@@ -1,0 +1,32 @@
+# copy this file to .env
+# cp env-file-for-local.dev .env
+
+DOMAIN=5g-api-emulator.medianetlab.eu
+DOCKER_IMAGE_BACKEND=backend
+DOCKER_IMAGE_FRONTEND=frontend
+# Backend
+SERVER_NAME=localhost
+SERVER_HOST=localhost
+BACKEND_CORS_ORIGINS=["https://5g-api-emulator.medianetlab.eu", "http://localhost" , "http://localhost:8080", "http://192.168.3.100"]
+PROJECT_NAME=5G-API-Emulator
+SECRET_KEY=password
+FIRST_SUPERUSER=admin@5g-api-emulator.medianetlab.eu
+FIRST_SUPERUSER_PASSWORD=password
+SMTP_TLS=True
+SMTP_PORT=465
+SMTP_HOST=mail.host.gr
+SMTP_USER=user
+SMTP_PASSWORD=password
+EMAILS_FROM_EMAIL=user@mail.host.gr
+SENTRY_DSN=
+
+# Postgres
+POSTGRES_SERVER=db
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=password
+POSTGRES_DB=app
+
+# PgAdmin
+PGADMIN_LISTEN_PORT=5050
+PGADMIN_DEFAULT_EMAIL=admin@5g-api-emulator.medianetlab.eu
+PGADMIN_DEFAULT_PASSWORD=password
