@@ -1,7 +1,9 @@
 #!/bin/bash
 
+PORT=8888
+
 TOKEN=$(curl -X 'POST' \
-  'http://localhost/api/v1/login/access-token' \
+  "http://localhost:${PORT}/api/v1/login/access-token" \
   -H 'accept: application/json' \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   -d 'grant_type=&username=admin%405g-api-emulator.medianetlab.eu&password=2881bce0aeb692ddda5e04a4b0d9683bc8c43a9a128ea21272fdb0eae9a6110a&scope=&client_id=&client_secret=' \
@@ -13,7 +15,7 @@ echo $TOKEN
 echo 'Initiallizing Paths...'
 
 curl -X 'POST' \
-  'http://localhost/api/v1/frontend/location/' \
+  "http://localhost:${PORT}/api/v1/frontend/location/" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -32,7 +34,7 @@ curl -X 'POST' \
 }'
 
 curl -X 'POST' \
-  'http://localhost/api/v1/frontend/location/' \
+  "http://localhost:${PORT}/api/v1/frontend/location/" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -53,7 +55,7 @@ curl -X 'POST' \
 echo 'Initiallizing gNBs...'
 
 curl -X 'POST' \
-  'http://localhost/api/v1/gNBs/' \
+  "http://localhost:${PORT}/api/v1/gNBs/" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -65,7 +67,7 @@ curl -X 'POST' \
 }'
 
 curl -X 'POST' \
-  'http://localhost/api/v1/gNBs/' \
+  "http://localhost:${PORT}/api/v1/gNBs/" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -79,7 +81,7 @@ curl -X 'POST' \
 echo 'Initiallizing Cells...'
 
 curl -X 'POST' \
-  'http://localhost/api/v1/Cells/' \
+  "http://localhost:${PORT}/api/v1/Cells/" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -91,7 +93,7 @@ curl -X 'POST' \
 }'
 
 curl -X 'POST' \
-  'http://localhost/api/v1/Cells/' \
+  "http://localhost:${PORT}/api/v1/Cells/" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -103,7 +105,7 @@ curl -X 'POST' \
 }'
 
 curl -X 'POST' \
-  'http://localhost/api/v1/Cells/' \
+  "http://localhost:${PORT}/api/v1/Cells/" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -115,7 +117,7 @@ curl -X 'POST' \
 }'
 
 curl -X 'POST' \
-  'http://localhost/api/v1/Cells/' \
+  "http://localhost:${PORT}/api/v1/Cells/" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -127,7 +129,7 @@ curl -X 'POST' \
 }'
 
 curl -X 'POST' \
-  'http://localhost/api/v1/Cells/' \
+  "http://localhost:${PORT}/api/v1/Cells/" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -139,7 +141,7 @@ curl -X 'POST' \
 }'
 
 curl -X 'POST' \
-  'http://localhost/api/v1/Cells/' \
+  "http://localhost:${PORT}/api/v1/Cells/" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -153,7 +155,7 @@ curl -X 'POST' \
 echo 'Initiallizing UEs...'
 
 curl -X 'POST' \
-  'http://localhost/api/v1/UEs/' \
+  "http://localhost:${PORT}/api/v1/UEs/" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -177,7 +179,7 @@ curl -X 'POST' \
 }'
 
 curl -X 'POST' \
-  'http://localhost/api/v1/UEs/' \
+  "http://localhost:${PORT}/api/v1/UEs/" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -201,7 +203,7 @@ curl -X 'POST' \
 }'
 
 curl -X 'POST' \
-  'http://localhost/api/v1/UEs/' \
+  "http://localhost:${PORT}/api/v1/UEs/" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -225,7 +227,7 @@ curl -X 'POST' \
 }'
 
 curl -X 'POST' \
-  'http://localhost/api/v1/UEs/' \
+  "http://localhost:${PORT}/api/v1/UEs/" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -249,7 +251,7 @@ curl -X 'POST' \
 }'
 
 curl -X 'POST' \
-  'http://localhost/api/v1/UEs/' \
+  "http://localhost:${PORT}/api/v1/UEs/" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -273,7 +275,7 @@ curl -X 'POST' \
 }'
 
 curl -X 'POST' \
-  'http://localhost/api/v1/UEs/' \
+  "http://localhost:${PORT}/api/v1/UEs/" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
