@@ -6,7 +6,7 @@ TOKEN=$(curl -X 'POST' \
   "http://localhost:${PORT}/api/v1/login/access-token" \
   -H 'accept: application/json' \
   -H 'Content-Type: application/x-www-form-urlencoded' \
-  -d 'grant_type=&username=admin%405g-api-emulator.medianetlab.eu&password=2881bce0aeb692ddda5e04a4b0d9683bc8c43a9a128ea21272fdb0eae9a6110a&scope=&client_id=&client_secret=' \
+  -d 'grant_type=&username=admin%405g-api-emulator.medianetlab.eu&password=password&scope=&client_id=&client_secret=' \
   | jq -r '.access_token')
 
 echo $TOKEN
