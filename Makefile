@@ -41,3 +41,10 @@ ps:
 # COMBOS
 
 upl: upd logs
+
+
+
+# DATABASE
+
+db-init:
+	./backend/app/app/db/init_paths.sh
