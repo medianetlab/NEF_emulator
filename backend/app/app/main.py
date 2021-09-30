@@ -42,3 +42,11 @@ app.mount("/nef", nefapi)
 @app.get("/login", response_class=HTMLResponse)
 async def login(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
+
+@app.get("/err404", response_class=HTMLResponse)
+async def err404(request: Request):
+    return templates.TemplateResponse("404.html", {"request": request})
+
+@app.get("/err500", response_class=HTMLResponse)
+async def err500(request: Request):
+    return templates.TemplateResponse("500.html", {"request": request})
