@@ -47,6 +47,10 @@ async def login(request: Request):
 async def err404(request: Request):
     return templates.TemplateResponse("404.html", {"request": request})
 
+@app.get("/err401", response_class=HTMLResponse)
+async def err404(request: Request):
+    return templates.TemplateResponse("401.html", {"request": request})
+
 @app.get("/err500", response_class=HTMLResponse)
 async def err500(request: Request):
     return templates.TemplateResponse("500.html", {"request": request})
