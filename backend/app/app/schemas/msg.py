@@ -1,5 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, constr
 
 
 class Msg(BaseModel):
-    msg: str
+    supi: constr(regex=r'^[0-9]{15,16}$')

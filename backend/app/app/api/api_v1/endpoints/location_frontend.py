@@ -77,14 +77,15 @@ def read_path(
     Get path by ID.
     """
     path = crud.path.get(db=db, id=id)
+    
+    if not path:
+        raise HTTPException(status_code=404, detail="Path not found")
+    if not crud.user.is_superuser(current_user) and (path.owner_id != current_user.id):
+        raise HTTPException(status_code=400, detail="Not enough permissions")
+    
     item_json = jsonable_encoder(path)
-
     item_json["start_point"] = {}
-    item_json["start_point"]["latitude"] = {}
-    item_json["start_point"]["longitude"] = {}
     item_json["end_point"] = {}
-    item_json["end_point"]["latitude"] = {}
-    item_json["end_point"]["longitude"] = {}
     item_json["start_point"]["latitude"] = path.start_lat
     item_json["start_point"]["longitude"] = path.start_long
     item_json["end_point"]["latitude"] = path.end_lat
@@ -95,10 +96,7 @@ def read_path(
     for obj in jsonable_encoder(points):
         print(obj)
     
-    if not path:
-        raise HTTPException(status_code=404, detail="Path not found")
-    if not crud.user.is_superuser(current_user) and (path.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
+   
     return item_json
 
 
