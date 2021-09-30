@@ -28,6 +28,7 @@ services:
   
   backend:
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    command: /start-reload.sh
     ports:
       - "8888:80"
     volumes:
@@ -43,7 +44,8 @@ services:
       context: ./backend
       dockerfile: backend.dockerfile
       args:
-        INSTALL_DEV: ${INSTALL_DEV-false}
+        INSTALL_DEV: ${INSTALL_DEV-true}
+        INSTALL_JUPYTER: ${INSTALL_JUPYTER-true}
 
 
 
