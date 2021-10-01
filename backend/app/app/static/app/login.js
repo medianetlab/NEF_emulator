@@ -44,13 +44,22 @@ function api_login_access_token(user , pass) {
         contentType : 'application/x-www-form-urlencoded; charset=UTF-8',
         data:         data,
         processData:  true,
+        beforeSend: function() {
+            $('.spinner-grow-sm').show();
+            $('.login-notifications .text-secondary').text("Checking user authentication...");
+        },
         success: function(data)
         {
             app_login(data);
+            ui_show_login_success();
         },
         error: function(err)
         {
             ui_show_login_error(err);
+        },
+        complete: function()
+        {
+            $('.spinner-grow-sm').hide();
         },
         timeout: 5000
     });
@@ -62,14 +71,20 @@ function app_login( token_data ) {
     // console.log(data);
     if (local_storage_available) {
         localStorage.setItem('app_auth', JSON.stringify(token_data));
-        window.location.href = [location.protocol, '//', location.host, "/home"].join('');
     }
 }
 
 
 function ui_show_login_error(err) {
-    // console.log(err);
-    $('.login-notifications small').text(err.responseJSON.detail);
+    console.log(err);
+    $('.login-notifications .text-danger').text(err.responseJSON.detail);
+}
+
+function ui_show_login_success() {
+    $('.login-notifications .text-secondary').text("Successful login, redirecting...");
+    setInterval(function(){
+        window.location.href = [location.protocol, '//', location.host, "/home"].join('');
+    },1200);
 }
 
 
