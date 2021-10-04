@@ -83,7 +83,7 @@ function ui_show_login_error(err) {
 function ui_show_login_success() {
     $('.login-notifications .text-secondary').text("Successful login, redirecting...");
     setInterval(function(){
-        window.location.href = [location.protocol, '//', location.host, "/home"].join('');
+        window.location.href = [location.protocol, '//', location.host, "/dashboard"].join('');
     },1200);
 }
 
