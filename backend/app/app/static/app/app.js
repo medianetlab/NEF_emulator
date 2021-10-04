@@ -27,20 +27,22 @@ $( document ).ready(function() {
     // update `local_storage_available` variable
     browser_test_local_storage();
 
+    console.log("document ready");
+
     // initialize auth_obj
     if (app.local_storage_available) {
-        auth_obj = JSON.parse(localStorage.getItem('app_auth'));
+        app.auth_obj = JSON.parse(localStorage.getItem('app_auth'));
 
-        if ( auth_obj == null ) {
+        if ( app.auth_obj == null ) {
             // if you can't find a token redirect to login page
             window.location.href = [location.protocol, '//', location.host, "/login"].join('');
         } else {
             // use the API to test the token found
             // to check that it is valid
-            api_test_token( auth_obj.access_token );
+            api_test_token( app.auth_obj.access_token );
         }
     }
-    
+
 });
 
 
