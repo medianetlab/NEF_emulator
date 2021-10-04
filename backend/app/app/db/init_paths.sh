@@ -12,7 +12,7 @@ TOKEN=$(curl -X 'POST' \
 echo $TOKEN
 
 #==================================================
-echo 'Initiallizing Paths...'
+echo 'Initiallizing Paths for admin...'
 
 curl -X 'POST' \
   "http://localhost:${PORT}/api/v1/frontend/location/" \
@@ -52,7 +52,7 @@ curl -X 'POST' \
   "color": "blue"
 }'
 
-echo 'Initiallizing gNBs...'
+echo 'Initiallizing gNBs for admin...'
 
 curl -X 'POST' \
   "http://localhost:${PORT}/api/v1/gNBs/" \
@@ -78,7 +78,7 @@ curl -X 'POST' \
   "location": "unknown"
 }'
 
-echo 'Initiallizing Cells...'
+echo 'Initiallizing Cells for admin...'
 
 curl -X 'POST' \
   "http://localhost:${PORT}/api/v1/Cells/" \
@@ -152,7 +152,7 @@ curl -X 'POST' \
   "gNB_id": 2
 }'
 
-echo 'Initiallizing UEs...'
+echo 'Initiallizing UEs for admin...'
 
 curl -X 'POST' \
   "http://localhost:${PORT}/api/v1/UEs/" \
@@ -296,4 +296,280 @@ curl -X 'POST' \
   "longitude": 23.818562,
   "speed": "LOW",
   "path_id": 2
+}'
+
+TOKEN=$(curl -X 'POST' \
+  "http://localhost:${PORT}/api/v1/login/access-token" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'grant_type=&username=simple_user%405g-api-emulator.medianetlab.eu&password=password&scope=&client_id=&client_secret=' \
+  | jq -r '.access_token')
+
+echo $TOKEN
+
+#==================================================
+echo 'Initiallizing Paths for simple user...'
+
+curl -X 'POST' \
+  "http://localhost:${PORT}/api/v1/frontend/location/" \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H 'Content-Type: application/json' \
+  -d '{
+   "description": "NCSRD Central Building", 
+   "points": [{"latitude":"37.999262","longitude":"23.819251"},{"latitude":"37.999257","longitude":"23.819260"},{"latitude":"37.999252","longitude":"23.819269"},{"latitude":"37.999246","longitude":"23.819279"},{"latitude":"37.999241","longitude":"23.819288"},{"latitude":"37.999236","longitude":"23.819297"},{"latitude":"37.999230","longitude":"23.819306"},{"latitude":"37.999225","longitude":"23.819315"},{"latitude":"37.999213","longitude":"23.819317"},{"latitude":"37.999205","longitude":"23.819312"},{"latitude":"37.999197","longitude":"23.819307"},{"latitude":"37.999189","longitude":"23.819302"},{"latitude":"37.999181","longitude":"23.819297"},{"latitude":"37.999173","longitude":"23.819292"},{"latitude":"37.999165","longitude":"23.819287"},{"latitude":"37.999156","longitude":"23.819282"},{"latitude":"37.999148","longitude":"23.819277"},{"latitude":"37.999140","longitude":"23.819272"},{"latitude":"37.999132","longitude":"23.819267"},{"latitude":"37.999124","longitude":"23.819262"},{"latitude":"37.999116","longitude":"23.819257"},{"latitude":"37.999108","longitude":"23.819252"},{"latitude":"37.999100","longitude":"23.819247"},{"latitude":"37.999092","longitude":"23.819242"},{"latitude":"37.999084","longitude":"23.819237"},{"latitude":"37.999076","longitude":"23.819232"},{"latitude":"37.999068","longitude":"23.819227"},{"latitude":"37.999059","longitude":"23.819222"},{"latitude":"37.999051","longitude":"23.819217"},{"latitude":"37.999043","longitude":"23.819212"},{"latitude":"37.999035","longitude":"23.819207"},{"latitude":"37.999027","longitude":"23.819202"},{"latitude":"37.999019","longitude":"23.819197"},{"latitude":"37.999011","longitude":"23.819192"},{"latitude":"37.999003","longitude":"23.819187"},{"latitude":"37.998995","longitude":"23.819182"},{"latitude":"37.998987","longitude":"23.819177"},{"latitude":"37.998978","longitude":"23.819185"},{"latitude":"37.998974","longitude":"23.819195"},{"latitude":"37.998969","longitude":"23.819205"},{"latitude":"37.998965","longitude":"23.819215"},{"latitude":"37.998961","longitude":"23.819225"},{"latitude":"37.998957","longitude":"23.819235"},{"latitude":"37.998952","longitude":"23.819245"},{"latitude":"37.998948","longitude":"23.819255"},{"latitude":"37.998944","longitude":"23.819265"},{"latitude":"37.998939","longitude":"23.819275"},{"latitude":"37.998935","longitude":"23.819285"},{"latitude":"37.998931","longitude":"23.819295"},{"latitude":"37.998927","longitude":"23.819305"},{"latitude":"37.998922","longitude":"23.819315"},{"latitude":"37.998918","longitude":"23.819325"},{"latitude":"37.998914","longitude":"23.819335"},{"latitude":"37.998910","longitude":"23.819345"},{"latitude":"37.998905","longitude":"23.819355"},{"latitude":"37.998901","longitude":"23.819365"},{"latitude":"37.998892","longitude":"23.819363"},{"latitude":"37.998884","longitude":"23.819358"},{"latitude":"37.998876","longitude":"23.819353"},{"latitude":"37.998867","longitude":"23.819348"},{"latitude":"37.998859","longitude":"23.819343"},{"latitude":"37.998851","longitude":"23.819338"},{"latitude":"37.998843","longitude":"23.819334"},{"latitude":"37.998835","longitude":"23.819329"},{"latitude":"37.998827","longitude":"23.819324"},{"latitude":"37.998819","longitude":"23.819319"},{"latitude":"37.998811","longitude":"23.819314"},{"latitude":"37.998802","longitude":"23.819309"},{"latitude":"37.998794","longitude":"23.819304"},{"latitude":"37.998786","longitude":"23.819299"},{"latitude":"37.998778","longitude":"23.819294"},{"latitude":"37.998770","longitude":"23.819289"},{"latitude":"37.998762","longitude":"23.819284"},{"latitude":"37.998754","longitude":"23.819280"},{"latitude":"37.998746","longitude":"23.819275"},{"latitude":"37.998738","longitude":"23.819270"},{"latitude":"37.998729","longitude":"23.819265"},{"latitude":"37.998721","longitude":"23.819260"},{"latitude":"37.998713","longitude":"23.819255"},{"latitude":"37.998705","longitude":"23.819250"},{"latitude":"37.998697","longitude":"23.819245"},{"latitude":"37.998689","longitude":"23.819240"},{"latitude":"37.998681","longitude":"23.819235"},{"latitude":"37.998673","longitude":"23.819231"},{"latitude":"37.998664","longitude":"23.819226"},{"latitude":"37.998656","longitude":"23.819221"},{"latitude":"37.998648","longitude":"23.819216"},{"latitude":"37.998640","longitude":"23.819211"},{"latitude":"37.998637","longitude":"23.819197"},{"latitude":"37.998641","longitude":"23.819186"},{"latitude":"37.998645","longitude":"23.819176"},{"latitude":"37.998649","longitude":"23.819166"},{"latitude":"37.998653","longitude":"23.819155"},{"latitude":"37.998657","longitude":"23.819145"},{"latitude":"37.998661","longitude":"23.819135"},{"latitude":"37.998665","longitude":"23.819125"},{"latitude":"37.998668","longitude":"23.819114"},{"latitude":"37.998672","longitude":"23.819104"},{"latitude":"37.998676","longitude":"23.819094"},{"latitude":"37.998680","longitude":"23.819083"},{"latitude":"37.998684","longitude":"23.819073"},{"latitude":"37.998688","longitude":"23.819063"},{"latitude":"37.998692","longitude":"23.819052"},{"latitude":"37.998695","longitude":"23.819042"},{"latitude":"37.998699","longitude":"23.819032"},{"latitude":"37.998703","longitude":"23.819021"},{"latitude":"37.998707","longitude":"23.819011"},{"latitude":"37.998711","longitude":"23.819001"},{"latitude":"37.998715","longitude":"23.818991"},{"latitude":"37.998719","longitude":"23.818980"},{"latitude":"37.998723","longitude":"23.818970"},{"latitude":"37.998726","longitude":"23.818960"},{"latitude":"37.998730","longitude":"23.818949"},{"latitude":"37.998734","longitude":"23.818939"},{"latitude":"37.998738","longitude":"23.818929"},{"latitude":"37.998742","longitude":"23.818918"},{"latitude":"37.998746","longitude":"23.818908"},{"latitude":"37.998750","longitude":"23.818898"},{"latitude":"37.998753","longitude":"23.818888"},{"latitude":"37.998757","longitude":"23.818877"},{"latitude":"37.998761","longitude":"23.818867"},{"latitude":"37.998765","longitude":"23.818857"},{"latitude":"37.998769","longitude":"23.818846"},{"latitude":"37.998773","longitude":"23.818836"},{"latitude":"37.998777","longitude":"23.818826"},{"latitude":"37.998781","longitude":"23.818815"},{"latitude":"37.998784","longitude":"23.818805"},{"latitude":"37.998788","longitude":"23.818795"},{"latitude":"37.998792","longitude":"23.818784"},{"latitude":"37.998796","longitude":"23.818774"},{"latitude":"37.998800","longitude":"23.818764"},{"latitude":"37.998804","longitude":"23.818754"},{"latitude":"37.998808","longitude":"23.818743"},{"latitude":"37.998811","longitude":"23.818733"},{"latitude":"37.998815","longitude":"23.818723"},{"latitude":"37.998819","longitude":"23.818712"},{"latitude":"37.998823","longitude":"23.818702"},{"latitude":"37.998827","longitude":"23.818692"},{"latitude":"37.998831","longitude":"23.818681"},{"latitude":"37.998835","longitude":"23.818671"},{"latitude":"37.998839","longitude":"23.818661"},{"latitude":"37.998842","longitude":"23.818651"},{"latitude":"37.998846","longitude":"23.818640"},{"latitude":"37.998850","longitude":"23.818630"},{"latitude":"37.998854","longitude":"23.818620"},{"latitude":"37.998858","longitude":"23.818609"},{"latitude":"37.998862","longitude":"23.818599"},{"latitude":"37.998866","longitude":"23.818589"},{"latitude":"37.998874","longitude":"23.818593"},{"latitude":"37.998882","longitude":"23.818599"},{"latitude":"37.998890","longitude":"23.818604"},{"latitude":"37.998897","longitude":"23.818610"},{"latitude":"37.998905","longitude":"23.818615"},{"latitude":"37.998913","longitude":"23.818621"},{"latitude":"37.998921","longitude":"23.818626"},{"latitude":"37.998929","longitude":"23.818632"},{"latitude":"37.998937","longitude":"23.818638"},{"latitude":"37.998945","longitude":"23.818643"},{"latitude":"37.998952","longitude":"23.818649"},{"latitude":"37.998960","longitude":"23.818654"},{"latitude":"37.998968","longitude":"23.818660"},{"latitude":"37.998976","longitude":"23.818665"},{"latitude":"37.998984","longitude":"23.818671"},{"latitude":"37.998992","longitude":"23.818677"},{"latitude":"37.998999","longitude":"23.818682"},{"latitude":"37.999007","longitude":"23.818688"},{"latitude":"37.999015","longitude":"23.818693"},{"latitude":"37.999023","longitude":"23.818699"},{"latitude":"37.999031","longitude":"23.818705"},{"latitude":"37.999039","longitude":"23.818710"},{"latitude":"37.999047","longitude":"23.818716"},{"latitude":"37.999054","longitude":"23.818721"},{"latitude":"37.999062","longitude":"23.818727"},{"latitude":"37.999070","longitude":"23.818732"},{"latitude":"37.999078","longitude":"23.818738"},{"latitude":"37.999086","longitude":"23.818744"},{"latitude":"37.999094","longitude":"23.818749"},{"latitude":"37.999101","longitude":"23.818755"},{"latitude":"37.999109","longitude":"23.818760"},{"latitude":"37.999117","longitude":"23.818766"},{"latitude":"37.999125","longitude":"23.818771"},{"latitude":"37.999133","longitude":"23.818777"},{"latitude":"37.999141","longitude":"23.818783"},{"latitude":"37.999149","longitude":"23.818788"},{"latitude":"37.999156","longitude":"23.818794"},{"latitude":"37.999164","longitude":"23.818799"},{"latitude":"37.999172","longitude":"23.818805"},{"latitude":"37.999180","longitude":"23.818811"},{"latitude":"37.999188","longitude":"23.818816"},{"latitude":"37.999196","longitude":"23.818822"},{"latitude":"37.999203","longitude":"23.818827"},{"latitude":"37.999211","longitude":"23.818833"},{"latitude":"37.999219","longitude":"23.818838"},{"latitude":"37.999227","longitude":"23.818844"},{"latitude":"37.999235","longitude":"23.818850"},{"latitude":"37.999243","longitude":"23.818855"},{"latitude":"37.999250","longitude":"23.818861"},{"latitude":"37.999258","longitude":"23.818866"},{"latitude":"37.999266","longitude":"23.818872"},{"latitude":"37.999274","longitude":"23.818877"},{"latitude":"37.999282","longitude":"23.818883"},{"latitude":"37.999290","longitude":"23.818889"},{"latitude":"37.999298","longitude":"23.818894"},{"latitude":"37.999299","longitude":"23.818909"},{"latitude":"37.999295","longitude":"23.818919"},{"latitude":"37.999291","longitude":"23.818929"},{"latitude":"37.999287","longitude":"23.818939"},{"latitude":"37.999283","longitude":"23.818949"},{"latitude":"37.999279","longitude":"23.818959"},{"latitude":"37.999275","longitude":"23.818969"},{"latitude":"37.999271","longitude":"23.818980"},{"latitude":"37.999266","longitude":"23.818990"},{"latitude":"37.999262","longitude":"23.819000"},{"latitude":"37.999258","longitude":"23.819010"},{"latitude":"37.999254","longitude":"23.819020"},{"latitude":"37.999250","longitude":"23.819030"},{"latitude":"37.999246","longitude":"23.819040"},{"latitude":"37.999242","longitude":"23.819051"},{"latitude":"37.999238","longitude":"23.819061"},{"latitude":"37.999233","longitude":"23.819071"},{"latitude":"37.999229","longitude":"23.819081"},{"latitude":"37.999225","longitude":"23.819091"},{"latitude":"37.999221","longitude":"23.819101"},{"latitude":"37.999217","longitude":"23.819111"},{"latitude":"37.999213","longitude":"23.819122"},{"latitude":"37.999209","longitude":"23.819132"},{"latitude":"37.999214","longitude":"23.819143"},{"latitude":"37.999222","longitude":"23.819148"},{"latitude":"37.999230","longitude":"23.819154"},{"latitude":"37.999238","longitude":"23.819159"},{"latitude":"37.999246","longitude":"23.819165"},{"latitude":"37.999253","longitude":"23.819171"},{"latitude":"37.999261","longitude":"23.819176"},{"latitude":"37.999269","longitude":"23.819182"},{"latitude":"37.999277","longitude":"23.819187"},{"latitude":"37.999277","longitude":"23.819199"},{"latitude":"37.999276","longitude":"23.819211"},{"latitude":"37.999274","longitude":"23.819222"}],
+   "start_point": {
+    "latitude": 37.999262,
+    "longitude": 23.819251
+  },
+  "end_point": {
+    "latitude": 37.999274,
+    "longitude": 23.819222
+  },
+  "color": "pink"
+}'
+echo 'Initiallizing gNBs for simple user...'
+
+curl -X 'POST' \
+  "http://localhost:${PORT}/api/v1/gNBs/" \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "gNB_id": "ABAAA1",
+  "name": "gNB1",
+  "description": "This is a base station",
+  "location": "unknown"
+}'
+
+curl -X 'POST' \
+  "http://localhost:${PORT}/api/v1/gNBs/" \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "gNB_id": "ABAAA2",
+  "name": "gNB2",
+  "description": "This is a base station",
+  "location": "unknown"
+}'
+
+echo 'Initiallizing Cells for simple user...'
+
+curl -X 'POST' \
+  "http://localhost:${PORT}/api/v1/Cells/" \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "cell_id": "ABAAA1001",
+  "name": "cell1",
+  "description": "This is a cell",
+  "gNB_id": 3
+}'
+
+curl -X 'POST' \
+  "http://localhost:${PORT}/api/v1/Cells/" \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "cell_id": "ABAAA1002",
+  "name": "cell2",
+  "description": "This is a cell",
+  "gNB_id": 3
+}'
+
+curl -X 'POST' \
+  "http://localhost:${PORT}/api/v1/Cells/" \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "cell_id": "ABAAA1003",
+  "name": "cell3",
+  "description": "This is a cell",
+  "gNB_id": 3
+}'
+
+curl -X 'POST' \
+  "http://localhost:${PORT}/api/v1/Cells/" \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "cell_id": "ABAAA2001",
+  "name": "cell4",
+  "description": "This is a cell",
+  "gNB_id": 4
+}'
+
+curl -X 'POST' \
+  "http://localhost:${PORT}/api/v1/Cells/" \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "cell_id": "ABAAA2002",
+  "name": "cell5",
+  "description": "This is a cell",
+  "gNB_id": 4
+}'
+
+curl -X 'POST' \
+  "http://localhost:${PORT}/api/v1/Cells/" \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "cell_id": "ABAAA2003",
+  "name": "cell6",
+  "description": "This is a cell",
+  "gNB_id": 4
+}'
+
+echo 'Initiallizing UEs for simple user...'
+
+curl -X 'POST' \
+  "http://localhost:${PORT}/api/v1/UEs/" \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "supi": "202010000000011",
+  "name": "UE1",
+  "description": "This is a UE",
+  "gNB_id": 3,
+  "Cell_id": 7,
+  "ip_address_v4": "10.0.0.11",
+  "ip_address_v6": "0:0:0:0:0:0:0:11",
+  "mac_address": "22-00-00-00-00-11",
+  "dnn": "province1.mnc01.mcc202.gprs",
+  "mcc": 202,
+  "mnc": 1,
+  "external_identifier": "10011@domain.com",
+  "latitude": 37.999262,
+  "longitude": 23.819251,
+  "speed": "LOW",
+  "path_id": 3
+}'
+
+curl -X 'POST' \
+  "http://localhost:${PORT}/api/v1/UEs/" \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "supi": "202010000000012",
+  "name": "UE2",
+  "description": "This is a UE",
+  "gNB_id": 3,
+  "Cell_id": 8,
+  "ip_address_v4": "10.0.0.12",
+  "ip_address_v6": "0:0:0:0:0:0:0:12",
+  "mac_address": "22-00-00-00-00-12",
+  "dnn": "province1.mnc01.mcc202.gprs",
+  "mcc": 202,
+  "mnc": 1,
+  "external_identifier": "10012@domain.com",
+  "latitude": 37.999262,
+  "longitude": 23.819251,
+  "speed": "LOW",
+  "path_id": 3
+}'
+
+curl -X 'POST' \
+  "http://localhost:${PORT}/api/v1/UEs/" \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "supi": "202010000000013",
+  "name": "UE3",
+  "description": "This is a UE",
+  "gNB_id": 3,
+  "Cell_id": 9,
+  "ip_address_v4": "10.0.0.13",
+  "ip_address_v6": "0:0:0:0:0:0:0:13",
+  "mac_address": "22-00-00-00-00-13",
+  "dnn": "province1.mnc01.mcc202.gprs",
+  "mcc": 202,
+  "mnc": 1,
+  "external_identifier": "10013@domain.com",
+  "latitude": 37.999262,
+  "longitude": 23.819251,
+  "speed": "LOW",
+  "path_id": 3
+}'
+
+curl -X 'POST' \
+  "http://localhost:${PORT}/api/v1/UEs/" \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "supi": "202010000000014",
+  "name": "UE4",
+  "description": "This is a UE",
+  "gNB_id": 4,
+  "Cell_id": 10,
+  "ip_address_v4": "10.0.0.14",
+  "ip_address_v6": "0:0:0:0:0:0:0:14",
+  "mac_address": "22-00-00-00-00-14",
+  "dnn": "province1.mnc01.mcc202.gprs",
+  "mcc": 202,
+  "mnc": 1,
+  "external_identifier": "10014@domain.com",
+  "latitude": 37.999262,
+  "longitude": 23.819251,
+  "speed": "LOW",
+  "path_id": 3
+}'
+
+curl -X 'POST' \
+  "http://localhost:${PORT}/api/v1/UEs/" \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "supi": "202010000000015",
+  "name": "UE5",
+  "description": "This is a UE",
+  "gNB_id": 4,
+  "Cell_id": 11,
+  "ip_address_v4": "10.0.0.15",
+  "ip_address_v6": "0:0:0:0:0:0:0:15",
+  "mac_address": "22-00-00-00-00-15",
+  "dnn": "province1.mnc01.mcc202.gprs",
+  "mcc": 202,
+  "mnc": 1,
+  "external_identifier": "10015@domain.com",
+  "latitude": 37.999262,
+  "longitude": 23.819251,
+  "speed": "LOW",
+  "path_id": 3
+}'
+
+curl -X 'POST' \
+  "http://localhost:${PORT}/api/v1/UEs/" \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "supi": "202010000000016",
+  "name": "UE6",
+  "description": "This is a UE",
+  "gNB_id": 4,
+  "Cell_id": 12,
+  "ip_address_v4": "10.0.0.16",
+  "ip_address_v6": "0:0:0:0:0:0:0:16",
+  "mac_address": "22-00-00-00-00-16",
+  "dnn": "province1.mnc01.mcc202.gprs",
+  "mcc": 202,
+  "mnc": 1,
+  "external_identifier": "10016@domain.com",
+  "latitude": 37.999262,
+  "longitude": 23.819251,
+  "speed": "LOW",
+  "path_id": 3
 }'

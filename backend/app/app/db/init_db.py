@@ -27,6 +27,15 @@ def init_db(db: Session) -> None:
         )
         user = crud.user.create(db, obj_in=user_in)  # noqa: F841
 
+    user = crud.user.get_by_email(db, email='simple_user@5g-api-emulator.medianetlab.eu')
+    if not user:
+        user_in = schemas.UserCreate(
+            email='simple_user@5g-api-emulator.medianetlab.eu',
+            password='password',
+            is_superuser=False,
+        )
+        user = crud.user.create(db, obj_in=user_in) 
+
     #If you don't want to initialize the db, every time the backend container starts, comment the code below
     """ UE = crud.ue.get_multi_by_owner(db=db, owner_id=1, skip=0, limit= 1)
     Cell = crud.cell.get_multi_by_owner(db=db, owner_id=1, skip=0, limit= 1)

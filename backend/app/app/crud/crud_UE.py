@@ -7,6 +7,7 @@ from app.crud.base import CRUDBase
 from app.models.UE import UE
 from app.schemas.UE import UECreate, UEUpdate
 
+import logging
 
 class CRUD_UE(CRUDBase[UE, UECreate, UEUpdate]):
     def create_with_owner(
@@ -63,7 +64,17 @@ class CRUD_UE(CRUDBase[UE, UECreate, UEUpdate]):
             .limit(limit)
             .all()
         )
-    
+
+    def update_coordinates(
+        self, db: Session, *, lat: float, long: float, db_obj: UE
+    )-> UE:
+        setattr(db_obj, 'latitude', lat)
+        setattr(db_obj, 'longitude', long)
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
+
     def remove_supi(self, db: Session, *, supi: str) -> UE: #Optionally, transfer this function in CRUDUE, since CRUDBase is for generic use, inherited from all the CRUD modules
         print(f'"removing supi"{supi}')
         obj = db.query(self.model).filter(UE.supi == supi).first()
