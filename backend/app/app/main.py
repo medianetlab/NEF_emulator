@@ -8,6 +8,7 @@ from app.core.config import settings
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
+from fastapi.responses import RedirectResponse
 
 app = FastAPI(
     title=settings.PROJECT_NAME, openapi_url=f"{settings.API_V1_STR}/openapi.json"
@@ -66,3 +67,7 @@ async def dashboard(request: Request):
 @app.get("/map", response_class=HTMLResponse)
 async def map(request: Request):
     return templates.TemplateResponse("map.html", {"request": request})
+
+@app.get("/", response_class=HTMLResponse)
+async def map(request: Request):
+    return RedirectResponse("/dashboard")

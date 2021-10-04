@@ -27,8 +27,6 @@ $( document ).ready(function() {
     // update `local_storage_available` variable
     browser_test_local_storage();
 
-    console.log("document ready");
-
     // initialize auth_obj
     if (app.local_storage_available) {
         app.auth_obj = JSON.parse(localStorage.getItem('app_auth'));
