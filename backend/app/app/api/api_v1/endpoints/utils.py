@@ -35,24 +35,33 @@ class BackgroundTasks(threading.Thread):
             
             UE = crud.ue.get_supi(db=db, supi=supi)
             if not UE:
-                raise HTTPException(status_code=404, detail="UE not found")
-            if not crud.user.is_superuser(current_user) and (UE.owner_id != current_user.id):
-                raise HTTPException(status_code=400, detail="Not enough permissions")
+                logging.warning("UE not found")
+                threads.pop(f"{supi}")
+                return
+            if (UE.owner_id != current_user.id):
+                logging.warning("Not enough permissions")
+                threads.pop(f"{supi}")
+                return
+                
 
             path = crud.path.get(db=db, id=UE.path_id)
             if not path:
-                raise HTTPException(status_code=404, detail="Path not found")
-            if not crud.user.is_superuser(current_user) and (path.owner_id != current_user.id):
-                raise HTTPException(status_code=400, detail="Not enough permissions")
+                logging.warning("Path not found")
+                threads.pop(f"{supi}")
+                return
+            if (path.owner_id != current_user.id):
+                logging.warning("Not enough permissions")
+                threads.pop(f"{supi}")
+                return
 
             points = crud.points.get_points(db=db, path_id=UE.path_id)
             points = jsonable_encoder(points)
             
             while True:
-                logging.warning(f'Looping... ^_^ User: {supi}')
-                logging.warning(f'Looping... ^_^ User: {current_user.id}')
-                logging.warning(f'Looping... ^_^ User: {UE.latitude}')
-                logging.warning(f'Looping... ^_^ User: {UE.longitude}')
+                logging.info(f'Looping... ^_^ User: {supi}')
+                logging.info(f'Looping... ^_^ User: {current_user.id}')
+                logging.info(f'Looping... ^_^ User: {UE.latitude}')
+                logging.info(f'Looping... ^_^ User: {UE.longitude}')
 
                 for point in points:
                     try:
@@ -62,7 +71,7 @@ class BackgroundTasks(threading.Thread):
                         logging.warning("Failed to update coordinates")
                         logging.warning(ex)
                     
-                    logging.warning(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
+                    logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
                     
                     if UE.speed == 'LOW':
                         time.sleep(1)
