@@ -41,6 +41,8 @@ $( document ).ready(function() {
         }
     }
 
+    ui_initialize_btn_listeners();
+
 });
 
 
@@ -85,5 +87,16 @@ function api_test_token( token_str ){
             window.location.href = [location.protocol, '//', location.host, "/login"].join('');
         },
         timeout: 5000
+    });
+}
+
+
+
+
+function ui_initialize_btn_listeners() {
+    $('#logout-btn').on("click",function(event){
+        event.preventDefault();
+        localStorage.removeItem('app_auth');
+        window.location.href = [location.protocol, '//', location.host].join('');
     });
 }
