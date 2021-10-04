@@ -1,0 +1,63 @@
+gnb, name, description, location
+AAAAA1, gNB1, This is a base station, unknown
+AAAAA2, gNB2, This is a base station, unknown
+AAAAA3, gNB3, This is a base station, unknown
+AAAAA4, gNB4, This is a base station, unknown
+AAAAA5, gNB5, This is a base station, unknown
+AAAAA6, gNB6, This is a base station, unknown
+cell, name, description, gNB_id
+AAAAA1001, cell1, This is a cell, 1
+AAAAA1002, cell2, This is a cell, 1
+AAAAA1003, cell3, This is a cell, 1
+AAAAA2001, cell4, This is a cell, 2
+AAAAA2002, cell5, This is a cell, 2
+AAAAA2003, cell6, This is a cell, 2
+AAAAA3001, cell7, This is a cell, 3
+AAAAA3002, cell8, This is a cell, 3
+AAAAA3003, cell9, This is a cell, 3
+AAAAA4001, cell10, This is a cell, 4
+AAAAA4002, cell11, This is a cell, 4
+AAAAA4003, cell12, This is a cell, 4
+AAAAA5001, cell13, This is a cell, 5
+AAAAA5002, cell14, This is a cell, 5
+AAAAA5003, cell15, This is a cell, 5
+AAAAA6001, cell16, This is a cell, 6
+AAAAA6002, cell17, This is a cell, 6
+AAAAA6003, cell18, This is a cell, 6
+supi, name, description, ip_address_v4, ip_address_v6, mac_address, dnn, mcc, mnc, external_identifier, gNB_id, Cell_id, Speed, Path id, latitude, longitude
+202010000000001, UE1, This is a UE, 10.0.0.1, 0:0:0:0:0:0:0:1, 22-00-00-00-00-01, province1.mnc01.mcc202.gprs, 202, 01, 10001@domain.com, 1, 1, LOW,1, 37.998119, 23.819444
+202010000000002, UE2, This is a UE, 10.0.0.2, 0:0:0:0:0:0:0:2, 22-00-00-00-00-02, province1.mnc01.mcc202.gprs, 202, 01, 10002@domain.com, 1, 1, HIGH,1, 37.998119, 23.819444
+202010000000003, UE3, This is a UE, 10.0.0.3, 0:0:0:0:0:0:0:3, 22-00-00-00-00-03, province1.mnc01.mcc202.gprs, 202, 01, 10003@domain.com, 1, 2, LOW,1, 37.998119, 23.819444
+202010000000004, UE4, This is a UE, 10.0.0.4, 0:0:0:0:0:0:0:4, 22-00-00-00-00-04, province1.mnc01.mcc202.gprs, 202, 01, 10004@domain.com, 1, 2, HIGH,1, 37.998119, 23.819444
+202010000000005, UE5, This is a UE, 10.0.0.5, 0:0:0:0:0:0:0:5, 22-00-00-00-00-05, province1.mnc01.mcc202.gprs, 202, 01, 10005@domain.com, 1, 3, LOW,1, 37.998119, 23.819444
+202010000000006, UE6, This is a UE, 10.0.0.6, 0:0:0:0:0:0:0:6, 22-00-00-00-00-06, province1.mnc01.mcc202.gprs, 202, 01, 10006@domain.com, 1, 3, HIGH,1, 37.998119, 23.819444
+202010000000007, UE7, This is a UE, 10.0.0.7, 0:0:0:0:0:0:0:7, 22-00-00-00-00-07, province1.mnc01.mcc202.gprs, 202, 01, 10007@domain.com, 2, 4, LOW,1, 37.998119, 23.819444
+202010000000008, UE8, This is a UE, 10.0.0.8, 0:0:0:0:0:0:0:8, 22-00-00-00-00-08, province1.mnc01.mcc202.gprs, 202, 01, 10008@domain.com, 2, 4, HIGH,1, 37.998119, 23.819444
+202010000000009, UE9, This is a UE, 10.0.0.9, 0:0:0:0:0:0:0:9, 22-00-00-00-00-09, province1.mnc01.mcc202.gprs, 202, 01, 10009@domain.com, 2, 5, LOW,2, 37.996095, 23.818562
+202010000000010, UE10, This is a UE, 10.0.0.10, 0:0:0:0:0:0:0:a, 22-00-00-00-00-0a, province1.mnc01.mcc202.gprs, 202, 01, 10010@domain.com, 2, 5, HIGH,2, 37.996095, 23.818562
+202010000000011, UE11, This is a UE, 10.0.0.11, 0:0:0:0:0:0:0:b, 22-00-00-00-00-0b, province1.mnc01.mcc202.gprs, 202, 01, 10011@domain.com, 2, 6, LOW,2, 37.996095, 23.818562
+202010000000012, UE12, This is a UE, 10.0.0.12, 0:0:0:0:0:0:0:c, 22-00-00-00-00-0c, province1.mnc01.mcc202.gprs, 202, 01, 10012@domain.com, 2, 6, HIGH,2, 37.996095, 23.818562
+202010000000013, UE13, This is a UE, 10.0.0.13, 0:0:0:0:0:0:0:d, 22-00-00-00-00-0d, province1.mnc01.mcc202.gprs, 202, 01, 10013@domain.com, 3, 7, LOW,2, 37.996095, 23.818562
+202010000000014, UE14, This is a UE, 10.0.0.14, 0:0:0:0:0:0:0:e, 22-00-00-00-00-0f, province1.mnc01.mcc202.gprs, 202, 01, 10014@domain.com, 3, 7, HIGH,2, 37.996095, 23.818562
+202010000000015, UE15, This is a UE, 10.0.0.15, 0:0:0:0:0:0:0:f, 22-00-00-00-00-1a, province1.mnc01.mcc202.gprs, 202, 01, 10015@domain.com, 3, 8, LOW,2, 37.996095, 23.818562
+202010000000016, UE16, This is a UE, 10.0.0.16, 0:0:0:0:0:0:0:1a, 22-00-00-00-00-2a, province1.mnc01.mcc202.gprs, 202, 01, 10016@domain.com, 3, 8, HIGH,2, 37.996095, 23.818562
+202010000000017, UE17, This is a UE, 10.0.0.17, 0:0:0:0:0:0:0:2a, 22-00-00-00-00-3a, province1.mnc01.mcc202.gprs, 202, 01, 10017@domain.com, 3, 9, LOW,2, 37.996095, 23.818562
+202010000000018, UE18, This is a UE, 10.0.0.18, 0:0:0:0:0:0:0:3a, 22-00-00-00-00-4a, province1.mnc01.mcc202.gprs, 202, 01, 10018@domain.com, 3, 9, HIGH,2, 37.996095, 23.818562
+202010000000019, UE19, This is a UE, 10.0.0.19, 0:0:0:0:0:0:0:4a, 22-00-00-00-00-5a, province1.mnc01.mcc202.gprs, 202, 01, 10019@domain.com, 4, 10, LOW,2, 37.996095, 23.818562
+202010000000020, UE20, This is a UE, 10.0.0.20, 0:0:0:0:0:0:0:5a, 22-00-00-00-00-6a, province1.mnc01.mcc202.gprs, 202, 01, 10020@domain.com, 4, 10, HIGH,2, 37.996095, 23.818562
+202010000000021, UE21, This is a UE, 10.0.0.21, 0:0:0:0:0:0:0:6a, 22-00-00-00-00-7a, province1.mnc01.mcc202.gprs, 202, 01, 10021@domain.com, 4, 11, LOW,2, 37.996095, 23.818562
+202010000000022, UE22, This is a UE, 10.0.0.22, 0:0:0:0:0:0:0:7a, 22-00-00-00-00-8a, province1.mnc01.mcc202.gprs, 202, 01, 10022@domain.com, 4, 11, HIGH,2, 37.996095, 23.818562
+202010000000023, UE23, This is a UE, 10.0.0.23, 0:0:0:0:0:0:0:8a, 22-00-00-00-00-9a, province1.mnc01.mcc202.gprs, 202, 01, 10023@domain.com, 4, 12, LOW,2, 37.996095, 23.818562
+202010000000024, UE24, This is a UE, 10.0.0.24, 0:0:0:0:0:0:0:9a, 22-00-00-00-00-aa, province1.mnc01.mcc202.gprs, 202, 01, 10024@domain.com, 4, 12, HIGH,2, 37.996095, 23.818562
+202010000000025, UE25, This is a UE, 10.0.0.25, 0:0:0:0:0:0:0:aa, 22-00-00-00-00-ba, province1.mnc01.mcc202.gprs, 202, 01, 10025@domain.com, 5, 13, LOW,2, 37.996095, 23.818562
+202010000000026, UE26, This is a UE, 10.0.0.26, 0:0:0:0:0:0:0:ba, 22-00-00-00-00-ca, province1.mnc01.mcc202.gprs, 202, 01, 10026@domain.com, 5, 13, HIGH,2, 37.996095, 23.818562
+202010000000027, UE27, This is a UE, 10.0.0.27, 0:0:0:0:0:0:0:ca, 22-00-00-00-00-da, province1.mnc01.mcc202.gprs, 202, 01, 10027@domain.com, 5, 14, LOW,2, 37.996095, 23.818562
+202010000000028, UE28, This is a UE, 10.0.0.28, 0:0:0:0:0:0:0:da, 22-00-00-00-00-fa, province1.mnc01.mcc202.gprs, 202, 01, 10028@domain.com, 5, 14, HIGH,2, 37.996095, 23.818562
+202010000000029, UE29, This is a UE, 10.0.0.29, 0:0:0:0:0:0:0:fa, 22-00-00-00-00-1b, province1.mnc01.mcc202.gprs, 202, 01, 10029@domain.com, 5, 15, LOW,2, 37.996095, 23.818562
+202010000000030, UE30, This is a UE, 10.0.0.30, 0:0:0:0:0:0:0:1b, 22-00-00-00-00-2b, province1.mnc01.mcc202.gprs, 202, 01, 10030@domain.com, 5, 15, HIGH,2, 37.996095, 23.818562
+202010000000031, UE31, This is a UE, 10.0.0.31, 0:0:0:0:0:0:0:2b, 22-00-00-00-00-3b, province1.mnc01.mcc202.gprs, 202, 01, 10031@domain.com, 6, 16, LOW,2, 37.996095, 23.818562
+202010000000032, UE32, This is a UE, 10.0.0.32, 0:0:0:0:0:0:0:3b, 22-00-00-00-00-4b, province1.mnc01.mcc202.gprs, 202, 01, 10032@domain.com, 6, 16, HIGH,2, 37.996095, 23.818562
+202010000000033, UE33, This is a UE, 10.0.0.33, 0:0:0:0:0:0:0:4b, 22-00-00-00-00-5b, province1.mnc01.mcc202.gprs, 202, 01, 10033@domain.com, 6, 17, LOW,2, 37.996095, 23.818562
+202010000000034, UE34, This is a UE, 10.0.0.34, 0:0:0:0:0:0:0:5b, 22-00-00-00-00-6b, province1.mnc01.mcc202.gprs, 202, 01, 10034@domain.com, 6, 17, HIGH,2, 37.996095, 23.818562
+202010000000035, UE35, This is a UE, 10.0.0.35, 0:0:0:0:0:0:0:6b, 22-00-00-00-00-7b, province1.mnc01.mcc202.gprs, 202, 01, 10035@domain.com, 6, 18, LOW,2, 37.996095, 23.818562
+202010000000036, UE36, This is a UE, 10.0.0.36, 0:0:0:0:0:0:0:7b, 22-00-00-00-00-8b, province1.mnc01.mcc202.gprs, 202, 01, 10036@domain.com, 6, 18, HIGH,2, 37.996095, 23.818562

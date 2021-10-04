@@ -1,0 +1,9 @@
+
+#mapid {width: 100%; height: 960px;}
+
+.emu-pin-box {}
+.emu-pin-box .pin-bg {width: 28px; height: 28px; border-radius: 50% 50% 50% 0; position: absolute; transform: rotate(-45deg); left: 50%; top: 50%; margin: -15px 0 0 -15px; border: 1px solid #00a3cc; background: #00ccff;}
+.emu-pin-box .pin-bg:after {content: ''; width: 24px; height: 24px; margin: 2px 0 0 2px; background: #ffffff; position: absolute; border-radius: 50%;}
+.emu-pin-box .pin-bg-red {background: #c11515; border-color: #8a1818;}
+.emu-pin-box .pin-icon {position: absolute; width: 30px; height: 42px ;font-size: 18px; left: 0; top: 8px; text-align: center;}
+.emu-pin-box .pin-text {position: absolute; width: 30px; height: 42px; font-size: 8px; left: 6px; top: 10px; font-weight: 600;}
