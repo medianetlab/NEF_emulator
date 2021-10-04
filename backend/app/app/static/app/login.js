@@ -15,7 +15,7 @@ $( document ).ready(function() {
 
     // check if local storage is available
     // updates `local_storage_available` variable
-    test_local_storage();
+    browser_test_local_storage();
 
 
     $('#btn-login').on('click',function(){
@@ -90,7 +90,7 @@ function ui_show_login_success() {
 
 
 
-function test_local_storage(){
+function browser_test_local_storage(){
     var test = 'test';
     try {
         localStorage.setItem(test, test);

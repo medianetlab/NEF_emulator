@@ -11,8 +11,9 @@
 // ================== Global variables ==================
 
 var app = {
-    local_storage_available = false,
-    auth_obj = null
+    local_storage_available: false,
+    auth_obj:                null,
+    api_url: "/api/v1"
 };
 
 // ======================================================
@@ -21,14 +22,25 @@ var app = {
 
 
 $( document ).ready(function() {
-    // check if local storage is available
-    // updates `local_storage_available` variable
-    test_local_storage();
+    
+    // check if local storage is available &
+    // update `local_storage_available` variable
+    browser_test_local_storage();
 
-    if (local_storage_available) {
-        auth_obj = JSON.parse(localStorage.getItem('bearer-token'));
+    // initialize auth_obj
+    if (app.local_storage_available) {
+        auth_obj = JSON.parse(localStorage.getItem('app_auth'));
+
+        if ( auth_obj == null ) {
+            // if you can't find a token redirect to login page
+            window.location.href = [location.protocol, '//', location.host, "/login"].join('');
+        } else {
+            // use the API to test the token found
+            // to check that it is valid
+            api_test_token( auth_obj.access_token );
+        }
     }
-
+    
 });
 
 
@@ -37,14 +49,14 @@ $( document ).ready(function() {
 
 // ================== Functions Area ==================
 // 
-function test_local_storage(){
+function browser_test_local_storage(){
     var test = 'test';
     try {
         localStorage.setItem(test, test);
         localStorage.removeItem(test);
-        local_storage_available = true;
+        app.local_storage_available = true;
     } catch(e) {
-        local_storage_available = false;
+        app.local_storage_available = false;
     }
 }
 
@@ -53,6 +65,25 @@ function test_local_storage(){
 // ================== Ajax Calls Area ==================
 //
 
-function test_token(){
+function api_test_token( token_str ){
+    var url = app.api_url + '/login/test-token';
 
+    $.ajax({
+        type: 'POST',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + token_str
+        },
+        processData:  false,
+        success: function(data)
+        {
+            // 
+        },
+        error: function(err)
+        {
+            window.location.href = [location.protocol, '//', location.host, "/login"].join('');
+        },
+        timeout: 5000
+    });
 }
