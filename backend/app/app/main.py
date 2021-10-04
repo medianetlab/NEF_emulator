@@ -58,3 +58,7 @@ async def err404(request: Request):
 @app.get("/err500", response_class=HTMLResponse)
 async def err500(request: Request):
     return templates.TemplateResponse("500.html", {"request": request})
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
