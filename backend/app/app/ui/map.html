@@ -23,9 +23,16 @@
     <!-- Main styles for this application-->
     <link href="static/css/style.css" rel="stylesheet">
 
-
+    <!-- necessary files -->
     <script src="static/app/jquery-3.6.0.min.js"></script>
     <script src="static/app/app.js"></script>
+
+    <!-- page specific -->
+    <link href="static/css/map.css" rel="stylesheet">
+    <link rel="stylesheet" href="static/leaflet@1.7.1/leaflet.css" >
+    <script src="static/leaflet@1.7.1/leaflet.js"></script>
+
+        <link href="https://unpkg.com/ionicons@4.5.10-0/dist/css/ionicons.min.css" rel="stylesheet">
   </head>
   <body>
     <div class="sidebar sidebar-dark sidebar-fixed" id="sidebar">
@@ -106,9 +113,7 @@
         </div>
       </header>
       <div class="body flex-grow-1 px-3">
-        <div class="container-lg">
-
-        </div>
+        <div id="mapid"></div>
       </div>
       <footer class="footer">
         <div> © Evolved-5G </div>
@@ -123,7 +128,7 @@
     <!-- <script src="vendors/chart.js/js/chart.min.js"></script> -->
     <!-- <script src="vendors/@coreui/chartjs/js/coreui-chartjs.js"></script> -->
     <script src="static/vendors/@coreui/utils/js/coreui-utils.js"></script>
-    <!-- <script src="static/js/main.js"></script> -->
+    <script src="static/js/map.js"></script>
     <script>
     </script>
 
