@@ -110,8 +110,8 @@ $( document ).ready(function() {
                <div class="pin-icon ion-md-walk"></div>'
     });
     var marker2 = L.marker([37.999262,23.819251], {icon: walk_icon2}).addTo(mymap)
-        .bindTooltip("10.2.0.1")
-        .bindPopup("<b>Walking UE: 1</b><br />Around the Library...<br />Speed: 1m/sec")
+        .bindTooltip("10.2.0.2")
+        .bindPopup("<b>Walking UE: 2</b><br />Goes around central offices...<br />Speed: 1m/sec")
         .addTo(walking_UEs);
 
 
