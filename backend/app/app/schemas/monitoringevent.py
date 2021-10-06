@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, Field, IPvAnyAddress, HttpUrl
 from enum import Enum
