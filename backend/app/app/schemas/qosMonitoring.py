@@ -1,10 +1,8 @@
 from typing import List, Optional
 from datetime import datetime
 from fastapi.param_functions import File
-from pydantic import BaseModel, Field, IPvAnyAddress, HttpUrl, constr
+from pydantic import BaseModel, Field, IPvAnyAddress, AnyHttpUrl, constr
 from enum import Enum
-
-from pydantic.errors import DecimalError
 
 class Snssai(BaseModel):
     sst: int = Field(None, description="Unsigned integer representing the Slice/Service Type. Value 0 to 127 correspond to the standardized SST range. Value 128 to 255 correspond to the Operator-specific range.", ge=0, le=255)
@@ -39,12 +37,12 @@ class SponsorInfo(BaseModel):
     pass
 
 class AsSessionWithQoSSubscription(BaseModel):
-    link: Optional[HttpUrl] = Field("https://myresource.com", description="String identifying a referenced resource. This is also returned as a location header in 201 Created Response")
+    link: Optional[AnyHttpUrl] = Field("https://myresource.com", description="String identifying a referenced resource. This is also returned as a location header in 201 Created Response")
     #Remember, when you actually trying to access the database through CRUD methods you need to typecast the pydantic types to strings, int etc.
     ipv4Addr: Optional[IPvAnyAddress] = Field(None, description="String identifying an Ipv4 address")    
     ipv6Addr: Optional[IPvAnyAddress] = Field("0:0:0:0:0:0:0:1", description="String identifying an Ipv6 address. Default value ::1/128 (loopback)")
     macAddr: Optional[constr(regex=r'^([0-9a-fA-F]{2})((-[0-9a-fA-F]{2}){5})$')]
-    notificationDestination: HttpUrl = "https://example.com/mynetapp"
+    notificationDestination: AnyHttpUrl = "https://example.com/mynetapp"
     snssai: Optional[Snssai] = None
     dnn: Optional[str] = Field("province1.mnc01.mcc202.gprs", description="String identifying the Data Network Name (i.e., Access Point Name in 4G)")    
     qosReference: int = Field(None, description="Identifies a pre-defined QoS Information", ge=1, le=90)
@@ -53,9 +51,3 @@ class AsSessionWithQoSSubscription(BaseModel):
     qosMonInfo: Optional[QosMonitoringInformation] = None
     class Config:
             orm_mode = True
-
-class subCreate(AsSessionWithQoSSubscription):
-        pass
-
-class subUpdate(AsSessionWithQoSSubscription):
-        pass

@@ -1,5 +1,5 @@
 from typing import Any, List
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, Response
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -62,16 +62,14 @@ def read_active_subscriptions(
 
 
 #Callback 
-'''
+
 monitoring_callback_router = APIRouter()
 
-@monitoring_callback_router.post( "{$request.body.notificationDestination}/", response_model=schemas.MonitoringEventReport)
-def monitoring_notification(body: schemas.MonitoringEventSubscription):
+@monitoring_callback_router.post("{$request.body.notificationDestination}", response_model=schemas.MonitoringEventReportReceived, status_code=200, response_class=Response)
+def monitoring_notification(body: schemas.MonitoringEventReport):
     pass
-'''
 
-
-@router.post("/{scsAsId}/subscriptions", response_model=schemas.MonitoringEventReport)
+@router.post("/{scsAsId}/subscriptions", response_model=schemas.MonitoringEventReport, callbacks=monitoring_callback_router.routes)
 def create_item(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
@@ -101,8 +99,8 @@ def create_item(
         json_compatible_item_data.pop("owner_id")
         json_compatible_item_data.pop("id")
         link = location_header + scsAsId + "/subscriptions/" + str(response.id)
-        json_compatible_item_data["link"] = link    #not saved in db                                    
-    #    crud.monitoring.update(db=db, db_obj=models.Monitoring, obj_in={"link" : link}) |||||only one session per request
+        json_compatible_item_data["link"] = link                      
+        crud.monitoring.update(db=db, db_obj=response, obj_in={"link" : link})
         response_header = {"location" : link}
         return JSONResponse(content=json_compatible_item_data, status_code=201, headers=response_header)
 
