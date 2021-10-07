@@ -26,6 +26,8 @@
     <link href="static/css/dashboard.css" rel="stylesheet">
     <!-- ionicons -->
     <link href="https://unpkg.com/ionicons@4.5.10-0/dist/css/ionicons.min.css" rel="stylesheet">
+    <!-- datatables -->
+    <link rel="stylesheet" href="static/datatables@1.10.18/datatables.min.css">
 
 
     <script src="static/app/jquery-3.6.0.min.js"></script>
@@ -167,6 +169,99 @@
 
           </div>
           <!-- row -->
+
+
+
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card mb-4">
+                
+                <div class="card-header"><h2>gNBs</h2></div>
+                <div class="card-body">
+                  <div class="row">
+
+                    <table id="dt-gNBs" class="display" style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th>gNB_id</th>
+                                <th>name</th>
+                                <th>description</th>
+                                <th>location</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- row -->
+
+
+
+
+
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card mb-4">
+                
+                <div class="card-header"><h2>Cells</h2></div>
+                <div class="card-body">
+                  <div class="row">
+
+                    <table id="dt-cells" class="display" style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th>cell_id</th>
+                                <th>name</th>
+                                <th>description</th>
+                                <th>gNB_id</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- row -->
+
+
+
+
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card mb-4">
+                
+                <div class="card-header"><h2>UEs</h2></div>
+                <div class="card-body">
+                  <div class="row">
+
+                    <table id="dt-ues" class="display" style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th>supi</th>
+                                <th>name</th>
+                                <th>description</th>
+                                <th>Cell_id</th>
+                                <th>ip_address_v4</th>
+                                <th>mac_address</th>
+                                <th>speed</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- row -->
+
+
+
         </div>
       </div>
       <footer class="footer">
@@ -184,8 +279,7 @@
     <script src="static/vendors/@coreui/utils/js/coreui-utils.js"></script>
     <!-- <script src="static/js/main.js"></script> -->
     <script src="static/js/dashboard.js"></script>
-    <script>
-    </script>
+    <script src="static/datatables@1.10.18/datatables.min.js"></script>
 
   </body>
 </html>
