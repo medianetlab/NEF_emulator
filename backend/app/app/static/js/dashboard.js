@@ -1,8 +1,13 @@
-var gNBs = null;
+var gNBs  = null;
+var cells = null;
+var ues   = null;
+var paths = null;
 
 $( document ).ready(function() {
     api_get_gNBs();
-    
+    api_get_Cells()
+    api_get_UEs()
+    api_get_paths()
 });
 
 
@@ -33,6 +38,89 @@ function api_get_gNBs() {
         timeout: 5000
     });
 }
+
+
+function api_get_Cells() {
+    
+    var url = app.api_url + '/Cells/?skip=0&limit=100';
+
+    $.ajax({
+        type: 'GET',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        processData:  false,
+        success: function(data)
+        {
+            console.log(data);
+            cells = data;
+            ui_update_card( '#num-cells-card' , cells.length );
+        },
+        error: function(err)
+        {
+            console.log(err);
+        },
+        timeout: 5000
+    });
+}
+
+
+
+function api_get_UEs() {
+    
+    var url = app.api_url + '/UEs/?skip=0&limit=100';
+
+    $.ajax({
+        type: 'GET',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        processData:  false,
+        success: function(data)
+        {
+            console.log(data);
+            ues = data;
+            ui_update_card( '#num-UEs-card' , ues.length );
+        },
+        error: function(err)
+        {
+            console.log(err);
+        },
+        timeout: 5000
+    });
+}
+
+
+function api_get_paths() {
+    
+    var url = app.api_url + '/frontend/location/?skip=0&limit=100';
+
+    $.ajax({
+        type: 'GET',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        processData:  false,
+        success: function(data)
+        {
+            console.log(data);
+            paths = data;
+            ui_update_card( '#num-paths-card' , paths.length );
+        },
+        error: function(err)
+        {
+            console.log(err);
+        },
+        timeout: 5000
+    });
+}
+
 
 
 function ui_update_card( element_id, number ) {
