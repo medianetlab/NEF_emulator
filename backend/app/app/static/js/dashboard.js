@@ -25,6 +25,9 @@ function api_get_gNBs() {
             "authorization": "Bearer " + app.auth_obj.access_token
         },
         processData:  false,
+        beforeSend: function() {
+            $('.card-gNBs .spinner-grow-sm').show();
+        },
         success: function(data)
         {
             console.log(data);
@@ -34,6 +37,10 @@ function api_get_gNBs() {
         error: function(err)
         {
             console.log(err);
+        },
+        complete: function()
+        {
+            $('.card-gNBs .spinner-grow-sm').hide();
         },
         timeout: 5000
     });
@@ -52,6 +59,9 @@ function api_get_Cells() {
             "authorization": "Bearer " + app.auth_obj.access_token
         },
         processData:  false,
+        beforeSend: function() {
+            $('.card-cells .spinner-grow-sm').show();
+        },
         success: function(data)
         {
             console.log(data);
@@ -61,6 +71,10 @@ function api_get_Cells() {
         error: function(err)
         {
             console.log(err);
+        },
+        complete: function()
+        {
+            $('.card-cells .spinner-grow-sm').hide();
         },
         timeout: 5000
     });
@@ -80,6 +94,9 @@ function api_get_UEs() {
             "authorization": "Bearer " + app.auth_obj.access_token
         },
         processData:  false,
+        beforeSend: function() {
+            $('.card-ues .spinner-grow-sm').show();
+        },
         success: function(data)
         {
             console.log(data);
@@ -89,6 +106,10 @@ function api_get_UEs() {
         error: function(err)
         {
             console.log(err);
+        },
+        complete: function()
+        {
+            $('.card-ues .spinner-grow-sm').hide();
         },
         timeout: 5000
     });
@@ -107,6 +128,9 @@ function api_get_paths() {
             "authorization": "Bearer " + app.auth_obj.access_token
         },
         processData:  false,
+        beforeSend: function() {
+            $('.card-paths .spinner-grow-sm').show();
+        },
         success: function(data)
         {
             console.log(data);
@@ -116,6 +140,10 @@ function api_get_paths() {
         error: function(err)
         {
             console.log(err);
+        },
+        complete: function()
+        {
+            $('.card-paths .spinner-grow-sm').hide();
         },
         timeout: 5000
     });
