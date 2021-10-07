@@ -5,13 +5,13 @@ from sqlalchemy.orm import Session # this will allow you to declare the type of 
 
 from app.crud.base import CRUDBase
 from app.models.monitoringevent import Monitoring
-from app.schemas.monitoringevent import subCreate, subUpdate
+from app.schemas.monitoringevent import MonitoringEventSubscription
 from app.schemas.UE import UECreate, UEUpdate
 
 
-class CRUD_Monitoring(CRUDBase[Monitoring, subCreate, subUpdate]):
+class CRUD_Monitoring(CRUDBase[Monitoring, MonitoringEventSubscription, MonitoringEventSubscription]):
     def create_with_owner(
-        self, db: Session, *, obj_in: subCreate, owner_id: int
+        self, db: Session, *, obj_in: MonitoringEventSubscription, owner_id: int
     ) -> Monitoring:
         obj_in_data = jsonable_encoder(obj_in.copy(exclude = {'monitoringEventReport'})) #exclude monitoringEventReport because model (table) Monitoring has not a column locationInfo
         db_obj = self.model(**obj_in_data, owner_id=owner_id)

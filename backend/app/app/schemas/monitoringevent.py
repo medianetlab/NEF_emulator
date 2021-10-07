@@ -46,11 +46,5 @@ class MonitoringEventSubscription(BaseModel):
     class Config:
             orm_mode = True
 
-class subCreate(MonitoringEventSubscription):
-        pass
-
-class subUpdate(MonitoringEventSubscription):
-        pass
-
 class MonitoringEventReportReceived(BaseModel):
     ok: bool

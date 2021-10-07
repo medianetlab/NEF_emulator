@@ -69,12 +69,12 @@ monitoring_callback_router = APIRouter()
 def monitoring_notification(body: schemas.MonitoringEventReport):
     pass
 
-@router.post("/{scsAsId}/subscriptions", response_model=schemas.MonitoringEventReport, callbacks=monitoring_callback_router.routes)
+@router.post("/{scsAsId}/subscriptions", response_model=schemas.MonitoringEventReport, responses={201: {"model" : schemas.MonitoringEventSubscription}}, callbacks=monitoring_callback_router.routes)
 def create_item(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     db: Session = Depends(deps.get_db),
-    item_in: schemas.subCreate,
+    item_in: schemas.MonitoringEventSubscription,
     current_user: models.User = Depends(deps.get_current_active_user),
 #    response_header: Response
 ) -> Any:
@@ -85,9 +85,6 @@ def create_item(
     if not UE: 
         raise HTTPException(status_code=409, detail="UE with this ipv4 doesn't exist")
     
-    response = crud.monitoring.create_with_owner(db=db, obj_in=item_in, owner_id=current_user.id)
-    
-    
     if item_in.monitoringType == "LOCATION_REPORTING" and item_in.maximumNumberOfReports == 1:
         json_compatible_item_data = jsonable_encoder(item_in.copy(include = {'monitoringEventReport'}))
         json_compatible_item_data["monitoringEventReport"]["monitoringType"] = item_in.monitoringType
@@ -95,6 +92,7 @@ def create_item(
         json_compatible_item_data["monitoringEventReport"]["locationInfo"]["enodeBId"] = UE.gNB_id
         return JSONResponse(content=json_compatible_item_data, status_code=200)
     elif item_in.monitoringType == "LOCATION_REPORTING" and item_in.maximumNumberOfReports>1:    
+        response = crud.monitoring.create_with_owner(db=db, obj_in=item_in, owner_id=current_user.id)
         json_compatible_item_data = jsonable_encoder(response)
         json_compatible_item_data.pop("owner_id")
         json_compatible_item_data.pop("id")
@@ -112,7 +110,7 @@ def update_item(
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     subscriptionId: str = Path(..., title="Identifier of the subscription resource"),
     db: Session = Depends(deps.get_db),
-    item_in: schemas.subUpdate,
+    item_in: schemas.MonitoringEventSubscription,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """

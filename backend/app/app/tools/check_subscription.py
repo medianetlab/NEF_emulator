@@ -53,6 +53,7 @@ def check_numberOfReports(db: Session, item_in: Monitoring)-> Monitoring:
         db.refresh(item_in)
         return item_in
     elif item_in.maximumNumberOfReports==1:
+        item_in.maximumNumberOfReports -= 1
         monitoring.remove(db=db, id=item_in.id)
         return item_in
     else:
