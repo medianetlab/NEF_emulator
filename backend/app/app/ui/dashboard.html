@@ -22,6 +22,10 @@
     <link rel="stylesheet" href="static/css/vendors/simplebar.css">
     <!-- Main styles for this application-->
     <link href="static/css/style.css" rel="stylesheet">
+    <!-- page-specific style -->
+    <link href="static/css/dashboard.css" rel="stylesheet">
+    <!-- ionicons -->
+    <link href="https://unpkg.com/ionicons@4.5.10-0/dist/css/ionicons.min.css" rel="stylesheet">
 
 
     <script src="static/app/jquery-3.6.0.min.js"></script>
@@ -107,7 +111,62 @@
       </header>
       <div class="body flex-grow-1 px-3">
         <div class="container-lg">
+          <div class="row">
 
+            <div class="col-sm-6 col-lg-3">
+              <div class="card mb-4 text-white bg-primary">
+                <div class="card-body align-items-start">
+                  <div class="d-flex justify-content-between">
+                    <i class="icon ion-ios-cellular icon-dashboard"></i>
+                    <div class="fs-2 fw-semibold">-</div>  
+                  </div>
+                  <div>gNBs</div>
+                  <div class="spinner-grow spinner-grow-sm text-light" style="display:none;" role="status"><span class="visually-hidden">Loading...</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-3">
+              <div class="card mb-4 text-white bg-info">
+                <div class="card-body align-items-start">
+                  <div class="d-flex justify-content-between">
+                    <i class="icon ion-md-wifi icon-dashboard"></i>
+                    <div class="fs-2 fw-semibold">-</div>  
+                  </div>
+                  <div>Cells</div>
+                  <div class="spinner-grow spinner-grow-sm text-light" style="display:none;" role="status"><span class="visually-hidden">Loading...</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-3">
+              <div class="card mb-4 text-white bg-warning">
+                <div class="card-body align-items-start">
+                  <div class="d-flex justify-content-between">
+                    <i class="icon ion-md-phone-portrait icon-dashboard"></i>
+                    <div class="fs-2 fw-semibold">-</div>  
+                  </div>
+                  <div>UEs</div>
+                  <div class="spinner-grow spinner-grow-sm text-light" style="display:none;" role="status"><span class="visually-hidden">Loading...</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-3">
+              <div class="card mb-4 text-white bg-danger">
+                <div class="card-body align-items-start">
+                  <div class="d-flex justify-content-between">
+                    <i class="icon ion-md-phone-portrait icon-dashboard"></i>
+                    <div class="fs-2 fw-semibold">-</div>  
+                  </div>
+                  <div>UEs</div>
+                  <div class="spinner-grow spinner-grow-sm text-light" style="display:none;" role="status"><span class="visually-hidden">Loading...</span></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <!-- row -->
         </div>
       </div>
       <footer class="footer">
@@ -124,6 +183,7 @@
     <!-- <script src="vendors/@coreui/chartjs/js/coreui-chartjs.js"></script> -->
     <script src="static/vendors/@coreui/utils/js/coreui-utils.js"></script>
     <!-- <script src="static/js/main.js"></script> -->
+    <script src="static/js/dashboard.js"></script>
     <script>
     </script>
 
