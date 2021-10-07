@@ -1,10 +1,12 @@
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.api import deps
+from app.tools.distance import check_distance
 
 router = APIRouter()
 
@@ -28,6 +30,9 @@ def read_Cells(
     Cells = crud.cell.get_multi_by_owner(
         db=db, owner_id=current_user.id, skip=skip, limit=limit
     )
+    current_cell = check_distance(37.99849, 23.819539, 2, jsonable_encoder(Cells))
+    print(f"Changed cell: {current_cell}")
+
     return Cells
 
 

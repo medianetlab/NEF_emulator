@@ -10,6 +10,7 @@ from app import models, schemas, crud
 from app.api import deps
 from app.core.celery_app import celery_app
 from app.utils import send_test_email
+from app.tools.distance import check_distance
 
 #Dictionary holding threads that are running per user id.
 threads = {}
@@ -43,7 +44,6 @@ class BackgroundTasks(threading.Thread):
                 threads.pop(f"{supi}")
                 return
                 
-
             path = crud.path.get(db=db, id=UE.path_id)
             if not path:
                 logging.warning("Path not found")
@@ -56,7 +56,11 @@ class BackgroundTasks(threading.Thread):
 
             points = crud.points.get_points(db=db, path_id=UE.path_id)
             points = jsonable_encoder(points)
+
+            Cells = crud.cell.get_multi_by_owner(db=db, owner_id=current_user.id, skip=0, limit=100)
+            json_cells = jsonable_encoder(Cells)
             
+
             while True:
                 logging.info(f'Looping... ^_^ User: {supi}')
                 logging.info(f'Looping... ^_^ User: {current_user.id}')
@@ -66,11 +70,14 @@ class BackgroundTasks(threading.Thread):
                 for point in points:
                     try:
                         UE = crud.ue.update_coordinates(db=db, lat=point["latitude"], long=point["longitude"], db_obj=UE)
+                        cell_now = check_distance(UE.latitude, UE.longitude, UE.Cell_id, json_cells)
+                        # logging.info(current_cell)
                         # logging.warning("We are in...")
                     except Exception as ex:
                         logging.warning("Failed to update coordinates")
                         logging.warning(ex)
                     
+                    logging.info(f"Cell {cell_now.get('id')}, {cell_now.get('description')}")
                     logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
                     
                     if UE.speed == 'LOW':

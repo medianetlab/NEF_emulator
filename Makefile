@@ -48,3 +48,6 @@ upl: upd logs
 
 db-init:
 	./backend/app/app/db/init_paths.sh
+
+db-init-simple: #simple scenario with 3 UEs, 3 Cells, 1 gNB
+	./backend/app/app/db/init_paths_simple.sh
