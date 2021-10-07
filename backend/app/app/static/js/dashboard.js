@@ -33,6 +33,7 @@ function api_get_gNBs() {
             console.log(data);
             gNBs = data;
             ui_update_card( '#num-gnbs-card' , gNBs.length );
+            ui_init_datatable_gNBs();
         },
         error: function(err)
         {
@@ -67,6 +68,7 @@ function api_get_Cells() {
             console.log(data);
             cells = data;
             ui_update_card( '#num-cells-card' , cells.length );
+            ui_init_datatable_Cells();
         },
         error: function(err)
         {
@@ -102,6 +104,7 @@ function api_get_UEs() {
             console.log(data);
             ues = data;
             ui_update_card( '#num-UEs-card' , ues.length );
+            ui_init_datatable_UEs();
         },
         error: function(err)
         {
@@ -153,4 +156,53 @@ function api_get_paths() {
 
 function ui_update_card( element_id, number ) {
     $( element_id ).html(number);
+}
+
+
+function ui_init_datatable_gNBs() {
+    $('#dt-gNBs').DataTable( {
+        data: gNBs,
+        responsive: true,
+        pageLength: -1,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        columns: [
+            { "data": "gNB_id" },
+            { "data": "name" },
+            { "data": "description" },
+            { "data": "location" },
+        ]
+    } );
+}
+
+function ui_init_datatable_Cells() {
+    $('#dt-cells').DataTable( {
+        data: cells,
+        responsive: true,
+        pageLength: -1,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        columns: [
+            { "data": "cell_id" },
+            { "data": "name" },
+            { "data": "description" },
+            { "data": "gNB_id" },
+        ]
+    } );
+}
+
+function ui_init_datatable_UEs() {
+    $('#dt-ues').DataTable( {
+        data: ues,
+        responsive: true,
+        pageLength: -1,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        columns: [
+            { "data": "supi" },
+            { "data": "name" },
+            { "data": "description" },
+            { "data": "Cell_id" },
+            { "data": "ip_address_v4" },
+            { "data": "mac_address" },
+            { "data": "speed" },
+        ]
+    } );
 }
