@@ -163,6 +163,9 @@ function ui_init_datatable_gNBs() {
     $('#dt-gNBs').DataTable( {
         data: gNBs,
         responsive: true,
+        paging: false,
+        searching: false,
+        info: false,
         pageLength: -1,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
         columns: [
@@ -178,6 +181,9 @@ function ui_init_datatable_Cells() {
     $('#dt-cells').DataTable( {
         data: cells,
         responsive: true,
+        paging: false,
+        searching: false,
+        info: false,
         pageLength: -1,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
         columns: [
@@ -193,6 +199,9 @@ function ui_init_datatable_UEs() {
     $('#dt-ues').DataTable( {
         data: ues,
         responsive: true,
+        paging: false,
+        searching: false,
+        info: false,
         pageLength: -1,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
         columns: [
