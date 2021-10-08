@@ -22,6 +22,7 @@ SENTRY_DSN=
 USERS_OPEN_REGISTRATION=true
 
 # Postgres
+# info: POSTGRES_USER value ('postgres') is hard-coded in /pgadmin/servers.json
 POSTGRES_SERVER=db
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=password
