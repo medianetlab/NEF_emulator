@@ -77,13 +77,16 @@ class BackgroundTasks(threading.Thread):
                         logging.warning("Failed to update coordinates")
                         logging.warning(ex)
                     
-                    logging.info(f"Cell {cell_now.get('id')}, {cell_now.get('description')}")
+                    if UE.Cell_id != cell_now.get('id'):
+                        logging.info(f"Handover to Cell {cell_now.get('id')}, {cell_now.get('description')}")
+                        crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
+                    
                     logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
                     
                     if UE.speed == 'LOW':
                         time.sleep(1)
                     elif UE.speed == 'HIGH':
-                        time.sleep(0.5)
+                        time.sleep(0.1)
         
                     if self._stop_threads:
                         print("Stop moving...")

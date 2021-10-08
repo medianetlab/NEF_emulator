@@ -21,15 +21,14 @@ def check_distance(UE_lat, UE_long, current_cell_id, cells):
     for cell in cells:
         if current_cell_id == cell.get("id"): #Find the cell that the UE belongs ||Maybe we can run this iteration before we call this function
             current_cell = cell
-            cells.remove(cell) # Remove this cell for the next iteration
-    
-    # print(f"Current cell {current_cell}")
+
+    logging.info(f"Current cell {current_cell}")
 
     current_cell_dist = distance(UE_lat, UE_long, current_cell.get("latitude"), current_cell.get("longitude"))
 
     for cell in cells:
         dist = distance(UE_lat, UE_long, cell.get("latitude"), cell.get("longitude"))
-        # print(f"{dist} meters from Cell {cell.get('description')}") 
+        logging.info(f"Distance = {dist} meters from Cell {cell.get('description')}") 
         if (dist < current_cell_dist) and (dist <= cell.get("radius")):
             current_cell_dist = dist
             current_cell = cell
