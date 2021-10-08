@@ -8,6 +8,7 @@
 -->
 <html lang="en">
   <head>
+    <script src="static/app/jquery-3.6.0.min.js"></script>
     <base href="./">
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -24,6 +25,7 @@
     <link rel="stylesheet" href="static/css/vendors/simplebar.css">
     <!-- Main styles for this application-->
     <link href="static/css/style.css" rel="stylesheet">
+    <link href="static/css/register.css" rel="stylesheet">
   </head>
   <body>
     <div class="bg-light min-vh-100 d-flex flex-row align-items-center">
@@ -39,27 +41,41 @@
                       <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-user"></use>
 
                     </svg></span>
-                  <input class="form-control" type="text" placeholder="Username">
+                  <input class="form-control" type="text" placeholder="Username" id="input-user">
                 </div>
                 <div class="input-group mb-3"><span class="input-group-text">
                     <svg class="icon">
                       <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-envelope-open"></use>
                     </svg></span>
-                  <input class="form-control" type="text" placeholder="Email">
+                  <input class="form-control" type="text" placeholder="Email" id="input-email">
                 </div>
                 <div class="input-group mb-3"><span class="input-group-text">
                     <svg class="icon">
                       <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-lock-locked"></use>
                     </svg></span>
-                  <input class="form-control" type="password" placeholder="Password">
+                  <input class="form-control" type="password" placeholder="Password" id="input-pass">
                 </div>
                 <div class="input-group mb-4"><span class="input-group-text">
                     <svg class="icon">
                       <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-lock-locked"></use>
                     </svg></span>
-                  <input class="form-control" type="password" placeholder="Repeat password">
+                  <input class="form-control" type="password" placeholder="Repeat password" id="input-pass-repeat">
                 </div>
-                <button class="btn btn-block btn-success" type="button">Create Account</button>
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <button class="btn btn-block btn-success" type="button" id="btn-register">Create Account</button>
+                  </div>
+
+                  <div>
+                    <small style="line-height: 38px;"><a href="/login" class="text-sm">Back to login</a></small>
+                  </div>
+                </div>
+
+                <div class="register-notifications mt-1">
+                    <div class="spinner-grow spinner-grow-sm text-light" style="display:none;" role="status"><span class="visually-hidden">Loading...</span></div>
+                    <div><small class="text-secondary"></small></div>
+                    <div><small class="text-danger"></small></div>
+                  </div>
               </div>
             </div>
           </div>
@@ -69,6 +85,8 @@
     <!-- CoreUI and necessary plugins-->
     <script src="static/vendors/@coreui/coreui/js/coreui.bundle.min.js"></script>
     <script src="static/vendors/simplebar/js/simplebar.min.js"></script>
+
+    <script src="static/js/register.js"></script>
 
   </body>
 </html>
