@@ -1,7 +1,6 @@
-import threading, logging, time
-
+import threading, logging, time, requests, json
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, responses
 from fastapi.encoders import jsonable_encoder
 from pydantic.networks import EmailStr
 from sqlalchemy.orm import Session
@@ -9,8 +8,10 @@ from app.db.session import SessionLocal
 from app import models, schemas, crud
 from app.api import deps
 from app.core.celery_app import celery_app
+from app.schemas import monitoringevent 
 from app.utils import send_test_email
 from app.tools.distance import check_distance
+from app.tools.send_callback import location_callback
 
 #Dictionary holding threads that are running per user id.
 threads = {}
@@ -80,7 +81,10 @@ class BackgroundTasks(threading.Thread):
                     if UE.Cell_id != cell_now.get('id'):
                         logging.info(f"Handover to Cell {cell_now.get('id')}, {cell_now.get('description')}")
                         crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
+                        response = location_callback(cell_now.get('id'), UE.gNB_id, "http://localhost:80/api/v1/utils/monitoring/callback")
+                        logging.info(f"Response = {response}")
                     
+                   
                     logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
                     
                     if UE.speed == 'LOW':
@@ -106,6 +110,11 @@ class BackgroundTasks(threading.Thread):
 
 router = APIRouter()
 
+
+@router.post("/monitoring/callback")
+def create_item(item: monitoringevent.MonitoringEventReport):
+    print(item)
+    return {'ack' : 'TRUE'}
 
 @router.post("/test-celery/", response_model=schemas.Msg, status_code=201)
 def test_celery(
