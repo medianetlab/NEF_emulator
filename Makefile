@@ -51,3 +51,6 @@ db-init:
 
 db-init-simple: #simple scenario with 3 UEs, 3 Cells, 1 gNB
 	./backend/app/app/db/init_paths_simple.sh
+
+db-reset:
+	docker-compose exec db psql -h localhost -U postgres -d app -c 'TRUNCATE TABLE cell, gnb, monitoring, path, points, ue RESTART IDENTITY;'
