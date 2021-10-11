@@ -25,9 +25,28 @@ $( document ).ready(function() {
 
     ui_initialize_map();
 
-    // get first data
+    // get UEs & Cells data and paint map
     api_get_UEs();
     api_get_Cells();
+
+
+    // wait for ajax call to UEs endpoint
+    // to initialize the UEs data
+    let wait_for_UEs_data = function() {
+      setTimeout(function () {
+        if (ues === null)
+          wait_for_UEs_data();
+        else {
+            // get and paint every path per UE
+            for (const ue of ues) {
+                api_get_specific_path(ue.path_id);
+            }
+        }
+      }, 500);
+    };
+    wait_for_UEs_data();
+
+    
 
 });
 
@@ -201,6 +220,65 @@ function ui_map_paint_Cells() {
 
 
 
+
+
+function api_get_specific_path( id ) {
+    
+    var url = app.api_url + '/frontend/location/' + id;
+
+    $.ajax({
+        type: 'GET',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            console.log(data);
+            // paths = data;
+            ui_map_paint_path(data);
+        },
+        error: function(err)
+        {
+            console.log(err);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
+
+
+function ui_map_paint_path( data ) {
+
+    var latlng   = fix_points_format( data.points );
+    var polyline = L.polyline(latlng, {
+        color: '#00a3cc',
+        opacity: 0.2
+    }).addTo(paths_lg).addTo(mymap);
+}
+
+
+
+function fix_points_format( datapoints ) {
+
+    // from (array of objects): [{latitude: 37.996095, longitude: 23.818562},{...}]
+    // to   (array of arrays) : [[37.996095,23.818562],[...]
+
+    var fixed = new Array(datapoints.length);
+    
+    for (i=0 ; i<datapoints.length ; i++) {
+        fixed[i] = [datapoints[i].latitude , datapoints[i].longitude];
+    }
+    return fixed;
+}
 
     // // walking-UE (around the library)
 
