@@ -9,10 +9,14 @@ TOKEN=$(curl -X 'POST' \
   -d 'grant_type=&username=admin%405g-api-emulator.medianetlab.eu&password=password&scope=&client_id=&client_secret=' \
   | jq -r '.access_token')
 
-echo $TOKEN
+printf $TOKEN
 
-#==================================================
-echo 'Initiallizing Paths for admin...'
+
+printf '\n==================================================\n'
+printf 'Initiallizing Paths for admin...'
+printf '\n==================================================\n'
+
+
 
 curl -X 'POST' \
   "http://localhost:${PORT}/api/v1/frontend/location/" \
@@ -52,7 +56,14 @@ curl -X 'POST' \
   "color": "blue"
 }'
 
-echo 'Initiallizing gNBs for admin...'
+
+
+printf '\n==================================================\n'
+printf 'Initiallizing gNBs for admin...'
+printf '\n==================================================\n'
+
+
+
 
 curl -X 'POST' \
   "http://localhost:${PORT}/api/v1/gNBs/" \
@@ -78,7 +89,15 @@ curl -X 'POST' \
 #   "location": "unknown"
 # }'
 
-echo 'Initiallizing Cells for admin...'
+
+
+
+printf '\n==================================================\n'
+printf 'Initiallizing Cells for admin...'
+printf '\n==================================================\n'
+
+
+
 
 curl -X 'POST' \
   "http://localhost:${PORT}/api/v1/Cells/" \
@@ -161,7 +180,12 @@ curl -X 'POST' \
 #   "gNB_id": 2
 # }'
 
-echo 'Initiallizing UEs for admin...'
+
+
+printf '\n==================================================\n'
+printf 'Initiallizing UEs for admin...'
+printf '\n==================================================\n'
+
 
 curl -X 'POST' \
   "http://localhost:${PORT}/api/v1/UEs/" \
@@ -314,10 +338,10 @@ curl -X 'POST' \
 #   -d 'grant_type=&username=simple_user%405g-api-emulator.medianetlab.eu&password=password&scope=&client_id=&client_secret=' \
 #   | jq -r '.access_token')
 
-# echo $TOKEN
+# printf $TOKEN
 
-# #==================================================
-# echo 'Initiallizing Paths for simple user...'
+# ==================================================
+# printf 'Initiallizing Paths for simple user...'
 
 # curl -X 'POST' \
 #   "http://localhost:${PORT}/api/v1/frontend/location/" \
@@ -337,7 +361,7 @@ curl -X 'POST' \
 #   },
 #   "color": "pink"
 # }'
-# echo 'Initiallizing gNBs for simple user...'
+# printf 'Initiallizing gNBs for simple user...'
 
 # curl -X 'POST' \
 #   "http://localhost:${PORT}/api/v1/gNBs/" \
@@ -363,7 +387,7 @@ curl -X 'POST' \
 #   "location": "unknown"
 # }'
 
-# echo 'Initiallizing Cells for simple user...'
+# printf 'Initiallizing Cells for simple user...'
 
 # curl -X 'POST' \
 #   "http://localhost:${PORT}/api/v1/Cells/" \
@@ -437,7 +461,7 @@ curl -X 'POST' \
 #   "gNB_id": 4
 # }'
 
-# echo 'Initiallizing UEs for simple user...'
+# printf 'Initiallizing UEs for simple user...'
 
 # curl -X 'POST' \
 #   "http://localhost:${PORT}/api/v1/UEs/" \
@@ -582,3 +606,7 @@ curl -X 'POST' \
 #   "speed": "LOW",
 #   "path_id": 3
 # }'
+
+
+
+printf '\n==================================================\n\n'
