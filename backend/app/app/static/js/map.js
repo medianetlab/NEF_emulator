@@ -17,7 +17,9 @@ var cells_lg         = L.layerGroup(),
 var ue_markers   = {};
 var cell_markers = {};
 // helper var for correct initialization
-UEs_first_paint = true;
+var UEs_first_paint = true;
+
+var UE_refresh_interval = null;
 
 
 
@@ -46,6 +48,39 @@ $( document ).ready(function() {
     };
     wait_for_UEs_data();
 
+
+    // TODO:
+    // replace with a switch / toggle button...
+    $('#btn-start').on('click', function(){
+        $(this).toggleClass('btn-success').toggleClass('btn-danger');
+        if ( $(this).text() == "Start" ) {
+            
+            // start location UE loops
+            for (const ue of ues) {
+                api_start_loop(ue.supi);
+            }
+
+            // start updating every second
+            UE_refresh_interval = setInterval(function(){ 
+                api_get_UEs();
+            }, 1000);
+
+
+
+            $(this).text("Stop");
+        } else {
+
+            // stop location UE loops
+            for (const ue of ues) {
+                api_stop_loop(ue.supi);
+            }
+
+            // stop updating every second
+            clearInterval( UE_refresh_interval );
+
+            $(this).text("Start");
+        }
+    });
     
 
 });
@@ -145,6 +180,8 @@ function ui_map_paint_UEs() {
         }
         else {
             // move existing markers
+            var newLatLng = [ue.latitude,ue.longitude];
+            ue_markers[ue.supi].setLatLng(newLatLng);
         }
     }
     UEs_first_paint = false;   
@@ -280,6 +317,80 @@ function fix_points_format( datapoints ) {
     return fixed;
 }
 
+
+
+
+function api_start_loop( supi ) {
+
+    var url = app.api_url + '/utils/start-loop';
+    var data = {
+        "supi": supi
+    };
+
+    $.ajax({
+        type: 'POST',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        data:         JSON.stringify(data),
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            console.log(data);
+        },
+        error: function(err)
+        {
+            console.log(err);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
+
+
+
+function api_stop_loop( supi ) {
+
+    var url = app.api_url + '/utils/stop-loop';
+    var data = {
+        "supi": supi
+    };
+
+    $.ajax({
+        type: 'POST',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        data:         JSON.stringify(data),
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            console.log(data);
+        },
+        error: function(err)
+        {
+            console.log(err);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
     // // walking-UE (around the library)
 
     // var walk_icon = L.divIcon({
