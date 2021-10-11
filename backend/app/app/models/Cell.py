@@ -40,3 +40,5 @@ class Cell(Base):
     radius = Column(Float, index=True)
     gNB_id = Column(Integer, ForeignKey("gnb.id"))
 
+    UE = relationship("UE", back_populates="Cell")
+

@@ -50,3 +50,5 @@ class UE(Base):
 
     gNB_id = Column(Integer, ForeignKey("gnb.id"))
     Cell_id = Column(Integer, ForeignKey("cell.id"))
+
+    Cell = relationship("Cell", back_populates="UE")

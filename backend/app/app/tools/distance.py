@@ -1,9 +1,8 @@
-#Haversine formula: determines the great-circle distance between two points on a sphere given their longitudes and latitudes.
 import logging
 import math
 
 
-def distance(lat1, lon1, lat2, lon2):
+def distance(lat1, lon1, lat2, lon2): #Haversine formula: determines the great-circle distance between two points on a sphere given their longitudes and latitudes.
     R = 6371e3
     φ1 = lat1 * math.pi / 180  # φ, λ in radians
     φ2 = lat2 * math.pi / 180
@@ -17,11 +16,8 @@ def distance(lat1, lon1, lat2, lon2):
 
     return d
 
-def check_distance(UE_lat, UE_long, current_cell_id, cells):
-    for cell in cells:
-        if current_cell_id == cell.get("id"): #Find the cell that the UE belongs ||Maybe we can run this iteration before we call this function
-            current_cell = cell
-
+def check_distance(UE_lat, UE_long, current_cell, cells):
+    
     logging.info(f"Current cell {current_cell}")
 
     current_cell_dist = distance(UE_lat, UE_long, current_cell.get("latitude"), current_cell.get("longitude"))

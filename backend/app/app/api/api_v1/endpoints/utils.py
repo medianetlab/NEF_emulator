@@ -70,7 +70,7 @@ class BackgroundTasks(threading.Thread):
                 for point in points:
                     try:
                         UE = crud.ue.update_coordinates(db=db, lat=point["latitude"], long=point["longitude"], db_obj=UE)
-                        cell_now = check_distance(UE.latitude, UE.longitude, UE.Cell_id, json_cells)
+                        cell_now = check_distance(UE.latitude, UE.longitude, jsonable_encoder(UE.Cell), json_cells)
                         # logging.info(current_cell)
                         # logging.warning("We are in...")
                     except Exception as ex:

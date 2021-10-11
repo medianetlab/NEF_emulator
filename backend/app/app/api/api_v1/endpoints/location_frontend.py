@@ -92,10 +92,10 @@ def read_path(
     item_json["end_point"]["longitude"] = path.end_long
 
     points = crud.points.get_points(db=db, path_id=path.id)
+    item_json["points"] = []
 
     for obj in jsonable_encoder(points):
-        print(obj)
-    
+        item_json["points"].append({'latitude' : obj.get('latitude'), 'longitude' : obj.get('longitude')})
    
     return item_json
 

@@ -107,7 +107,7 @@ curl -X 'POST' \
   "gNB_id": 1,
   "latitude" : 37.998194,
   "longitude" : 23.820883,
-  "radius" : 100
+  "radius" : 150
 }'
 
 curl -X 'POST' \
