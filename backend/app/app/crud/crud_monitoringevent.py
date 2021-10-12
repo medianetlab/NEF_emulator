@@ -30,6 +30,9 @@ class CRUD_Monitoring(CRUDBase[Monitoring, MonitoringEventSubscription, Monitori
             .limit(limit)
             .all()
         )
+
+    def get_sub_ipv4(self, db: Session, ipv4: str) -> Monitoring:
+        return db.query(self.model).filter(Monitoring.ipv4Addr == ipv4).first()
 '''
 class CRUD_LocationInfo(CRUDBase[LocationInfo, UECreate, UEUpdate]):
     def create_with_owner(

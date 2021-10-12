@@ -12,6 +12,7 @@ from app.schemas import monitoringevent
 from app.utils import send_test_email
 from app.tools.distance import check_distance
 from app.tools.send_callback import location_callback
+from app import tools
 
 #Dictionary holding threads that are running per user id.
 threads = {}
@@ -35,6 +36,7 @@ class BackgroundTasks(threading.Thread):
         try:
             db = SessionLocal()
             
+            #Initiate UE
             UE = crud.ue.get_supi(db=db, supi=supi)
             if not UE:
                 logging.warning("UE not found")
@@ -44,7 +46,8 @@ class BackgroundTasks(threading.Thread):
                 logging.warning("Not enough permissions")
                 threads.pop(f"{supi}")
                 return
-                
+            
+            #Retrieve paths & points
             path = crud.path.get(db=db, id=UE.path_id)
             if not path:
                 logging.warning("Path not found")
@@ -58,10 +61,20 @@ class BackgroundTasks(threading.Thread):
             points = crud.points.get_points(db=db, path_id=UE.path_id)
             points = jsonable_encoder(points)
 
+            #Retrieve all the cells
             Cells = crud.cell.get_multi_by_owner(db=db, owner_id=current_user.id, skip=0, limit=100)
             json_cells = jsonable_encoder(Cells)
             
-
+            #Retrieve the subscription of the UE by ipv4
+            sub = crud.monitoring.get_sub_ipv4(db=db, ipv4=UE.ip_address_v4)
+    
+            if not sub:
+                logging.warning("Subscription not found")
+                return
+            if not crud.user.is_superuser(current_user) and (sub.owner_id != current_user.id):
+                logging.warning("Not enough permissions")
+                return
+            
             while True:
                 logging.info(f'Looping... ^_^ User: {supi}')
                 logging.info(f'Looping... ^_^ User: {current_user.id}')
@@ -72,8 +85,6 @@ class BackgroundTasks(threading.Thread):
                     try:
                         UE = crud.ue.update_coordinates(db=db, lat=point["latitude"], long=point["longitude"], db_obj=UE)
                         cell_now = check_distance(UE.latitude, UE.longitude, jsonable_encoder(UE.Cell), json_cells)
-                        # logging.info(current_cell)
-                        # logging.warning("We are in...")
                     except Exception as ex:
                         logging.warning("Failed to update coordinates")
                         logging.warning(ex)
@@ -81,8 +92,20 @@ class BackgroundTasks(threading.Thread):
                     if UE.Cell_id != cell_now.get('id'):
                         logging.info(f"Handover to Cell {cell_now.get('id')}, {cell_now.get('description')}")
                         crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
-                        response = location_callback(cell_now.get('id'), UE.gNB_id, "http://localhost:80/api/v1/utils/monitoring/callback")
-                        logging.info(f"Response = {response}")
+                        
+                        #Validation of subscription
+                        sub_validate_time = tools.check_expiration_time(expire_time=sub.monitorExpireTime)
+                        if sub_validate_time:
+                            sub = tools.check_numberOfReports(db=db, item_in=sub)
+                            if sub:
+                                response = location_callback(cell_now.get('id'), UE.gNB_id, "http://localhost:80/api/v1/utils/monitoring/callback")
+                                logging.info(f"Response = {response}")
+                        else:
+                            crud.monitoring.remove(db=db, id=sub.id)
+                            logging.warning("Subscription has expired")
+                            return
+                       
+                        
                     
                    
                     logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
