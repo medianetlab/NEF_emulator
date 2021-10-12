@@ -28,3 +28,12 @@ make db-init-simple
 >\* 💡 Info: *To use the `make` command you need to `apt install build-essential` first. In case you don't want to proceed with this installation, you can head over to the `Makefile` and copy/paste the shell commands that are being used for every step.*
 
 > \*\* 💡 Info: *The shell script used at step 4 (for adding test data) uses `jq` which is a lightweight and flexible command-line JSON processor. You can install it with `apt install jq`*
+
+### Try out your setup
+
+After the containers are up and running:
+
+ - access and start playing with the Swager UI at: [localhost:8888/docs](http://localhost:8888/docs)
+ - login to the admin dashboard at: [localhost:8888/login](http://localhost:8888/login)
+     - Default credentials: `admin@my-email.com` / `pass`
+     - they can be found/changed inside your `.env` file
