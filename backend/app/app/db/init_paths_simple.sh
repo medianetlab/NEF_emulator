@@ -6,8 +6,6 @@ set -a # automatically export all variables
 source .env
 set +a
 
-printenv
-
 
 TOKEN=$(curl -X 'POST' \
   "http://localhost:${PORT}/api/v1/login/access-token" \
