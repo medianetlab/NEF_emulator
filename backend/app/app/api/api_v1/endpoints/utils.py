@@ -36,7 +36,7 @@ class BackgroundTasks(threading.Thread):
         try:
             db = SessionLocal()
             
-            #Initiate UE
+            #Initiate UE - if exists
             UE = crud.ue.get_supi(db=db, supi=supi)
             if not UE:
                 logging.warning("UE not found")
@@ -67,13 +67,6 @@ class BackgroundTasks(threading.Thread):
             
             #Retrieve the subscription of the UE by ipv4
             sub = crud.monitoring.get_sub_ipv4(db=db, ipv4=UE.ip_address_v4)
-    
-            if not sub:
-                logging.warning("Subscription not found")
-                return
-            if not crud.user.is_superuser(current_user) and (sub.owner_id != current_user.id):
-                logging.warning("Not enough permissions")
-                return
             
             while True:
                 logging.info(f'Looping... ^_^ User: {supi}')
@@ -84,30 +77,31 @@ class BackgroundTasks(threading.Thread):
                 for point in points:
                     try:
                         UE = crud.ue.update_coordinates(db=db, lat=point["latitude"], long=point["longitude"], db_obj=UE)
-                        cell_now = check_distance(UE.latitude, UE.longitude, jsonable_encoder(UE.Cell), json_cells)
+                        cell_now = check_distance(UE.latitude, UE.longitude, jsonable_encoder(UE.Cell), json_cells) #calculate the distance from all the cells
                     except Exception as ex:
                         logging.warning("Failed to update coordinates")
                         logging.warning(ex)
                     
-                    if UE.Cell_id != cell_now.get('id'):
-                        logging.info(f"Handover to Cell {cell_now.get('id')}, {cell_now.get('description')}")
+                    if UE.Cell_id != cell_now.get('id'): #Cell has changed in the db "handover"
+                        logging.info(f"UE({UE.supi}) handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
                         crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
                         
                         #Validation of subscription
-                        sub_validate_time = tools.check_expiration_time(expire_time=sub.monitorExpireTime)
-                        if sub_validate_time:
-                            sub = tools.check_numberOfReports(db=db, item_in=sub)
-                            if sub:
-                                response = location_callback(cell_now.get('id'), UE.gNB_id, "http://localhost:80/api/v1/utils/monitoring/callback")
-                                logging.info(f"Response = {response}")
+                        if not sub:
+                            logging.warning("Subscription not found")
+                        elif not crud.user.is_superuser(current_user) and (sub.owner_id != current_user.id):
+                            logging.warning("Not enough permissions")
                         else:
-                            crud.monitoring.remove(db=db, id=sub.id)
-                            logging.warning("Subscription has expired")
-                            return
-                       
-                        
-                    
-                   
+                            sub_validate_time = tools.check_expiration_time(expire_time=sub.monitorExpireTime)
+                            if sub_validate_time:
+                                sub = tools.check_numberOfReports(db=db, item_in=sub)
+                                if sub: #return the callback request only if subscription is valid
+                                    response = location_callback(cell_now.get('id'), UE.gNB_id, "http://localhost:80/api/v1/utils/monitoring/callback")
+                                    logging.info(f"Response = {response}")
+                            else:
+                                crud.monitoring.remove(db=db, id=sub.id)
+                                logging.warning("Subscription has expired")
+
                     logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
                     
                     if UE.speed == 'LOW':
