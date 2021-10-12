@@ -174,7 +174,11 @@ function ui_map_paint_UEs() {
             
             ue_markers[ue.supi] = L.marker([ue.latitude,ue.longitude], {icon: walk_icon}).addTo(mymap)
                 .bindTooltip(ue.ip_address_v4)
-                .bindPopup("<b>"+ ue.name +"</b><br />"+ ue.description +"<br />Speed:"+ ue.speed)
+                .bindPopup("<b>"+ ue.name +"</b><br />"+
+                           // ue.description +"<br />"+
+                           "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
+                           "Cell ID:" + ue.Cell_id +"<br />"+
+                           "Speed:"+ ue.speed)
                 .addTo(ues_lg); // add to layer group
 
         }
@@ -182,6 +186,11 @@ function ui_map_paint_UEs() {
             // move existing markers
             var newLatLng = [ue.latitude,ue.longitude];
             ue_markers[ue.supi].setLatLng(newLatLng);
+            ue_markers[ue.supi].setPopupContent("<b>"+ ue.name +"</b><br />"+
+                           // ue.description +"<br />"+
+                           "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
+                           "Cell ID:" + ue.Cell_id +"<br />"+
+                           "Speed:"+ ue.speed);
         }
     }
     UEs_first_paint = false;   
