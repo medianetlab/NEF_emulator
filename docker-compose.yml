@@ -18,7 +18,7 @@ services:
     ports:
       - "5050:5050"
     volumes:
-      - pgadmin-data:/var/lib/pgadmin
+      - ./pgadmin/servers.json:/pgadmin4/servers.json
     env_file:
       - .env
     logging:

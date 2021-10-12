@@ -35,6 +35,10 @@ class Cell(Base):
     ## Additional Columns
     # For Cell
 
-
+    latitude = Column(Float, index=True)
+    longitude = Column(Float, index=True)
+    radius = Column(Float, index=True)
     gNB_id = Column(Integer, ForeignKey("gnb.id"))
+
+    UE = relationship("UE", back_populates="Cell")
 

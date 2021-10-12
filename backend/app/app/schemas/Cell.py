@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel, constr
+from pydantic import BaseModel, constr, confloat
 
 
 # Shared properties
@@ -9,6 +9,10 @@ class CellBase(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     gNB_id: int = None
+    latitude: confloat(ge=-90, le=90)
+    longitude: confloat(ge=-180, le=180)
+    radius: float
+    
     
 # Properties to receive on item creation
 class CellCreate(CellBase):

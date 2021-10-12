@@ -1,10 +1,12 @@
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.api import deps
+from app.tools.distance import check_distance
 
 router = APIRouter()
 

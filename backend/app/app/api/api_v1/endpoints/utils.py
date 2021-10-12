@@ -1,7 +1,6 @@
-import threading, logging, time
-
+import threading, logging, time, requests, json
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, responses
 from fastapi.encoders import jsonable_encoder
 from pydantic.networks import EmailStr
 from sqlalchemy.orm import Session
@@ -9,7 +8,11 @@ from app.db.session import SessionLocal
 from app import models, schemas, crud
 from app.api import deps
 from app.core.celery_app import celery_app
+from app.schemas import monitoringevent 
 from app.utils import send_test_email
+from app.tools.distance import check_distance
+from app.tools.send_callback import location_callback
+from app import tools
 
 #Dictionary holding threads that are running per user id.
 threads = {}
@@ -33,6 +36,7 @@ class BackgroundTasks(threading.Thread):
         try:
             db = SessionLocal()
             
+            #Initiate UE - if exists
             UE = crud.ue.get_supi(db=db, supi=supi)
             if not UE:
                 logging.warning("UE not found")
@@ -42,8 +46,8 @@ class BackgroundTasks(threading.Thread):
                 logging.warning("Not enough permissions")
                 threads.pop(f"{supi}")
                 return
-                
-
+            
+            #Retrieve paths & points
             path = crud.path.get(db=db, id=UE.path_id)
             if not path:
                 logging.warning("Path not found")
@@ -56,6 +60,13 @@ class BackgroundTasks(threading.Thread):
 
             points = crud.points.get_points(db=db, path_id=UE.path_id)
             points = jsonable_encoder(points)
+
+            #Retrieve all the cells
+            Cells = crud.cell.get_multi_by_owner(db=db, owner_id=current_user.id, skip=0, limit=100)
+            json_cells = jsonable_encoder(Cells)
+            
+            #Retrieve the subscription of the UE by ipv4
+            sub = crud.monitoring.get_sub_ipv4(db=db, ipv4=UE.ip_address_v4)
             
             while True:
                 logging.info(f'Looping... ^_^ User: {supi}')
@@ -66,17 +77,38 @@ class BackgroundTasks(threading.Thread):
                 for point in points:
                     try:
                         UE = crud.ue.update_coordinates(db=db, lat=point["latitude"], long=point["longitude"], db_obj=UE)
-                        # logging.warning("We are in...")
+                        cell_now = check_distance(UE.latitude, UE.longitude, jsonable_encoder(UE.Cell), json_cells) #calculate the distance from all the cells
                     except Exception as ex:
                         logging.warning("Failed to update coordinates")
                         logging.warning(ex)
                     
+                    if UE.Cell_id != cell_now.get('id'): #Cell has changed in the db "handover"
+                        logging.info(f"UE({UE.supi}) handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
+                        crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
+                        
+                        #Validation of subscription
+                        if not sub:
+                            logging.warning("Subscription not found")
+                        elif not crud.user.is_superuser(current_user) and (sub.owner_id != current_user.id):
+                            logging.warning("Not enough permissions")
+                        else:
+                            sub_validate_time = tools.check_expiration_time(expire_time=sub.monitorExpireTime)
+                            if sub_validate_time:
+                                sub = tools.check_numberOfReports(db=db, item_in=sub)
+                                logging.warning(sub)
+                                if sub: #return the callback request only if subscription is valid
+                                    response = location_callback(cell_now.get('id'), UE.gNB_id, sub.notificationDestination)
+                                    logging.info(f"Response = {response}")
+                            else:
+                                crud.monitoring.remove(db=db, id=sub.id)
+                                logging.warning("Subscription has expired (expiration date)")
+
                     logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
                     
                     if UE.speed == 'LOW':
                         time.sleep(1)
                     elif UE.speed == 'HIGH':
-                        time.sleep(0.5)
+                        time.sleep(0.1)
         
                     if self._stop_threads:
                         print("Stop moving...")
@@ -96,6 +128,11 @@ class BackgroundTasks(threading.Thread):
 
 router = APIRouter()
 
+
+@router.post("/monitoring/callback")
+def create_item(item: monitoringevent.MonitoringEventReport):
+    print(item)
+    return {'ack' : 'TRUE'}
 
 @router.post("/test-celery/", response_model=schemas.Msg, status_code=201)
 def test_celery(
