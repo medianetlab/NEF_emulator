@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 # Prepare DEVELOPMENT environment
 
 prepare-dev-env:

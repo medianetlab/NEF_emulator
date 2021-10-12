@@ -2,11 +2,20 @@
 
 PORT=8888
 
+set -a # automatically export all variables
+source .env
+set +a
+
+printenv
+
+
 TOKEN=$(curl -X 'POST' \
   "http://localhost:${PORT}/api/v1/login/access-token" \
   -H 'accept: application/json' \
   -H 'Content-Type: application/x-www-form-urlencoded' \
-  -d 'grant_type=&username=admin%405g-api-emulator.medianetlab.eu&password=password&scope=&client_id=&client_secret=' \
+  --data-urlencode "username=${FIRST_SUPERUSER}" \
+  --data-urlencode "password=${FIRST_SUPERUSER_PASSWORD}" \
+  -d "grant_type=&scope=&client_id=&client_secret=" \
   | jq -r '.access_token')
 
 printf $TOKEN
