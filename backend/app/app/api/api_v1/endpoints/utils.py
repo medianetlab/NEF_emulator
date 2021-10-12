@@ -95,12 +95,13 @@ class BackgroundTasks(threading.Thread):
                             sub_validate_time = tools.check_expiration_time(expire_time=sub.monitorExpireTime)
                             if sub_validate_time:
                                 sub = tools.check_numberOfReports(db=db, item_in=sub)
+                                logging.warning(sub)
                                 if sub: #return the callback request only if subscription is valid
-                                    response = location_callback(cell_now.get('id'), UE.gNB_id, "http://localhost:80/api/v1/utils/monitoring/callback")
+                                    response = location_callback(cell_now.get('id'), UE.gNB_id, sub.notificationDestination)
                                     logging.info(f"Response = {response}")
                             else:
                                 crud.monitoring.remove(db=db, id=sub.id)
-                                logging.warning("Subscription has expired")
+                                logging.warning("Subscription has expired (expiration date)")
 
                     logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
                     

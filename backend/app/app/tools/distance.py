@@ -25,10 +25,11 @@ def check_distance(UE_lat, UE_long, current_cell, cells):
     for cell in cells:
         dist = distance(UE_lat, UE_long, cell.get("latitude"), cell.get("longitude"))
         logging.info(f"Distance = {dist} meters from Cell {cell.get('description')}") 
-        if (dist < current_cell_dist) and (dist <= cell.get("radius")):
-            current_cell_dist = dist
-            current_cell = cell
-
+        if (dist <= cell.get("radius")):
+            if ((current_cell_dist <= current_cell.get("radius")) and (dist < current_cell_dist)) or (current_cell_dist > current_cell.get("radius")):
+                current_cell_dist = dist
+                current_cell = cell
+    
     return current_cell
         
 

@@ -151,6 +151,22 @@ curl -X 'POST' \
   "radius" : 100
 }'
 
+curl -X 'POST' \
+  "http://localhost:${PORT}/api/v1/Cells/" \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "cell_id": "AAAAA1004",
+  "name": "cell4",
+  "description": "Faculty Building",
+  "gNB_id": 1,
+  "latitude" : 37.997708,
+  "longitude" : 23.818464,
+  "radius" : 85
+}'
+
+
 # curl -X 'POST' \
 #   "http://localhost:${PORT}/api/v1/Cells/" \
 #   -H 'accept: application/json' \

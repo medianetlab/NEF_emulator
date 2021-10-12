@@ -58,5 +58,4 @@ def check_numberOfReports(db: Session, item_in: Monitoring)-> Monitoring:
         monitoring.remove(db=db, id=item_in.id)
         return item_in
     else:
-        logging.warning("Subscription has expired")
-        raise HTTPException(status_code=403, detail="Subscription has expired")
+        logging.warning("Subscription has expired (maximum number of reports")
