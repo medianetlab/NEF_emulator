@@ -228,10 +228,10 @@ curl -X 'POST' \
   "mcc": 202,
   "mnc": 1,
   "external_identifier": "10001@domain.com",
-  "latitude": 37.998119,
-  "longitude": 23.819444,
+  "latitude": 37.996095,
+  "longitude": 23.818562,
   "speed": "LOW",
-  "path_id": 1
+  "path_id": 2
 }'
 
 curl -X 'POST' \
@@ -278,7 +278,7 @@ curl -X 'POST' \
   "external_identifier": "10003@domain.com",
   "latitude": 37.996095,
   "longitude": 23.818562,
-  "speed": "LOW",
+  "speed": "HIGH",
   "path_id": 2
 }'
 

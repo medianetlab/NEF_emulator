@@ -85,10 +85,9 @@ def create_item(
         raise HTTPException(status_code=409, detail="UE with this ipv4 doesn't exist")
     
     if item_in.monitoringType == "LOCATION_REPORTING" and item_in.maximumNumberOfReports == 1:
-        json_compatible_item_data = jsonable_encoder(item_in.copy(include = {'monitoringEventReport'}))
-        json_compatible_item_data["monitoringEventReport"]["monitoringType"] = item_in.monitoringType
-        json_compatible_item_data["monitoringEventReport"]["locationInfo"]["cellId"] = UE.Cell_id
-        json_compatible_item_data["monitoringEventReport"]["locationInfo"]["enodeBId"] = UE.gNB_id
+        json_compatible_item_data = {}
+        json_compatible_item_data["monitoringType"] = item_in.monitoringType
+        json_compatible_item_data["locationInfo"] = {'cellId' : UE.Cell_id, 'gNBId' : UE.gNB_id}
         return JSONResponse(content=json_compatible_item_data, status_code=200)
     elif item_in.monitoringType == "LOCATION_REPORTING" and item_in.maximumNumberOfReports>1:    
         response = crud.monitoring.create_with_owner(db=db, obj_in=item_in, owner_id=current_user.id)
@@ -150,15 +149,12 @@ def read_item(
         raise HTTPException(status_code=400, detail="Not enough permissions")
     
     sub_validate_time = tools.check_expiration_time(expire_time=sub.monitorExpireTime)
+    
     if sub_validate_time:
-        sub = tools.check_numberOfReports(db=db, item_in=sub)
-        json_input = jsonable_encoder(sub)
-        return location_reporting(db=db, item_in_json=json_input, user=current_user)
+        return sub
     else:
         crud.monitoring.remove(db=db, id=id)
         raise HTTPException(status_code=403, detail="Subscription has expired")
-
-
 
 @router.delete("/{scsAsId}/subscriptions/{subscriptionId}", response_model=schemas.MonitoringEventSubscription)
 def delete_item(

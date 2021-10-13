@@ -14,10 +14,10 @@ class Monitoring(Base):
 #The __tablename__ attribute tells SQLAlchemy the name of the table to use in the database for each of these models.
     id = Column(Integer, primary_key=True, index=True)
     link = Column(String, index=True)
-    mtcProviderId = Column(String, index=True)
+    # mtcProviderId = Column(String, index=True)
     externalId = Column(String, index=True)
     msisdn = Column(String, index=True)
-    externalGroupId = Column(String, index=True)
+    # externalGroupId = Column(String, index=True)
     ipv4Addr = Column(String, index=True)
     ipv6Addr = Column(String, index=True)
     notificationDestination = Column(String, index=True)
@@ -25,10 +25,3 @@ class Monitoring(Base):
     maximumNumberOfReports = Column(Integer, index=True)
     monitorExpireTime = Column(String, index=True)
     owner_id = Column(Integer, ForeignKey("user.id"))
-'''
-class LocationInfo(Base):
-    id = Column(Integer, primary_key=True, index=True)
-    cellId = Column(String, index=True)
-    enodeBId = Column(String, index=True)
-    subscription_id = Column(Integer, ForeignKey("monitoring.id"))
-'''

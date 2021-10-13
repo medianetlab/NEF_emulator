@@ -13,7 +13,7 @@ class CRUD_Monitoring(CRUDBase[Monitoring, MonitoringEventSubscription, Monitori
     def create_with_owner(
         self, db: Session, *, obj_in: MonitoringEventSubscription, owner_id: int
     ) -> Monitoring:
-        obj_in_data = jsonable_encoder(obj_in.copy(exclude = {'monitoringEventReport'})) #exclude monitoringEventReport because model (table) Monitoring has not a column locationInfo
+        obj_in_data = jsonable_encoder(obj_in)
         db_obj = self.model(**obj_in_data, owner_id=owner_id)
         db.add(db_obj)
         db.commit()
@@ -33,31 +33,5 @@ class CRUD_Monitoring(CRUDBase[Monitoring, MonitoringEventSubscription, Monitori
 
     def get_sub_ipv4(self, db: Session, ipv4: str) -> Monitoring:
         return db.query(self.model).filter(Monitoring.ipv4Addr == ipv4).first()
-'''
-class CRUD_LocationInfo(CRUDBase[LocationInfo, UECreate, UEUpdate]):
-    def create_with_owner(
-        self, db: Session, *, obj_in: UECreate, owner_id: int
-    ) -> LocationInfo:
-        obj_in_data = jsonable_encoder(obj_in.copy(include = {'gNB_id', 'Cell_id'}))
-        db_obj = self.model(**obj_in_data, owner_id=owner_id)
-        db.add(db_obj)
-        db.commit()
-        db.refresh(db_obj)
-        return db_obj
-
-   def get_multi_by_owner(
-        self, db: Session, *, owner_id: int, skip: int = 0, limit: int = 100
-    ) -> List[Monitoring]:
-        return (
-            db.query(self.model)
-            .filter(Monitoring.owner_id == owner_id)
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
-
-locationinfo = CRUD_LocationInfo(LocationInfo) #create objects to call in /endpoints
-'''
-
 
 monitoring = CRUD_Monitoring(Monitoring)
