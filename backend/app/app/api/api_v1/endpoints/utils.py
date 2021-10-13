@@ -218,9 +218,10 @@ def state_movement(
     """
     print(threads)
     try:
-        return {"msg": threads[f"{supi}"][f"{current_user.id}"].is_alive()}
+        return {"running": threads[f"{supi}"][f"{current_user.id}"].is_alive()}
     except KeyError as ke:
         print('Key Not Found in Threads Dictionary:', ke)
-        raise HTTPException(status_code=200, detail="There is no thread running for this UE! Please initiate a new thread")
+        # raise HTTPException(status_code=200, detail="There is no thread running for this UE! Please initiate a new thread")
+        return {"running" : False}
 
     
