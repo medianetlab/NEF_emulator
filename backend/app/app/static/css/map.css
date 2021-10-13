@@ -1,5 +1,5 @@
 
-#mapid {width: 100%; height: 960px;}
+#mapid {width: 100%; }
 
 .emu-pin-box {}
 .emu-pin-box .pin-bg {width: 28px; height: 28px; border-radius: 50% 50% 50% 0; position: absolute; transform: rotate(-45deg); left: 50%; top: 50%; margin: -15px 0 0 -15px; border: 1px solid #00a3cc; background: #00ccff; box-sizing: content-box;}

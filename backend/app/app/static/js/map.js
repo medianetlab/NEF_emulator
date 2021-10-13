@@ -88,7 +88,17 @@ $( document ).ready(function() {
 
 
 
+$( window ).resize(function() {
+    $('#mapid').css({"height": window.innerHeight * 0.65} );
+});
+
+
+
 function ui_initialize_map() {
+
+    // set map height
+    $('#mapid').css({"height": window.innerHeight * 0.65} );
+
     var mbAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
                 'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
         mbUrl = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
