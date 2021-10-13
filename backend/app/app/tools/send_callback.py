@@ -17,10 +17,6 @@ def location_callback(cellid, gnbid, callbackurl):
     'Content-Type': 'application/json'
     }
 
-    try:
-        response = requests.request("POST", url, headers=headers, data=payload)
-    except Exception as ex:
-        logging.warning("Failed to send the callback request")
-        logging.warning(ex)
-    finally:
-        return response
+    response = requests.request("POST", url, headers=headers, data=payload)
+    
+    return response

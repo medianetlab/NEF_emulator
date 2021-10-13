@@ -14,7 +14,7 @@ def check_expiration_time(expire_time):
     sec = int(expire_time[17:19])
 
     time_now = time.localtime()
-    print(time.asctime(time_now))
+    # print(time.asctime(time_now))
     
     if year>=time_now[0] and month>=time_now[1]: 
         # print(year, time_now[0])

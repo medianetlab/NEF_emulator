@@ -65,14 +65,9 @@ class BackgroundTasks(threading.Thread):
             Cells = crud.cell.get_multi_by_owner(db=db, owner_id=current_user.id, skip=0, limit=100)
             json_cells = jsonable_encoder(Cells)
             
-            #Retrieve the subscription of the UE by ipv4
-            sub = crud.monitoring.get_sub_ipv4(db=db, ipv4=UE.ip_address_v4)
+            
             
             while True:
-                logging.info(f'Looping... ^_^ User: {supi}')
-                logging.info(f'Looping... ^_^ User: {current_user.id}')
-                logging.info(f'Looping... ^_^ User: {UE.latitude}')
-                logging.info(f'Looping... ^_^ User: {UE.longitude}')
 
                 for point in points:
                     try:
@@ -86,6 +81,9 @@ class BackgroundTasks(threading.Thread):
                         logging.info(f"UE({UE.supi}) handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
                         crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
                         
+                        #Retrieve the subscription of the UE by ipv4 | This could be outside while true but then the user cannot subscribe when the loop runs
+                        sub = crud.monitoring.get_sub_ipv4(db=db, ipv4=UE.ip_address_v4)
+
                         #Validation of subscription
                         if not sub:
                             logging.warning("Subscription not found")
@@ -95,15 +93,20 @@ class BackgroundTasks(threading.Thread):
                             sub_validate_time = tools.check_expiration_time(expire_time=sub.monitorExpireTime)
                             if sub_validate_time:
                                 sub = tools.check_numberOfReports(db=db, item_in=sub)
-                                logging.warning(sub)
                                 if sub: #return the callback request only if subscription is valid
-                                    response = location_callback(cell_now.get('id'), UE.gNB_id, sub.notificationDestination)
-                                    logging.info(f"Response = {response}")
+                                    try:
+                                        response = location_callback(cell_now.get('id'), UE.gNB_id, sub.notificationDestination)
+                                        logging.debug(response)
+                                    except requests.exceptions.ConnectionError as ex:
+                                        logging.warning("Failed to send the callback request")
+                                        logging.warning(ex)
+                                        crud.monitoring.remove(db=db, id=sub.id)
+                                        continue   
                             else:
                                 crud.monitoring.remove(db=db, id=sub.id)
                                 logging.warning("Subscription has expired (expiration date)")
 
-                    logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
+                    # logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
                     
                     if UE.speed == 'LOW':
                         time.sleep(1)
@@ -131,7 +134,7 @@ router = APIRouter()
 
 @router.post("/monitoring/callback")
 def create_item(item: monitoringevent.MonitoringEventReport):
-    print(item)
+    logging.info(item)
     return {'ack' : 'TRUE'}
 
 @router.post("/test-celery/", response_model=schemas.Msg, status_code=201)
@@ -166,7 +169,8 @@ def initiate_movement(
     """
     Start the loop.
     """
-    
+    if msg.supi in threads:
+        raise HTTPException(status_code=409, detail=f"There is a thread already running for this supi:{msg.supi}")
     t = BackgroundTasks(args= (current_user, msg.supi, ))
     threads[f"{msg.supi}"] = {}
     threads[f"{msg.supi}"][f"{current_user.id}"] = t

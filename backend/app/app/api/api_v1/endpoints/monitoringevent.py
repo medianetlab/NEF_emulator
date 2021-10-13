@@ -76,12 +76,10 @@ def create_item(
     db: Session = Depends(deps.get_db),
     item_in: schemas.MonitoringEventSubscription,
     current_user: models.User = Depends(deps.get_current_active_user),
-    request: Request
 ) -> Any:
     """
     Create new subscription.
     """
-    print(f'{request.client}')
     UE = crud.ue.get_ipv4(db=db, ipv4=str(item_in.ipv4Addr), owner_id=current_user.id)
     if not UE: 
         raise HTTPException(status_code=409, detail="UE with this ipv4 doesn't exist")
