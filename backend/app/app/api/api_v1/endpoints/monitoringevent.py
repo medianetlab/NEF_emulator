@@ -74,7 +74,7 @@ def create_item(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     db: Session = Depends(deps.get_db),
-    item_in: schemas.MonitoringEventSubscription,
+    item_in: schemas.MonitoringEventSubscriptionCreate,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """

@@ -28,8 +28,7 @@ class MonitoringEventReport(BaseModel):
     monitoringType: MonitoringType
     locationInfo: Optional[LocationInfo] = None
 
-class MonitoringEventSubscription(BaseModel):
-    link: Optional[AnyHttpUrl] = Field("https://myresource.com", description="String identifying a referenced resource. This is also returned as a location header in 201 Created Response")
+class MonitoringEventSubscriptionCreate(BaseModel):
     # mtcProviderId: Optional[str] = Field(None, description="Identifies the MTC Service Provider and/or MTC Application")
     externalId: Optional[str] = Field("123456789@domain.com", description="Globally unique identifier containing a Domain Identifier and a Local Identifier. \<Local Identifier\>@\<Domain Identifier\>")
     msisdn: Optional[str] = Field("918369110173", description="Mobile Subscriber ISDN number that consists of Country Code, National Destination Code and Subscriber Number.")
@@ -43,6 +42,10 @@ class MonitoringEventSubscription(BaseModel):
     maximumNumberOfReports: Optional[int] = Field(None, description="Identifies the maximum number of event reports to be generated. Value 1 makes the Monitoring Request a One-time Request", ge=1)
     monitorExpireTime: Optional[datetime] = Field(None, description="Identifies the absolute time at which the related monitoring event request is considered to expire")
     # monitoringEventReport: Optional[MonitoringEventReport] = None
+
+class MonitoringEventSubscription(MonitoringEventSubscriptionCreate):
+    link: Optional[AnyHttpUrl] = Field("https://myresource.com", description="String identifying a referenced resource. This is also returned as a location header in 201 Created Response")
+    
     class Config:
             orm_mode = True
 

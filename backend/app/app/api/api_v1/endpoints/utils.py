@@ -1,4 +1,5 @@
 import threading, logging, time, requests, json
+import fastapi
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Path, responses
 from fastapi.encoders import jsonable_encoder
@@ -66,10 +67,20 @@ class BackgroundTasks(threading.Thread):
             json_cells = jsonable_encoder(Cells)
             
             
-            
-            while True:
+            flag = True
 
+            while True:
                 for point in points:
+
+                    #Iteration to find the last known coordinates of the UE
+                    #Then the movements begins from the last known position (geo coordinates)
+                    if ((UE.latitude != point["latitude"]) or (UE.longitude != point["longitude"])) and flag == True:
+                        continue
+                    elif (UE.latitude == point["latitude"]) and (UE.longitude == point["longitude"]) and flag == True:
+                        flag = False
+                        continue
+                    
+
                     try:
                         UE = crud.ue.update_coordinates(db=db, lat=point["latitude"], long=point["longitude"], db_obj=UE)
                         cell_now = check_distance(UE.latitude, UE.longitude, jsonable_encoder(UE.Cell), json_cells) #calculate the distance from all the cells
@@ -210,6 +221,6 @@ def state_movement(
         return {"msg": threads[f"{supi}"][f"{current_user.id}"].is_alive()}
     except KeyError as ke:
         print('Key Not Found in Threads Dictionary:', ke)
-        raise HTTPException(status_code=409, detail="There is no thread running for this UE! Please initiate a new thread")
+        raise HTTPException(status_code=200, detail="There is no thread running for this UE! Please initiate a new thread")
 
     
