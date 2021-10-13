@@ -78,7 +78,7 @@ class BackgroundTasks(threading.Thread):
                         logging.warning(ex)
                     
                     if UE.Cell_id != cell_now.get('id'): #Cell has changed in the db "handover"
-                        logging.info(f"UE({UE.supi}) handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
+                        logging.info(f"UE({UE.supi}) with ipv4 {UE.ip_address_v4} handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
                         crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
                         
                         #Retrieve the subscription of the UE by ipv4 | This could be outside while true but then the user cannot subscribe when the loop runs
@@ -95,7 +95,7 @@ class BackgroundTasks(threading.Thread):
                                 sub = tools.check_numberOfReports(db=db, item_in=sub)
                                 if sub: #return the callback request only if subscription is valid
                                     try:
-                                        response = location_callback(cell_now.get('id'), UE.gNB_id, sub.notificationDestination)
+                                        response = location_callback(UE.Cell.cell_id, UE.Cell.gNB.gNB_id, sub.notificationDestination)
                                         logging.debug(response)
                                     except requests.exceptions.ConnectionError as ex:
                                         logging.warning("Failed to send the callback request")

@@ -3,6 +3,7 @@ from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, Path
 from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
@@ -25,7 +26,7 @@ def exists(db, gNB, cell, path):
         return True
 
 
-@router.get("/", response_model=List[schemas.UE])
+@router.get("/", response_model=List[schemas.UEs])
 def read_UEs(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
@@ -41,7 +42,14 @@ def read_UEs(
         UEs = crud.ue.get_multi_by_owner(
             db=db, owner_id=current_user.id, skip=skip, limit=limit
         )
-    return UEs
+    json_UEs = jsonable_encoder(UEs)
+
+    for json_UE in json_UEs:
+        for UE in UEs:
+            if UE.Cell_id == json_UE.get('Cell_id'):
+                json_UE.update({"cell_id_hex": UE.Cell.cell_id})
+
+    return JSONResponse(content=json_UEs, status_code=200)
 
 
 @router.post("/", response_model=schemas.UE)
