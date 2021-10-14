@@ -1,3 +1,7 @@
+// ===============================================
+//               Global variables
+// ===============================================
+
 // varialbles used for raw data,
 // as they are fetched from the API
 var mymap = null;
@@ -25,8 +29,14 @@ var UE_refresh_interval = null;
 var ue_btn_tpl = `<button class="btn btn-success px-4 btn-ue" type="button" id="btn-ue-{{id}}" data-supi={{supi}} data-running=false>{{name}}</button> `
 
 var looping_UEs = 0;
+// ===============================================
 
 
+
+
+// ===============================================
+//                 Document ready
+// ===============================================
 $( document ).ready(function() {
 
     ui_initialize_map();
@@ -53,6 +63,7 @@ $( document ).ready(function() {
             }
             if ( ues.length >0 ) {
                 ui_add_ue_btn_listeners();
+                ui_add_ue_all_btn_listener();
             }
         }
       }, 100);
@@ -60,38 +71,24 @@ $( document ).ready(function() {
     wait_for_UEs_data();
 
 
-    // TODO:
-    // replace with a switch / toggle button...
-    $('#btn-start-all').on('click', function(){
-        $(this).toggleClass('btn-success').toggleClass('btn-danger');
-        if ( $(this).text() == "Start all" ) {
-            
-            // start location UE loops
-            for (const ue of ues) {
-                api_start_loop(ue);
-            }
-
-            start_map_refresh_interval();
-
-            $(this).text("Stop all");
-        } else {
-
-            // stop location UE loops
-            for (const ue of ues) {
-                api_stop_loop(ue);
-            }
-
-            stop_map_refresh_interval();
-
-            $(this).text("Start all");
-        }
-    });
-    
-
 });
 
+$( window ).resize(function() {
+    $('#mapid').css({"height": window.innerHeight * 0.65} );
+});
+// ===============================================
 
 
+
+
+
+// ===============================================
+//         Interval - map refresh functions
+// ===============================================
+// 
+// Initializes the "UE_refresh_interval"
+// which triggers an Ajax call every second
+// to fetch the UE data and update the map
 function start_map_refresh_interval() {
 
     if (UE_refresh_interval == null) {
@@ -102,21 +99,26 @@ function start_map_refresh_interval() {
     }
 }
 
-
 function stop_map_refresh_interval() {
     // stop updating every second
     clearInterval( UE_refresh_interval );
     UE_refresh_interval = null;
 }
+// ===============================================
 
 
 
-$( window ).resize(function() {
-    $('#mapid').css({"height": window.innerHeight * 0.65} );
-});
 
 
 
+
+// ===============================================
+//         initialize the Leaflet.js map 
+// ===============================================
+// 
+// TODO: calculate the center of the map depending on
+//       the cells positions.
+// 
 function ui_initialize_map() {
 
     // set map height
@@ -155,7 +157,9 @@ function ui_initialize_map() {
 
 
 
-
+// Ajax request to get UEs data
+// on success: paint the UE marks on the map
+// 
 function api_get_UEs() {
     
     var url = app.api_url + '/UEs/?skip=0&limit=100';
@@ -190,7 +194,9 @@ function api_get_UEs() {
 }
 
 
-
+// 1. At first Ajax call, UE marks are generated and painted on the map
+// 2. At later Ajax calls, the marks are just updated (coordinates and popup content)
+// 
 function ui_map_paint_UEs() {
 
     for (const ue of ues) {
@@ -251,7 +257,7 @@ function api_get_Cells() {
         },
         success: function(data)
         {
-            console.log(data);
+            // console.log(data);
             cells = data;
             ui_map_paint_Cells();
         },
@@ -268,6 +274,11 @@ function api_get_Cells() {
 }
 
 
+
+
+// Ajax request to get Cells data
+// on success: paint the Cell marks on the map
+// 
 function ui_map_paint_Cells() {
 
     for (const cell of cells) {
@@ -301,7 +312,9 @@ function ui_map_paint_Cells() {
 
 
 
-
+// Ajax request to get specific Path data
+// on success: paint the Path on the map
+// 
 function api_get_specific_path( id ) {
     
     var url = app.api_url + '/frontend/location/' + id;
@@ -319,7 +332,7 @@ function api_get_specific_path( id ) {
         },
         success: function(data)
         {
-            console.log(data);
+            // console.log(data);
             // paths = data;
             ui_map_paint_path(data);
         },
@@ -336,6 +349,11 @@ function api_get_specific_path( id ) {
 }
 
 
+
+// Adds a path polyline to the map
+// Calls a helper function "fix_points_format()"
+// to prepare the data for leaflet.js format
+// 
 function ui_map_paint_path( data ) {
 
     var latlng   = fix_points_format( data.points );
@@ -347,6 +365,11 @@ function ui_map_paint_path( data ) {
 
 
 
+// Helper function
+// Takes the data fetched from the API
+// and returns them with a format appropriate
+// leaflet.js
+// 
 function fix_points_format( datapoints ) {
 
     // from (array of objects): [{latitude: 37.996095, longitude: 23.818562},{...}]
@@ -363,9 +386,11 @@ function fix_points_format( datapoints ) {
 
 
 
-function api_start_loop( ue ) {
 
-    console.log(ue);
+// Ajax request to START the loop for a UE
+// on success: handle the state of the buttons
+// 
+function api_start_loop( ue ) {
 
     var url = app.api_url + '/utils/start-loop/';
     var data = {
@@ -409,6 +434,10 @@ function api_start_loop( ue ) {
 
 
 
+// Ajax request to STOP the loop for a UE
+// on success: handle the state of the buttons
+// and check whether the interval/updating-the-map has to stop
+// 
 function api_stop_loop( ue ) {
 
     console.log(ue);
@@ -456,6 +485,12 @@ function api_stop_loop( ue ) {
 
 
 
+
+
+// Add start/stop loop button for UE
+// It generates HTML based on the button template
+// and adds it to the ue-btn-area
+// 
 function ui_generate_loop_btn_for( ue ) {
     var html_str = ue_btn_tpl.replaceAll("{{id}}", ue.id).replace("{{name}}",ue.name).replace("{{supi}}",ue.supi);
     $(".ue-btn-area").append(html_str);
@@ -463,6 +498,12 @@ function ui_generate_loop_btn_for( ue ) {
 
 
 
+
+
+// Add start/stop loop button for UE
+// It generates HTML based on the button template
+// and adds it to the ue-btn-area
+// 
 function ui_set_loop_btn_status_for(ue) {
     var url = app.api_url + '/utils/state-loop/' + ue.supi;
 
@@ -502,6 +543,9 @@ function ui_set_loop_btn_status_for(ue) {
 
 
 
+
+// Adds a listener to every start/stop loop UE button
+// 
 function ui_add_ue_btn_listeners(){
     $('.btn-ue').on('click', function(){
 
@@ -523,6 +567,38 @@ function ui_add_ue_btn_listeners(){
 
             $(this).data("running",false);
             $(this).addClass('btn-success').removeClass('btn-danger');
+        }
+    });
+}
+
+
+
+
+// Adds a listener start/stop ALL button
+// 
+function ui_add_ue_all_btn_listener() {
+    $('#btn-start-all').on('click', function(){
+        $(this).toggleClass('btn-success').toggleClass('btn-danger');
+        if ( $(this).text() == "Start all" ) {
+            
+            // start location UE loops
+            for (const ue of ues) {
+                api_start_loop(ue);
+            }
+
+            start_map_refresh_interval();
+
+            $(this).text("Stop all");
+        } else {
+
+            // stop location UE loops
+            for (const ue of ues) {
+                api_stop_loop(ue);
+            }
+
+            stop_map_refresh_interval();
+
+            $(this).text("Start all");
         }
     });
 }
