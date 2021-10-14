@@ -107,7 +107,7 @@ class BackgroundTasks(threading.Thread):
                                 if sub: #return the callback request only if subscription is valid
                                     try:
                                         response = location_callback(UE.Cell.cell_id, UE.Cell.gNB.gNB_id, sub.notificationDestination)
-                                        logging.debug(response)
+                                        logging.info(response.json())
                                     except requests.exceptions.ConnectionError as ex:
                                         logging.warning("Failed to send the callback request")
                                         logging.warning(ex)
@@ -145,7 +145,7 @@ router = APIRouter()
 
 @router.post("/monitoring/callback")
 def create_item(item: monitoringevent.MonitoringEventReport):
-    logging.info(item)
+    logging.info(item.json())
     return {'ack' : 'TRUE'}
 
 @router.post("/test-celery/", response_model=schemas.Msg, status_code=201)
@@ -216,7 +216,6 @@ def state_movement(
     """
     Get the state
     """
-    print(threads)
     try:
         return {"running": threads[f"{supi}"][f"{current_user.id}"].is_alive()}
     except KeyError as ke:
