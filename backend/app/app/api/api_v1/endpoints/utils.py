@@ -30,7 +30,6 @@ class BackgroundTasks(threading.Thread):
 
     def run(self):
         
-        # logging.warning(f'Looping... ^_^ User: {path}')
         current_user = self._args[0]
         supi = self._args[1]
 
