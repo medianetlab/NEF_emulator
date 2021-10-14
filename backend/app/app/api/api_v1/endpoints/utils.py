@@ -1,4 +1,5 @@
 import threading, logging, time, requests, json
+import fastapi
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Path, responses
 from fastapi.encoders import jsonable_encoder
@@ -65,16 +66,21 @@ class BackgroundTasks(threading.Thread):
             Cells = crud.cell.get_multi_by_owner(db=db, owner_id=current_user.id, skip=0, limit=100)
             json_cells = jsonable_encoder(Cells)
             
-            #Retrieve the subscription of the UE by ipv4
-            sub = crud.monitoring.get_sub_ipv4(db=db, ipv4=UE.ip_address_v4)
             
-            while True:
-                logging.info(f'Looping... ^_^ User: {supi}')
-                logging.info(f'Looping... ^_^ User: {current_user.id}')
-                logging.info(f'Looping... ^_^ User: {UE.latitude}')
-                logging.info(f'Looping... ^_^ User: {UE.longitude}')
+            flag = True
 
+            while True:
                 for point in points:
+
+                    #Iteration to find the last known coordinates of the UE
+                    #Then the movements begins from the last known position (geo coordinates)
+                    if ((UE.latitude != point["latitude"]) or (UE.longitude != point["longitude"])) and flag == True:
+                        continue
+                    elif (UE.latitude == point["latitude"]) and (UE.longitude == point["longitude"]) and flag == True:
+                        flag = False
+                        continue
+                    
+
                     try:
                         UE = crud.ue.update_coordinates(db=db, lat=point["latitude"], long=point["longitude"], db_obj=UE)
                         cell_now = check_distance(UE.latitude, UE.longitude, jsonable_encoder(UE.Cell), json_cells) #calculate the distance from all the cells
@@ -83,9 +89,12 @@ class BackgroundTasks(threading.Thread):
                         logging.warning(ex)
                     
                     if UE.Cell_id != cell_now.get('id'): #Cell has changed in the db "handover"
-                        logging.info(f"UE({UE.supi}) handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
+                        logging.info(f"UE({UE.supi}) with ipv4 {UE.ip_address_v4} handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
                         crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
                         
+                        #Retrieve the subscription of the UE by ipv4 | This could be outside while true but then the user cannot subscribe when the loop runs
+                        sub = crud.monitoring.get_sub_ipv4(db=db, ipv4=UE.ip_address_v4)
+
                         #Validation of subscription
                         if not sub:
                             logging.warning("Subscription not found")
@@ -95,15 +104,20 @@ class BackgroundTasks(threading.Thread):
                             sub_validate_time = tools.check_expiration_time(expire_time=sub.monitorExpireTime)
                             if sub_validate_time:
                                 sub = tools.check_numberOfReports(db=db, item_in=sub)
-                                logging.warning(sub)
                                 if sub: #return the callback request only if subscription is valid
-                                    response = location_callback(cell_now.get('id'), UE.gNB_id, sub.notificationDestination)
-                                    logging.info(f"Response = {response}")
+                                    try:
+                                        response = location_callback(UE.Cell.cell_id, UE.Cell.gNB.gNB_id, sub.notificationDestination)
+                                        logging.info(response.json())
+                                    except requests.exceptions.ConnectionError as ex:
+                                        logging.warning("Failed to send the callback request")
+                                        logging.warning(ex)
+                                        crud.monitoring.remove(db=db, id=sub.id)
+                                        continue   
                             else:
                                 crud.monitoring.remove(db=db, id=sub.id)
                                 logging.warning("Subscription has expired (expiration date)")
 
-                    logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
+                    # logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
                     
                     if UE.speed == 'LOW':
                         time.sleep(1)
@@ -131,7 +145,7 @@ router = APIRouter()
 
 @router.post("/monitoring/callback")
 def create_item(item: monitoringevent.MonitoringEventReport):
-    print(item)
+    logging.info(item.json())
     return {'ack' : 'TRUE'}
 
 @router.post("/test-celery/", response_model=schemas.Msg, status_code=201)
@@ -166,7 +180,8 @@ def initiate_movement(
     """
     Start the loop.
     """
-    
+    if msg.supi in threads:
+        raise HTTPException(status_code=409, detail=f"There is a thread already running for this supi:{msg.supi}")
     t = BackgroundTasks(args= (current_user, msg.supi, ))
     threads[f"{msg.supi}"] = {}
     threads[f"{msg.supi}"][f"{current_user.id}"] = t
@@ -201,11 +216,11 @@ def state_movement(
     """
     Get the state
     """
-    print(threads)
     try:
-        return {"msg": threads[f"{supi}"][f"{current_user.id}"].is_alive()}
+        return {"running": threads[f"{supi}"][f"{current_user.id}"].is_alive()}
     except KeyError as ke:
         print('Key Not Found in Threads Dictionary:', ke)
-        raise HTTPException(status_code=409, detail="There is no thread running for this UE! Please initiate a new thread")
+        # raise HTTPException(status_code=200, detail="There is no thread running for this UE! Please initiate a new thread")
+        return {"running" : False}
 
     

@@ -35,3 +35,5 @@ class gNB(Base):
     # For gNB
 
     location = Column(String, index=True)
+    Cells = relationship("Cell", back_populates="gNB")
+    

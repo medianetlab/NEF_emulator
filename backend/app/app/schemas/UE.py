@@ -52,6 +52,6 @@ class UE(UEInDBBase):
     id: Optional[int]
 
 
-# Properties properties stored in DB
-class UEInDB(UEInDBBase):
-    pass
+# Properties to return to client for all UEs
+class UEs(UEBase):
+    cell_id_hex: str

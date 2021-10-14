@@ -41,4 +41,5 @@ class Cell(Base):
     gNB_id = Column(Integer, ForeignKey("gnb.id"))
 
     UE = relationship("UE", back_populates="Cell")
+    gNB = relationship("gNB", back_populates="Cells")
 

@@ -169,10 +169,11 @@ function ui_init_datatable_gNBs() {
         pageLength: -1,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
         columns: [
-            { "data": "gNB_id" },
-            { "data": "name" },
+            { "data": "id", className: "dt-center" },
+            { "data": "gNB_id", className: "dt-center" },
+            { "data": "name", className: "dt-center" },
             { "data": "description" },
-            { "data": "location" },
+            { "data": "location", className: "dt-center" },
         ]
     } );
 }
@@ -187,10 +188,11 @@ function ui_init_datatable_Cells() {
         pageLength: -1,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
         columns: [
-            { "data": "cell_id" },
-            { "data": "name" },
+            { "data": "id", className: "dt-center" },
+            { "data": "cell_id", className: "dt-center" },
+            { "data": "name", className: "dt-center" },
             { "data": "description" },
-            { "data": "gNB_id" },
+            { "data": "gNB_id", className: "dt-center" },
         ]
     } );
 }
@@ -205,13 +207,13 @@ function ui_init_datatable_UEs() {
         pageLength: -1,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
         columns: [
-            { "data": "supi" },
-            { "data": "name" },
+            { "data": "supi", className: "dt-center" },
+            { "data": "name", className: "dt-center" },
             { "data": "description" },
-            { "data": "Cell_id" },
-            { "data": "ip_address_v4" },
-            { "data": "mac_address" },
-            { "data": "speed" },
+            { "data": "Cell_id", className: "dt-center" },
+            { "data": "ip_address_v4", className: "dt-center" },
+            { "data": "mac_address", className: "dt-center" },
+            { "data": "speed", className: "dt-center" },
         ]
     } );
 }

@@ -42,7 +42,6 @@ def create_path(
     """
     path = crud.path.create_with_owner(db=db, obj_in=path_in, owner_id=current_user.id)
     crud.points.create(db=db, obj_in=path_in, path_id=path.id) 
-    print(path)
     return path
 
 
