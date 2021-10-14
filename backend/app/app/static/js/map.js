@@ -8,12 +8,12 @@ var paths = null;
 
 
 // variables used for painting / updating the map
-// > map layer groups
+//  map layer groups
 var cells_lg         = L.layerGroup(),
     cell_coverage_lg = L.layerGroup(),
     ues_lg           = L.layerGroup(),
     paths_lg         = L.layerGroup();
-// > markers
+//  markers
 var ue_markers   = {};
 var cell_markers = {};
 // helper var for correct initialization
@@ -21,6 +21,10 @@ var UEs_first_paint = true;
 
 var UE_refresh_interval = null;
 
+// template for UE buttons
+var ue_btn_tpl = `<button class="btn btn-success px-4 btn-ue" type="button" id="btn-ue-{{id}}" data-supi={{supi}} data-running=false>{{name}}</button> `
+
+var looping_UEs = 0;
 
 
 $( document ).ready(function() {
@@ -40,9 +44,15 @@ $( document ).ready(function() {
           wait_for_UEs_data();
         else {
             // when ready,
-            // get and paint every path per UE
+            //  1. get and paint every path per UE
+            //  2. create start/stop buttons
             for (const ue of ues) {
                 api_get_specific_path(ue.path_id);
+                ui_generate_loop_btn_for( ue );
+                ui_set_loop_btn_status_for( ue );
+            }
+            if ( ues.length >0 ) {
+                ui_add_ue_btn_listeners();
             }
         }
       }, 100);
@@ -52,39 +62,52 @@ $( document ).ready(function() {
 
     // TODO:
     // replace with a switch / toggle button...
-    $('#btn-start').on('click', function(){
+    $('#btn-start-all').on('click', function(){
         $(this).toggleClass('btn-success').toggleClass('btn-danger');
-        if ( $(this).text() == "Start" ) {
+        if ( $(this).text() == "Start all" ) {
             
             // start location UE loops
             for (const ue of ues) {
-                api_start_loop(ue.supi);
+                api_start_loop(ue);
             }
 
-            // start updating every second
-            UE_refresh_interval = setInterval(function(){ 
-                api_get_UEs();
-            }, 1000);
+            start_map_refresh_interval();
 
-
-
-            $(this).text("Stop");
+            $(this).text("Stop all");
         } else {
 
             // stop location UE loops
             for (const ue of ues) {
-                api_stop_loop(ue.supi);
+                api_stop_loop(ue);
             }
 
-            // stop updating every second
-            clearInterval( UE_refresh_interval );
+            stop_map_refresh_interval();
 
-            $(this).text("Start");
+            $(this).text("Start all");
         }
     });
     
 
 });
+
+
+
+function start_map_refresh_interval() {
+
+    if (UE_refresh_interval == null) {
+        // start updating every second
+        UE_refresh_interval = setInterval(function(){ 
+            api_get_UEs();
+        }, 1000);
+    }
+}
+
+
+function stop_map_refresh_interval() {
+    // stop updating every second
+    clearInterval( UE_refresh_interval );
+    UE_refresh_interval = null;
+}
 
 
 
@@ -340,11 +363,13 @@ function fix_points_format( datapoints ) {
 
 
 
-function api_start_loop( supi ) {
+function api_start_loop( ue ) {
 
-    var url = app.api_url + '/utils/start-loop';
+    console.log(ue);
+
+    var url = app.api_url + '/utils/start-loop/';
     var data = {
-        "supi": supi
+        "supi": ue.supi
     };
 
     $.ajax({
@@ -361,7 +386,14 @@ function api_start_loop( supi ) {
         },
         success: function(data)
         {
-            console.log(data);
+            // console.log(data);
+            $("#btn-ue-"+ue.id).data("running",true);
+            $("#btn-ue-"+ue.id).removeClass('btn-success').addClass('btn-danger');
+            looping_UEs++;
+            if (looping_UEs == ues.length) {
+                $('#btn-start-all').removeClass('btn-success').addClass('btn-danger');
+                $('#btn-start-all').text("Stop all");
+            }
         },
         error: function(err)
         {
@@ -377,11 +409,13 @@ function api_start_loop( supi ) {
 
 
 
-function api_stop_loop( supi ) {
+function api_stop_loop( ue ) {
 
-    var url = app.api_url + '/utils/stop-loop';
+    console.log(ue);
+
+    var url = app.api_url + '/utils/stop-loop/';
     var data = {
-        "supi": supi
+        "supi": ue.supi
     };
 
     $.ajax({
@@ -398,7 +432,15 @@ function api_stop_loop( supi ) {
         },
         success: function(data)
         {
-            console.log(data);
+            // console.log(data);
+            $("#btn-ue-"+ue.id).data("running",false);
+            $("#btn-ue-"+ue.id).addClass('btn-success').removeClass('btn-danger');
+            looping_UEs--;
+            if (looping_UEs == 0) {
+                $('#btn-start-all').addClass('btn-success').removeClass('btn-danger');
+                $('#btn-start-all').text("Start all");
+                stop_map_refresh_interval();
+            }
         },
         error: function(err)
         {
@@ -409,5 +451,78 @@ function api_stop_loop( supi ) {
             // 
         },
         timeout: 5000
+    });
+}
+
+
+
+function ui_generate_loop_btn_for( ue ) {
+    var html_str = ue_btn_tpl.replaceAll("{{id}}", ue.id).replace("{{name}}",ue.name).replace("{{supi}}",ue.supi);
+    $(".ue-btn-area").append(html_str);
+}
+
+
+
+function ui_set_loop_btn_status_for(ue) {
+    var url = app.api_url + '/utils/state-loop/' + ue.supi;
+
+    $.ajax({
+        type: 'GET',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        // data:         JSON.stringify(data),
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            // console.log(data);
+            if ( data.running ) {
+                $('#btn-ue-'+ue.id).removeClass('btn-success').addClass('btn-danger');
+                $('#btn-ue-'+ue.id).data("running",data.running);
+                
+                start_map_refresh_interval();
+            }
+        },
+        error: function(err)
+        {
+            console.log(err);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
+
+
+
+function ui_add_ue_btn_listeners(){
+    $('.btn-ue').on('click', function(){
+
+        curr_supi = $(this).data("supi");
+        // console.log(curr_supi);
+        // console.log($(this).data("running"));
+        if ( $(this).data("running") == false) {
+            
+            // start location UE loop
+            api_start_loop({"supi":curr_supi});
+            start_map_refresh_interval();
+
+            $(this).data("running",true);
+            $(this).removeClass('btn-success').addClass('btn-danger');
+        } else {
+
+            // stop location UE loop
+            api_stop_loop({"supi":curr_supi});
+
+            $(this).data("running",false);
+            $(this).addClass('btn-success').removeClass('btn-danger');
+        }
     });
 }
