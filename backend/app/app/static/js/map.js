@@ -65,6 +65,9 @@ $( document ).ready(function() {
                 ui_add_ue_btn_listeners();
                 ui_add_ue_all_btn_listener();
             }
+            else {
+                $('#btn-start-all').removeClass("btn-success").addClass("btn-secondary").attr("disabled",true);
+            }
         }
       }, 100);
     };
