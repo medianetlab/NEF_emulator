@@ -80,14 +80,15 @@ def create_item(
     """
     Create new subscription.
     """
-    UE = crud.ue.get_ipv4(db=db, ipv4=str(item_in.ipv4Addr), owner_id=current_user.id)
+    UE = crud.ue.get_externalId(db=db, externalId=str(item_in.externalId), owner_id=current_user.id)
     if not UE: 
-        raise HTTPException(status_code=409, detail="UE with this ipv4 doesn't exist")
+        raise HTTPException(status_code=409, detail="UE with this external identifier doesn't exist")
     
     if item_in.monitoringType == "LOCATION_REPORTING" and item_in.maximumNumberOfReports == 1:
         json_compatible_item_data = {}
         json_compatible_item_data["monitoringType"] = item_in.monitoringType
         json_compatible_item_data["locationInfo"] = {'cellId' : UE.Cell.cell_id, 'gNBId' : UE.Cell.gNB.gNB_id}
+        json_compatible_item_data["externalId"] = item_in.externalId
         return JSONResponse(content=json_compatible_item_data, status_code=200)
     elif item_in.monitoringType == "LOCATION_REPORTING" and item_in.maximumNumberOfReports>1:    
         response = crud.monitoring.create_with_owner(db=db, obj_in=item_in, owner_id=current_user.id)

@@ -31,7 +31,7 @@ class CRUD_Monitoring(CRUDBase[Monitoring, MonitoringEventSubscription, Monitori
             .all()
         )
 
-    def get_sub_ipv4(self, db: Session, ipv4: str) -> Monitoring:
-        return db.query(self.model).filter(Monitoring.ipv4Addr == ipv4).first()
+    def get_sub_externalId(self, db: Session, externalId: str) -> Monitoring:
+        return db.query(self.model).filter(Monitoring.externalId == externalId).first()
 
 monitoring = CRUD_Monitoring(Monitoring)

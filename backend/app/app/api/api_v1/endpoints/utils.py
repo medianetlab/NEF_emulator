@@ -1,10 +1,8 @@
-import threading, logging, time, requests, json
-import fastapi
-from typing import Any
+import threading, logging, time, requests, ast
+from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, Path, responses
 from fastapi.encoders import jsonable_encoder
 from pydantic.networks import EmailStr
-from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app import models, schemas, crud
 from app.api import deps
@@ -92,7 +90,7 @@ class BackgroundTasks(threading.Thread):
                         crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
                         
                         #Retrieve the subscription of the UE by ipv4 | This could be outside while true but then the user cannot subscribe when the loop runs
-                        sub = crud.monitoring.get_sub_ipv4(db=db, ipv4=UE.ip_address_v4)
+                        sub = crud.monitoring.get_sub_externalId(db=db, externalId=UE.external_identifier)
 
                         #Validation of subscription
                         if not sub:
@@ -105,7 +103,7 @@ class BackgroundTasks(threading.Thread):
                                 sub = tools.check_numberOfReports(db=db, item_in=sub)
                                 if sub: #return the callback request only if subscription is valid
                                     try:
-                                        response = location_callback(UE.Cell.cell_id, UE.Cell.gNB.gNB_id, sub.notificationDestination)
+                                        response = location_callback(UE.external_identifier, UE.Cell.cell_id, UE.Cell.gNB.gNB_id, sub.notificationDestination, sub.link)
                                         logging.info(response.json())
                                     except requests.exceptions.ConnectionError as ex:
                                         logging.warning("Failed to send the callback request")
@@ -138,37 +136,25 @@ class BackgroundTasks(threading.Thread):
         self._stop_threads = True
 
 
+event_notifications = []
 
 router = APIRouter()
 
 
 @router.post("/monitoring/callback")
-def create_item(item: monitoringevent.MonitoringEventReport):
+def create_item(item: monitoringevent.MonitoringNotification):
     logging.info(item.json())
+    event_notifications.append(ast.literal_eval(item.json()))
     return {'ack' : 'TRUE'}
 
-@router.post("/test-celery/", response_model=schemas.Msg, status_code=201)
-def test_celery(
-    msg: schemas.Msg,
-    current_user: models.User = Depends(deps.get_current_active_superuser),
-) -> Any:
-    """
-    Test Celery worker.
-    """
-    celery_app.send_task("app.worker.test_celery", args=[msg.msg])
-    return {"msg": "Word received"}
-
-
-@router.post("/test-email/", response_model=schemas.Msg, status_code=201)
-def test_email(
-    email_to: EmailStr,
-    current_user: models.User = Depends(deps.get_current_active_superuser),
-) -> Any:
-    """
-    Test emails.
-    """
-    send_test_email(email_to=email_to)
-    return {"msg": "Test email sent"}
+@router.get("/monitoring/notifications")
+def get_items(
+    skip: int = 0,
+    limit: int = 100
+    ):
+    notification = event_notifications[skip:limit]
+    logging.info(notification)
+    return notification
 
 @router.post("/start-loop/", status_code=200)
 def initiate_movement(
