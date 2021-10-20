@@ -180,7 +180,7 @@ function api_get_UEs() {
         },
         success: function(data)
         {
-            console.log(data);
+            // console.log(data);
             ues = data;
             ui_map_paint_UEs();
         },
@@ -221,6 +221,7 @@ function ui_map_paint_UEs() {
                            // ue.description +"<br />"+
                            "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
                            "Cell ID: " + ue.cell_id_hex +"<br />"+
+                           "External identifier: " + ue.external_identifier +"<br />"+
                            "Speed:"+ ue.speed)
                 .addTo(ues_lg); // add to layer group
 
@@ -233,6 +234,7 @@ function ui_map_paint_UEs() {
                            // ue.description +"<br />"+
                            "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
                            "Cell ID: " + ue.cell_id_hex +"<br />"+
+                           "External identifier: " + ue.external_identifier +"<br />"+
                            "Speed:"+ ue.speed);
         }
     }
@@ -443,8 +445,6 @@ function api_start_loop( ue ) {
 // 
 function api_stop_loop( ue ) {
 
-    console.log(ue);
-
     var url = app.api_url + '/utils/stop-loop/';
     var data = {
         "supi": ue.supi
@@ -553,8 +553,7 @@ function ui_add_ue_btn_listeners(){
     $('.btn-ue').on('click', function(){
 
         curr_supi = $(this).data("supi");
-        // console.log(curr_supi);
-        // console.log($(this).data("running"));
+        
         if ( $(this).data("running") == false) {
             
             // start location UE loop
