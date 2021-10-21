@@ -20,6 +20,7 @@ var cells_lg         = L.layerGroup(),
 //  markers
 var ue_markers   = {};
 var cell_markers = {};
+var map_bounds   = [];
 // helper var for correct initialization
 var UEs_first_paint = true;
 
@@ -131,14 +132,16 @@ function ui_initialize_map() {
                 'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
         mbUrl = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
 
-    var grayscale   = L.tileLayer(mbUrl, {id: 'mapbox/light-v9', tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
+    var grayscale   = L.tileLayer(mbUrl, {id: 'mapbox/light-v9',    tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
         streets     = L.tileLayer(mbUrl, {id: 'mapbox/streets-v11', tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23});
 
 
     // map initialization
     mymap = L.map('mapid', {
         layers: [grayscale, cells_lg, cell_coverage_lg, ues_lg, paths_lg]
-    }).setView([37.996349, 23.819861], 17);
+    }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
+    //.setView([37.996349, 23.819861], 17);  // previous "hard-coded" center for the first map scenario at NCSRD
+
 
     var baseLayers = {
             "Grayscale": grayscale,
@@ -309,8 +312,17 @@ function ui_map_paint_Cells() {
             fillColor: '#f03',
             fillOpacity: 0.05
         }).addTo(cell_coverage_lg).addTo(mymap);
-          
-    }    
+        
+        // keep (lat, long) to later set view of the map
+        map_bounds.push([cell.latitude,cell.longitude]);
+    }
+    
+    // if cells where found, map -> set view
+    if ( cells.length >0 ) {
+        var leaflet_bounds = new L.LatLngBounds(map_bounds);
+        mymap.fitBounds( leaflet_bounds );
+    }
+
 }
 
 
