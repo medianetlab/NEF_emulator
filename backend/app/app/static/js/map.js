@@ -24,7 +24,10 @@ var map_bounds   = [];
 // helper var for correct initialization
 var UEs_first_paint = true;
 
-var UE_refresh_interval = null;
+// for UE & map refresh
+var UE_refresh_interval    = null;
+var UE_refresh_sec_default = 1000; // 1 sec
+var UE_refresh_sec         = 0;    // 0 sec = off
 
 // template for UE buttons
 var ue_btn_tpl = `<button class="btn btn-success px-4 btn-ue" type="button" id="btn-ue-{{id}}" data-supi={{supi}} data-running=false>{{name}}</button> `
@@ -75,6 +78,10 @@ $( document ).ready(function() {
     wait_for_UEs_data();
 
 
+    // add listener to the select option for map refresh
+    ui_add_select_listener_map_reload();
+
+
 });
 
 $( window ).resize(function() {
@@ -96,17 +103,40 @@ $( window ).resize(function() {
 function start_map_refresh_interval() {
 
     if (UE_refresh_interval == null) {
-        // start updating every second
+
+        // specify the seconds between every interval
+        if ( UE_refresh_sec==0 ) {
+            UE_refresh_sec = UE_refresh_sec_default;
+        }
+
+        // start updating
         UE_refresh_interval = setInterval(function(){ 
             api_get_UEs();
-        }, 1000);
+        }, UE_refresh_sec);
+
+        // enable the select button
+        $('.map-reload-select').prop("disabled",false);
+        $('.map-reload-select').val(UE_refresh_sec);
     }
 }
+
 
 function stop_map_refresh_interval() {
     // stop updating every second
     clearInterval( UE_refresh_interval );
     UE_refresh_interval = null;
+    
+    // disable the select button
+    $('.map-reload-select').prop("disabled",true);
+    $('.map-reload-select').val(0);
+}
+
+
+function reload_map_refresh_interval( new_option ) {
+    
+    stop_map_refresh_interval();
+    UE_refresh_sec  = new_option;
+    start_map_refresh_interval();
 }
 // ===============================================
 
@@ -432,6 +462,7 @@ function api_start_loop( ue ) {
             $("#btn-ue-"+ue.id).data("running",true);
             $("#btn-ue-"+ue.id).removeClass('btn-success').addClass('btn-danger');
             looping_UEs++;
+
             if (looping_UEs == ues.length) {
                 $('#btn-start-all').removeClass('btn-success').addClass('btn-danger');
                 $('#btn-start-all').text("Stop all");
@@ -480,6 +511,7 @@ function api_stop_loop( ue ) {
             $("#btn-ue-"+ue.id).data("running",false);
             $("#btn-ue-"+ue.id).addClass('btn-success').removeClass('btn-danger');
             looping_UEs--;
+
             if (looping_UEs == 0) {
                 $('#btn-start-all').addClass('btn-success').removeClass('btn-danger');
                 $('#btn-start-all').text("Start all");
@@ -541,6 +573,12 @@ function ui_set_loop_btn_status_for(ue) {
                 $('#btn-ue-'+ue.id).removeClass('btn-success').addClass('btn-danger');
                 $('#btn-ue-'+ue.id).data("running",data.running);
                 
+                looping_UEs++;
+                if (looping_UEs == ues.length) {
+                    $('#btn-start-all').removeClass('btn-success').addClass('btn-danger');
+                    $('#btn-start-all').text("Stop all");
+                }
+                
                 start_map_refresh_interval();
             }
         },
@@ -588,7 +626,7 @@ function ui_add_ue_btn_listeners(){
 
 
 
-// Adds a listener start/stop ALL button
+// Adds a listener to start/stop ALL button
 // 
 function ui_add_ue_all_btn_listener() {
     $('#btn-start-all').on('click', function(){
@@ -614,5 +652,17 @@ function ui_add_ue_all_btn_listener() {
 
             $(this).text("Start all");
         }
+    });
+}
+
+
+// Adds a listener to the select button (top left)
+// to handle the reload interval for the map.
+// On change, it takes the selected value (seconds)
+// and reloads the interval
+// 
+function ui_add_select_listener_map_reload(){
+    $('.map-reload-select').on('change', function(){
+        reload_map_refresh_interval( $(this).val() );
     });
 }
