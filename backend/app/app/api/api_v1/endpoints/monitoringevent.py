@@ -1,3 +1,4 @@
+import ast
 from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, Path, Response, Request
 from fastapi.encoders import jsonable_encoder
@@ -8,6 +9,7 @@ from app import crud, models, schemas
 from app.api import deps
 from app import tools
 from app.core.config import settings
+from app.api.api_v1.endpoints.utils import add_notifications
 
 location_header = settings.BACKEND_CORS_ORIGINS[1] + settings.API_V1_STR + "/3gpp-monitoring-event/v1/" 
 
@@ -39,6 +41,7 @@ def read_active_subscriptions(
     limit: int = 100,
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
+    http_request: Request
 ) -> Any:
     """
     Read all active subscriptions
@@ -57,7 +60,17 @@ def read_active_subscriptions(
             crud.monitoring.remove(db=db, id=sub.id)
             subs.remove(sub)
     
-    return subs
+    json_compatible_item_data = jsonable_encoder(subs)
+    
+    for json_data in json_compatible_item_data:
+        json_data.pop("owner_id")
+        json_data.pop("id")
+        
+    http_response = JSONResponse(content=json_compatible_item_data, status_code=200)
+
+    add_notifications(http_request, http_response, False)
+    return http_response
+    
 
 
 
@@ -76,6 +89,7 @@ def create_item(
     db: Session = Depends(deps.get_db),
     item_in: schemas.MonitoringEventSubscriptionCreate,
     current_user: models.User = Depends(deps.get_current_active_user),
+    http_request: Request
 ) -> Any:
     """
     Create new subscription.
@@ -85,21 +99,32 @@ def create_item(
         raise HTTPException(status_code=409, detail="UE with this external identifier doesn't exist")
     
     if item_in.monitoringType == "LOCATION_REPORTING" and item_in.maximumNumberOfReports == 1:
+        
         json_compatible_item_data = {}
         json_compatible_item_data["monitoringType"] = item_in.monitoringType
         json_compatible_item_data["locationInfo"] = {'cellId' : UE.Cell.cell_id, 'gNBId' : UE.Cell.gNB.gNB_id}
         json_compatible_item_data["externalId"] = item_in.externalId
-        return JSONResponse(content=json_compatible_item_data, status_code=200)
-    elif item_in.monitoringType == "LOCATION_REPORTING" and item_in.maximumNumberOfReports>1:    
+        
+        http_response = JSONResponse(content=json_compatible_item_data, status_code=200)
+        add_notifications(http_request, http_response, False)
+        
+        return http_response 
+    elif item_in.monitoringType == "LOCATION_REPORTING" and item_in.maximumNumberOfReports>1:
+        
         response = crud.monitoring.create_with_owner(db=db, obj_in=item_in, owner_id=current_user.id)
+        
         json_compatible_item_data = jsonable_encoder(response)
         json_compatible_item_data.pop("owner_id")
         json_compatible_item_data.pop("id")
         link = location_header + scsAsId + "/subscriptions/" + str(response.id)
-        json_compatible_item_data["link"] = link                      
+        json_compatible_item_data["link"] = link
         crud.monitoring.update(db=db, db_obj=response, obj_in={"link" : link})
+        
         response_header = {"location" : link}
-        return JSONResponse(content=json_compatible_item_data, status_code=201, headers=response_header)
+        http_response = JSONResponse(content=json_compatible_item_data, status_code=201, headers=response_header)
+        add_notifications(http_request, http_response, False)
+        
+        return http_response
 
 
 
@@ -111,6 +136,7 @@ def update_item(
     db: Session = Depends(deps.get_db),
     item_in: schemas.MonitoringEventSubscription,
     current_user: models.User = Depends(deps.get_current_active_user),
+    http_request: Request
 ) -> Any:
     """
     Update/Replace an existing subscription resource
@@ -125,7 +151,14 @@ def update_item(
     
     if sub_validate_time:
         sub = crud.monitoring.update(db=db, db_obj=sub, obj_in=item_in)
-        return sub
+
+        json_compatible_item_data = jsonable_encoder(sub)
+        json_compatible_item_data.pop("owner_id")
+        json_compatible_item_data.pop("id")
+        http_response = JSONResponse(content=json_compatible_item_data, status_code=200)
+
+        add_notifications(http_request, http_response, False)
+        return http_response
     else:
         raise HTTPException(status_code=403, detail="Subscription has expired")
     
@@ -137,6 +170,7 @@ def read_item(
     subscriptionId: str = Path(..., title="Identifier of the subscription resource"),
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
+    http_request: Request
 ) -> Any:
     """
     Get subscription by id
@@ -152,7 +186,13 @@ def read_item(
     sub_validate_time = tools.check_expiration_time(expire_time=sub.monitorExpireTime)
     
     if sub_validate_time:
-        return sub
+        json_compatible_item_data = jsonable_encoder(sub)
+        json_compatible_item_data.pop("owner_id")
+        json_compatible_item_data.pop("id")
+        http_response = JSONResponse(content=json_compatible_item_data, status_code=200)
+
+        add_notifications(http_request, http_response, False)
+        return http_response
     else:
         crud.monitoring.remove(db=db, id=id)
         raise HTTPException(status_code=403, detail="Subscription has expired")
@@ -164,6 +204,7 @@ def delete_item(
     subscriptionId: str = Path(..., title="Identifier of the subscription resource"),
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
+    http_request: Request
 ) -> Any:
     """
     Delete a subscription
@@ -178,7 +219,14 @@ def delete_item(
     
     if sub_validate_time:
         sub = crud.monitoring.remove(db=db, id=int(subscriptionId))
-        return sub
+        
+        json_compatible_item_data = jsonable_encoder(sub)
+        json_compatible_item_data.pop("owner_id")
+        json_compatible_item_data.pop("id")
+        http_response = JSONResponse(content=json_compatible_item_data, status_code=200)
+        
+        add_notifications(http_request, http_response, False)
+        return http_response
     else:
         crud.monitoring.remove(db=db, id=id)
         raise HTTPException(status_code=403, detail="Subscription has expired")

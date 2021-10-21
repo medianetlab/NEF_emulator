@@ -1,8 +1,11 @@
+import json
 import threading, logging, time, requests, ast
 from typing import Any, List
-from fastapi import APIRouter, Depends, HTTPException, Path, responses
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
+from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from pydantic.networks import EmailStr
+from sqlalchemy.util.langhelpers import counter
 from app.db.session import SessionLocal
 from app import models, schemas, crud
 from app.api import deps
@@ -137,24 +140,66 @@ class BackgroundTasks(threading.Thread):
 
 
 event_notifications = []
+counter = 0
+
+def add_notifications(request: Request, response: JSONResponse, is_notification: bool):
+
+    global counter
+
+    json_data = {}
+    json_data.update({"id" : counter})
+
+    #Request body check and trim
+    if(request.method == 'POST') or (request.method == 'PUT'):  
+        req_body = request._body.decode("utf-8").replace('\n', '')
+        req_body = req_body.replace(' ', '')
+        json_data["request_body"] = req_body
+
+    json_data["response_body"] = response.body.decode("utf-8")  
+    json_data["method"] = request.method
+    json_data["status_code"] = response.status_code
+    json_data["isNotification"] = is_notification
+
+    event_notifications.append(json_data)
+    if len(event_notifications) > 100:
+        event_notifications.pop(0)
+
+    counter += 1
+
+    return json_data
+
 
 router = APIRouter()
 
 
 @router.post("/monitoring/callback")
-def create_item(item: monitoringevent.MonitoringNotification):
+def create_item(item: monitoringevent.MonitoringNotification, request: Request):
     logging.info(item.json())
-    event_notifications.append(ast.literal_eval(item.json()))
-    return {'ack' : 'TRUE'}
+
+    http_response = JSONResponse(content={'ack' : 'TRUE'}, status_code=200)
+    add_notifications(request, http_response, True)
+    return http_response 
 
 @router.get("/monitoring/notifications")
-def get_items(
+def get_notifications(
     skip: int = 0,
     limit: int = 100
     ):
     notification = event_notifications[skip:limit]
-    logging.info(notification)
     return notification
+
+@router.get("/monitoring/last_notifications")
+def get_last_notifications(
+    id: int = Query(..., description="The id of the last retrieved item")
+    ):
+    updated_notification = []
+
+    for notification in event_notifications:
+        if notification.get('id') == id:
+            updated_notification = event_notifications[(id + 1):]
+            break
+    
+    return updated_notification
 
 @router.post("/start-loop/", status_code=200)
 def initiate_movement(
