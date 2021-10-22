@@ -815,7 +815,7 @@ function api_get_all_monitoring_events() {
         },
         success: function(data)
         {
-            console.log(data);
+            // console.log(data);
             events = data;
             if ( events_first_fetch ) {
                 // initialize datatable
@@ -886,6 +886,7 @@ function ui_init_datatable_events() {
         paging: false,
         searching: false,
         info: false,
+        order: [[4, 'desc']],
         pageLength: -1,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
         columnDefs: [
@@ -923,13 +924,16 @@ function ui_init_datatable_events() {
             { "data": "timestamp", className: "dt-center" },
         ]
     } );
+
+    // update id value of latest event
+    if (events.length > 0) { latest_event_id_fetched = events[ events.length-1 ].id }
 }
 
 
 function ui_append_datatable_events(data) {
 
     if (data.length == 0) return;
-    
+
     for (const event of data) {
 
         // console.log(event);
