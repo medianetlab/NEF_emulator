@@ -96,6 +96,7 @@ $( document ).ready(function() {
     // events
     api_get_all_monitoring_events();
     start_events_refresh_interval();
+    ui_add_select_listener_events_reload();
 
 });
 
@@ -180,8 +181,6 @@ function start_events_refresh_interval() {
             api_get_last_monitoring_events();
         }, events_refresh_sec);
 
-        // enable the select button
-        $('.events-reload-select').prop("disabled",false);
         $('.events-reload-select').val(events_refresh_sec);
     }
 }
@@ -192,14 +191,12 @@ function stop_events_refresh_interval() {
     clearInterval( events_refresh_interval );
     events_refresh_interval = null;
     
-    // disable the select button
-    $('.events-reload-select').prop("disabled",true);
+    events_refresh_sec = 0;
     $('.events-reload-select').val(0);
 }
 
 
 function reload_events_refresh_interval( new_option ) {
-    
     stop_events_refresh_interval();
     events_refresh_sec  = new_option;
     start_events_refresh_interval();
