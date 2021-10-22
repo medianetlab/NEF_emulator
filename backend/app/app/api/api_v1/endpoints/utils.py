@@ -1,4 +1,4 @@
-import json
+from datetime import datetime
 import threading, logging, time, requests, ast
 from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
@@ -159,6 +159,7 @@ def add_notifications(request: Request, response: JSONResponse, is_notification:
     json_data["method"] = request.method
     json_data["status_code"] = response.status_code
     json_data["isNotification"] = is_notification
+    json_data["timestamp"] = datetime.now()
 
     event_notifications.append(json_data)
     if len(event_notifications) > 100:
