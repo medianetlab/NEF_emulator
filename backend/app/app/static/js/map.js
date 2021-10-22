@@ -27,7 +27,7 @@ var UEs_first_paint = true;
 // for UE & map refresh
 var UE_refresh_interval    = null;
 var UE_refresh_sec_default = 1000; // 1 sec
-var UE_refresh_sec         = 0;    // 0 sec = off
+var UE_refresh_sec         = -1;   // when select = "off" AND disabled = true
 
 // template for UE buttons
 var ue_btn_tpl = `<button class="btn btn-success px-4 btn-ue" type="button" id="btn-ue-{{id}}" data-supi={{supi}} data-running=false>{{name}}</button> `
@@ -121,9 +121,14 @@ function start_map_refresh_interval() {
 
     if (UE_refresh_interval == null) {
 
+        if ( UE_refresh_sec == 0 ) {
+            $('.map-reload-select').prop("disabled",false);
+            return;
+        }
+
         // specify the seconds between every interval
-        if ( UE_refresh_sec==0 ) {
-            UE_refresh_sec = UE_refresh_sec_default;
+        if ( UE_refresh_sec ==-1 ) { // select is "off" and "disabled"
+             UE_refresh_sec = UE_refresh_sec_default;
         }
 
         // start updating
@@ -145,7 +150,8 @@ function stop_map_refresh_interval() {
     
     // disable the select button
     $('.map-reload-select').prop("disabled",true);
-    $('.map-reload-select').val(0);
+    // UE_refresh_sec = 0;
+    // $('.map-reload-select').val(0);
 }
 
 
@@ -153,7 +159,14 @@ function reload_map_refresh_interval( new_option ) {
     
     stop_map_refresh_interval();
     UE_refresh_sec  = new_option;
-    start_map_refresh_interval();
+
+    if (new_option==0) {
+        // user has choosed 0 / off
+        // and wants to stop fetcing UEs...
+        return;
+    } else {
+        start_map_refresh_interval();
+    }
 }
 // ===============================================
 
@@ -199,7 +212,14 @@ function stop_events_refresh_interval() {
 function reload_events_refresh_interval( new_option ) {
     stop_events_refresh_interval();
     events_refresh_sec  = new_option;
-    start_events_refresh_interval();
+
+    if (new_option==0) {
+        // user has choosed 0 / off
+        // and wants to stop fetcing new events...
+        return;
+    } else {
+        start_events_refresh_interval();
+    }
 }
 // ===============================================
 
