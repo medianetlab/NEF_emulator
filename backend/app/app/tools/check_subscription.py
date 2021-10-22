@@ -2,7 +2,6 @@ import logging
 import time
 from app.models.monitoringevent import Monitoring
 from app.crud.crud_monitoringevent import monitoring
-from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 def check_expiration_time(expire_time):
@@ -24,10 +23,10 @@ def check_expiration_time(expire_time):
             return True
         elif(day==time_now[2]):
             # print("Day == day now", day, time_now[2])
-            if(hour>time_now[3]+3):     #+3 is for timeZone (GMT+3)
+            if(hour>time_now[3]):
                 # print(hour, time_now[3])
                 return True
-            elif(hour==time_now[3]+3):
+            elif(hour==time_now[3]):
                 # print("Time == time now", hour, time_now[3])
                 if(minute>time_now[4]):
                     # print(minute, time_now[4])
