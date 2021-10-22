@@ -334,7 +334,11 @@ function ui_map_paint_Cells() {
         
         cell_markers[cell.cell_id] = L.marker([cell.latitude,cell.longitude], {icon: cell_icon_5g}).addTo(mymap)
             .bindTooltip(cell.cell_id)
-            .bindPopup("<b>"+ cell.name +"</b><br />"+ cell.description)
+            .bindPopup("<b>"+ cell.name +"</b><br />"+ 
+                           cell.description  +"<br />"+
+                           "location: ["  + cell.latitude.toFixed(6) + "," + cell.longitude.toFixed(6) +"]<br />"+
+                           "radius: "  + cell.radius
+                )
             .addTo(cells_lg); // add to layer group        
         
         L.circle([cell.latitude,cell.longitude], cell.radius, {
