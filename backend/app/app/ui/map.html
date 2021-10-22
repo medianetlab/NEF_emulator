@@ -32,7 +32,10 @@
     <link rel="stylesheet" href="static/leaflet@1.7.1/leaflet.css" >
     <script src="static/leaflet@1.7.1/leaflet.js"></script>
 
-        <link href="https://unpkg.com/ionicons@4.5.10-0/dist/css/ionicons.min.css" rel="stylesheet">
+    <!-- datatables -->
+    <link rel="stylesheet" href="static/datatables@1.10.18/datatables.min.css">
+
+    <link href="https://unpkg.com/ionicons@4.5.10-0/dist/css/ionicons.min.css" rel="stylesheet">
   </head>
   <body>
     <div class="sidebar sidebar-dark sidebar-fixed" id="sidebar">
@@ -116,25 +119,88 @@
       </header>
       <div class="body flex-grow-1 px-3">
         <div class="mt-2 mb-2">
-          <svg class="icon me-2">
-            <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-reload"></use>
-          </svg>
-          <select class="form-select form-select-sm map-reload-select" aria-label=".form-select-sm" disabled="true">
-            <option value=0 selected>off</option>
-            <option value=1000>1s</option>
-            <option value=2000>2s</option>
-            <option value=5000>5s</option>
-            <option value=15000>15s</option>
-            <option value=30000>30s</option>
-            <option value=60000>1m</option>
-          </select>
+          
         </div>
-        <div id="mapid"></div>
-        <div class="row mt-2">
+        
+        <!-- leaflet js map -->
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-header">Map
+                <div class="select-wrapper">
+                  <svg class="icon me-2">
+                    <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-reload"></use>
+                  </svg>
+                  <select class="form-select form-select-sm map-reload-select" aria-label=".form-select-sm" disabled="true">
+                    <option value=0 selected>off</option>
+                    <option value=1000>1s</option>
+                    <option value=2000>2s</option>
+                    <option value=5000>5s</option>
+                    <option value=15000>15s</option>
+                    <option value=30000>30s</option>
+                    <option value=60000>1m</option>
+                  </select>
+                </div>
+              </div>
+              <div id="mapid"></div>
+            </div>
+          </div>
+        </div>
+        
+
+        <!-- UE button area -->
+        <div class="row mt-2 mb-4">
           <div class="col-12 ue-btn-area">
             <button class="btn btn-success px-4" type="button" id="btn-start-all">Start all</button> 
           </div>
         </div>
+        <!-- row -->
+
+        <!-- events -->
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card mb-4">
+              <div class="card-header">Monitoring Events
+                <div class="select-wrapper">
+                  <svg class="icon me-2">
+                    <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-reload"></use>
+                  </svg>
+                  <select class="form-select form-select-sm events-reload-select" aria-label=".form-select-sm">
+                    <option value=0 selected>off</option>
+                    <option value=1000>1s</option>
+                    <option value=2000>2s</option>
+                    <option value=5000>5s</option>
+                    <option value=15000>15s</option>
+                    <option value=30000>30s</option>
+                    <option value=60000>1m</option>
+                  </select>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row">
+
+                  <table id="dt-events" class="hover" style="width:100%;">
+                      <thead>
+                          <tr>
+                            <th>ID</th>
+                            <th>TYPE</th>
+                            <th>METHOD</th>
+                            <th>RESPONSE</th>
+                            <th>TIMESTAMP</th>
+                            <th>DETAILS</th>
+                          </tr>
+                      </thead>
+                  </table>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- row -->
+
+
+
       </div>
       <footer class="footer">
         <div> © Evolved-5G </div>
@@ -150,6 +216,7 @@
     <!-- <script src="vendors/@coreui/chartjs/js/coreui-chartjs.js"></script> -->
     <script src="static/vendors/@coreui/utils/js/coreui-utils.js"></script>
     <script src="static/js/map.js"></script>
+    <script src="static/datatables@1.10.18/datatables.min.js"></script>
     <script>
     </script>
 

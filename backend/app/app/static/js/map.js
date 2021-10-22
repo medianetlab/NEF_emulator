@@ -33,6 +33,17 @@ var UE_refresh_sec         = 0;    // 0 sec = off
 var ue_btn_tpl = `<button class="btn btn-success px-4 btn-ue" type="button" id="btn-ue-{{id}}" data-supi={{supi}} data-running=false>{{name}}</button> `
 
 var looping_UEs = 0;
+
+// variables used for events
+var events                  = null;
+var events_datatbl          = null;
+var events_first_fetch      = true;
+var latest_event_id_fetched = -1;
+
+// for events & datatables refresh
+var events_refresh_interval    = null;
+var events_refresh_sec_default = 5000; // 5 sec
+var events_refresh_sec         = 5000; // 5 sec
 // ===============================================
 
 
@@ -82,6 +93,10 @@ $( document ).ready(function() {
     ui_add_select_listener_map_reload();
 
 
+    // events
+    api_get_all_monitoring_events();
+    start_events_refresh_interval();
+
 });
 
 $( window ).resize(function() {
@@ -98,8 +113,9 @@ $( window ).resize(function() {
 // ===============================================
 // 
 // Initializes the "UE_refresh_interval"
-// which triggers an Ajax call every second
+// which triggers an Ajax call every "UE_refresh_sec"
 // to fetch the UE data and update the map
+// 
 function start_map_refresh_interval() {
 
     if (UE_refresh_interval == null) {
@@ -137,6 +153,56 @@ function reload_map_refresh_interval( new_option ) {
     stop_map_refresh_interval();
     UE_refresh_sec  = new_option;
     start_map_refresh_interval();
+}
+// ===============================================
+
+
+
+
+
+
+
+
+// ===============================================
+//         Interval - event refresh functions
+// ===============================================
+// 
+// Initializes the "events_refresh_interval"
+// which triggers an Ajax call every "events_refresh_sec"
+// to fetch the event data and update datatable
+// 
+function start_events_refresh_interval() {
+
+    if (events_refresh_interval == null) {
+
+        // start updating
+        events_refresh_interval = setInterval(function(){ 
+            api_get_last_monitoring_events();
+        }, events_refresh_sec);
+
+        // enable the select button
+        $('.events-reload-select').prop("disabled",false);
+        $('.events-reload-select').val(events_refresh_sec);
+    }
+}
+
+
+function stop_events_refresh_interval() {
+    // stop updating every second
+    clearInterval( events_refresh_interval );
+    events_refresh_interval = null;
+    
+    // disable the select button
+    $('.events-reload-select').prop("disabled",true);
+    $('.events-reload-select').val(0);
+}
+
+
+function reload_events_refresh_interval( new_option ) {
+    
+    stop_events_refresh_interval();
+    events_refresh_sec  = new_option;
+    start_events_refresh_interval();
 }
 // ===============================================
 
@@ -660,7 +726,7 @@ function ui_add_ue_all_btn_listener() {
 }
 
 
-// Adds a listener to the select button (top left)
+// Adds a listener to the select button (top right)
 // to handle the reload interval for the map.
 // On change, it takes the selected value (seconds)
 // and reloads the interval
@@ -669,4 +735,214 @@ function ui_add_select_listener_map_reload(){
     $('.map-reload-select').on('change', function(){
         reload_map_refresh_interval( $(this).val() );
     });
+}
+
+
+
+// Adds a listener to the select button (top right)
+// to handle the reload interval for the events.
+// On change, it takes the selected value (seconds)
+// and reloads the interval
+// 
+function ui_add_select_listener_events_reload(){
+    $('.events-reload-select').on('change', function(){
+        reload_events_refresh_interval( $(this).val() );
+    });
+}
+
+
+
+
+
+// Ajax request to get all monitoring events data
+// 
+// 
+function api_get_all_monitoring_events() {
+    
+    var url = app.api_url + '/utils/monitoring/notifications?skip=0&limit=100';
+
+    $.ajax({
+        type: 'GET',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            console.log(data);
+            events = data;
+            if ( events_first_fetch ) {
+                // initialize datatable
+                ui_init_datatable_events();
+                events_first_fetch = false;
+            }
+        },
+        error: function(err)
+        {
+            console.log(err);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
+
+
+// Ajax request to get all monitoring events data
+// 
+// 
+function api_get_all_monitoring_events() {
+    
+    var url = app.api_url + '/utils/monitoring/notifications?skip=0&limit=100';
+
+    $.ajax({
+        type: 'GET',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            console.log(data);
+            events = data;
+            if ( events_first_fetch ) {
+                // initialize datatable
+                ui_init_datatable_events();
+                events_first_fetch = false;
+            }
+        },
+        error: function(err)
+        {
+            console.log(err);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
+
+
+
+
+
+// Ajax request to get all monitoring events data
+// 
+// 
+function api_get_last_monitoring_events() {
+    
+    var url = app.api_url + '/utils/monitoring/last_notifications?id=' + latest_event_id_fetched;
+
+    $.ajax({
+        type: 'GET',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            // console.log(data);
+            events = data;
+            ui_append_datatable_events(data);
+            
+        },
+        error: function(err)
+        {
+            console.log(err);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
+
+
+
+
+function ui_init_datatable_events() {
+    events_datatbl = $('#dt-events').DataTable( {
+        data: events,
+        responsive: true,
+        paging: false,
+        searching: false,
+        info: false,
+        pageLength: -1,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        columnDefs: [
+            {
+                "targets": 0,
+                "data": "id",
+                "visible": true,
+                "orderable" : true,
+                "searchable": false,
+            },
+            {
+                "targets": 5,
+                "data": null,
+                "defaultContent": '',
+                "orderable" : false,
+                "searchable": false,
+                "render": function ( data, type, row ) {
+                    return row.id;
+                },
+            },
+        ],
+        columns: [
+            { "data": "id", className: "dt-center" },
+            { "data": "isNotification",
+              "render": function(data) {
+                if (data) {
+                    return 'Notification';
+                }
+                return 'Request';
+              }
+            },
+            // { "data": "isNotification", className: "dt-center" },
+            { "data": "method", className: "dt-center" },
+            { "data": "status_code", className: "dt-center" },
+            { "data": "timestamp", className: "dt-center" },
+        ]
+    } );
+}
+
+
+function ui_append_datatable_events(data) {
+
+    if (data.length == 0) return;
+    
+    for (const event of data) {
+
+        // console.log(event);
+
+        events_datatbl.rows.add( [{
+            id:             event.id,
+            isNotification: event.isNotification,
+            method:         event.method,
+            status_code:    event.status_code,
+            timestamp:      event.timestamp,
+        }] ).draw( false );
+    }
+
+    // update id value of latest event
+    latest_event_id_fetched = data[ data.length-1 ].id
 }
