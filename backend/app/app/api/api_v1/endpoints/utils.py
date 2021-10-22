@@ -184,16 +184,21 @@ def create_item(item: monitoringevent.MonitoringNotification, request: Request):
 @router.get("/monitoring/notifications")
 def get_notifications(
     skip: int = 0,
-    limit: int = 100
+    limit: int = 100,
+    current_user: models.User = Depends(deps.get_current_active_user)
     ):
     notification = event_notifications[skip:limit]
     return notification
 
 @router.get("/monitoring/last_notifications")
 def get_last_notifications(
-    id: int = Query(..., description="The id of the last retrieved item")
+    id: int = Query(..., description="The id of the last retrieved item"),
+    current_user: models.User = Depends(deps.get_current_active_user)
     ):
     updated_notification = []
+
+    if id == -1:
+        return event_notifications
 
     for notification in event_notifications:
         if notification.get('id') == id:
