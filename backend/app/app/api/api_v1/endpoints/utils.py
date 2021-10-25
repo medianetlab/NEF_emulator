@@ -92,7 +92,7 @@ class BackgroundTasks(threading.Thread):
                         logging.info(f"UE({UE.supi}) with ipv4 {UE.ip_address_v4} handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
                         crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
                         
-                        #Retrieve the subscription of the UE by ipv4 | This could be outside while true but then the user cannot subscribe when the loop runs
+                        #Retrieve the subscription of the UE by external Id | This could be outside while true but then the user cannot subscribe when the loop runs
                         sub = crud.monitoring.get_sub_externalId(db=db, externalId=UE.external_identifier)
 
                         #Validation of subscription
@@ -196,14 +196,19 @@ def get_last_notifications(
     current_user: models.User = Depends(deps.get_current_active_user)
     ):
     updated_notification = []
+    event_notifications_snapshot = event_notifications
 
-    if id == -1:
-        return event_notifications
+    if id == -1 or (event_notifications_snapshot[0].get('id') > id):
+        return event_notifications_snapshot
 
-    for notification in event_notifications:
+
+    skipped_items = 0
+
+    for notification in event_notifications_snapshot:
         if notification.get('id') == id:
-            updated_notification = event_notifications[(id + 1):]
+            updated_notification = event_notifications_snapshot[(skipped_items+1):]
             break
+        skipped_items += 1
     
     return updated_notification
 
