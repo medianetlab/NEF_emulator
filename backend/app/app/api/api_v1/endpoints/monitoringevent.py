@@ -11,8 +11,6 @@ from app import tools
 from app.core.config import settings
 from app.api.api_v1.endpoints.utils import add_notifications
 
-location_header = settings.BACKEND_CORS_ORIGINS[1] + settings.API_V1_STR + "/3gpp-monitoring-event/v1/" 
-
 
 def location_reporting(db: Session,  item_in_json: Any, user: models.User):
     UE = crud.ue.get_ipv4(db=db, ipv4=item_in_json["ipv4Addr"], owner_id=user.id)
@@ -116,7 +114,7 @@ def create_item(
         json_compatible_item_data = jsonable_encoder(response)
         json_compatible_item_data.pop("owner_id")
         json_compatible_item_data.pop("id")
-        link = location_header + scsAsId + "/subscriptions/" + str(response.id)
+        link = str(http_request.url) + '/' + str(response.id)
         json_compatible_item_data["link"] = link
         crud.monitoring.update(db=db, db_obj=response, obj_in={"link" : link})
         

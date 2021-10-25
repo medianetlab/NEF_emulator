@@ -1,15 +1,14 @@
 from datetime import datetime
-import threading, logging, time, requests, ast
+import threading, logging, time, requests
 from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from pydantic.networks import EmailStr
+from fastapi.exceptions import HTTPException
 from sqlalchemy.util.langhelpers import counter
 from app.db.session import SessionLocal
 from app import models, schemas, crud
 from app.api import deps
-from app.core.celery_app import celery_app
 from app.schemas import monitoringevent 
 from app.utils import send_test_email
 from app.tools.distance import check_distance
@@ -149,6 +148,13 @@ def add_notifications(request: Request, response: JSONResponse, is_notification:
     json_data = {}
     json_data.update({"id" : counter})
 
+    #Find the service API 
+    #Keep in mind that whether endpoint changes format, the following if statement needs review
+    #Since new APIs are added in the emulator, the if statement will expand. e.g.,   elif endpoint.find('qos') != -1: serviceAPI = "As Session With QoS"
+    endpoint = request.url.path
+    if endpoint.find('monitoring') != -1:
+        serviceAPI = "Monitoring Event API"
+
     #Request body check and trim
     if(request.method == 'POST') or (request.method == 'PUT'):  
         req_body = request._body.decode("utf-8").replace('\n', '')
@@ -156,11 +162,14 @@ def add_notifications(request: Request, response: JSONResponse, is_notification:
         json_data["request_body"] = req_body
 
     json_data["response_body"] = response.body.decode("utf-8")  
-    json_data["method"] = request.method
+    json_data["endpoint"] = endpoint
+    json_data["serviceAPI"] = serviceAPI
+    json_data["method"] = request.method    
     json_data["status_code"] = response.status_code
     json_data["isNotification"] = is_notification
     json_data["timestamp"] = datetime.now()
 
+    #Check that event_notifications length does not exceed 100
     event_notifications.append(json_data)
     if len(event_notifications) > 100:
         event_notifications.pop(0)
@@ -198,11 +207,18 @@ def get_last_notifications(
     updated_notification = []
     event_notifications_snapshot = event_notifications
 
-    if id == -1 or (event_notifications_snapshot[0].get('id') > id):
+
+    if id == -1:
         return event_notifications_snapshot
 
-
+    if event_notifications_snapshot:
+        if event_notifications_snapshot[0].get('id') > id:
+            return event_notifications_snapshot
+    else:
+        raise HTTPException(status_code=409, detail="Event notification list is empty")
+            
     skipped_items = 0
+
 
     for notification in event_notifications_snapshot:
         if notification.get('id') == id:
