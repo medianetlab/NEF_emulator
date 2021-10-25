@@ -201,6 +201,79 @@
 
 
 
+
+
+        <!-- <div class="docs-example-modal"> -->
+        <div class="modal" tabindex="-1" id="details_modal">
+          <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title"></h5>
+                <button type="button" class="btn-close" data-coreui-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body p-5">
+
+                <div class="mb-5">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Service API</th>
+                        <th scope="col">Endpoint</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td scope="row" id="modal_srv"></th>
+                        <td><kbd id="modal_endpoint"></kbd></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="mb-5">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Type</th>
+                        <th scope="col">Status code</th>
+                        <th scope="col">Method</th>
+                        <th scope="col">Timestamp</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td id="modal_type"></td>
+                        <td id="modal_code"></td>
+                        <td id="modal_method"></td>
+                        <td id="modal_tstamp"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                
+                <div class="mb-5">
+                  <h4>Request Body</h4>
+                  <pre class="pre-scrollable" id="modal_req"></pre>
+                </div>
+
+                <div class="mb-5">
+                  <h4>Response Body</h4>
+                  <pre  class="pre-scrollable" id="modal_resp"></pre>
+                </div>
+
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-coreui-dismiss="modal">Close</button>
+                <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
+
+
       </div>
       <footer class="footer">
         <div> © Evolved-5G </div>

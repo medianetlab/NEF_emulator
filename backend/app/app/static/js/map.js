@@ -44,6 +44,18 @@ var latest_event_id_fetched = -1;
 var events_refresh_interval    = null;
 var events_refresh_sec_default = 5000; // 5 sec
 var events_refresh_sec         = 5000; // 5 sec
+
+// template for Details buttons
+var detail_btn_tpl = `<button class="btn btn-light" type="button" onclick="show_details_modal({{id}});">
+  <svg class="icon">
+    <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-fullscreen"></use>
+  </svg>
+</button>`;
+
+
+// modal for details
+var modal = new coreui.Modal(document.getElementById('details_modal'), {});
+
 // ===============================================
 
 
@@ -877,7 +889,7 @@ function api_get_last_monitoring_events() {
         success: function(data)
         {
             // console.log(data);
-            events = data;
+            events.push(...data);
             ui_append_datatable_events(data);
             
         },
@@ -895,7 +907,8 @@ function api_get_last_monitoring_events() {
 
 
 
-
+// Called to create the Datatable instance of the events.
+// 
 function ui_init_datatable_events() {
     events_datatbl = $('#dt-events').DataTable( {
         data: events,
@@ -921,7 +934,8 @@ function ui_init_datatable_events() {
                 "orderable" : false,
                 "searchable": false,
                 "render": function ( data, type, row ) {
-                    return row.id;
+                    // return row.id;
+                    return detail_btn_tpl.replaceAll("{{id}}", row.id);
                 },
             },
         ],
@@ -935,10 +949,10 @@ function ui_init_datatable_events() {
                 return 'Request';
               }
             },
-            // { "data": "isNotification", className: "dt-center" },
             { "data": "method", className: "dt-center" },
             { "data": "status_code", className: "dt-center" },
             { "data": "timestamp", className: "dt-center" },
+            { "data": null, className: "dt-center" },
         ]
     } );
 
@@ -947,6 +961,10 @@ function ui_init_datatable_events() {
 }
 
 
+
+// called after fetching new events and uses the
+// Datatables API to add data as new "rows".
+// 
 function ui_append_datatable_events(data) {
 
     if (data.length == 0) return;
@@ -966,4 +984,33 @@ function ui_append_datatable_events(data) {
 
     // update id value of latest event
     latest_event_id_fetched = data[ data.length-1 ].id
+}
+
+
+
+
+
+function show_details_modal( event_id ) {
+
+    details = get_event_details( event_id );
+
+    // load event details
+    $("#modal_srv").html( details.serviceAPI );
+    $("#modal_endpoint").html(details.endpoint);
+    $("#modal_type").html( (details.isNotification)? "Notification" : "Request" );
+    $("#modal_code").html(details.status_code);
+    $("#modal_method").html(details.method);
+    $("#modal_tstamp").html(details.timestamp);
+
+    $("#modal_req").html(  JSON.stringify( JSON.parse(details.request_body),  null, 4 ) );
+    $("#modal_resp").html( JSON.stringify( JSON.parse(details.response_body), null, 4 ) );
+
+    modal.show();
+}
+
+
+function get_event_details( event_id ) {
+    for (const event of events) {
+        if (event.id == event_id) return event;
+    }
 }
