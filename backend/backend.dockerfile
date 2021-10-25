@@ -23,3 +23,5 @@ RUN bash -c "if [ $INSTALL_JUPYTER == 'true' ] ; then pip install jupyterlab ; f
 
 COPY ./app /app
 ENV PYTHONPATH=/app
+
+COPY ./start-reload.sh /
