@@ -1002,7 +1002,12 @@ function show_details_modal( event_id ) {
     $("#modal_method").html(details.method);
     $("#modal_tstamp").html(details.timestamp);
 
-    $("#modal_req").html(  JSON.stringify( JSON.parse(details.request_body),  null, 4 ) );
+    if (details.request_body != null) {
+        $("#modal_req").html(  JSON.stringify( JSON.parse(details.request_body),  null, 4 ) );
+    } else {
+        $("#modal_req").html(  "empty" );
+    }
+    
     $("#modal_resp").html( JSON.stringify( JSON.parse(details.response_body), null, 4 ) );
 
     modal.show();

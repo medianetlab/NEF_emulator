@@ -14,3 +14,5 @@
 
 .row table.dataTable thead th {border-bottom: none;}
 .row table.dataTable.no-footer {border-bottom: none; font-size: 14px;}
+
+.pre-body {max-height: 340px; background: #f5f5f5;}
