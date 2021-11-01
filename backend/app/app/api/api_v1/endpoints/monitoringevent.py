@@ -1,4 +1,3 @@
-import ast
 from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, Path, Response, Request
 from fastapi.encoders import jsonable_encoder
@@ -53,7 +52,6 @@ def read_active_subscriptions(
 
     for sub in subs:
         sub_validate_time = tools.check_expiration_time(expire_time=sub.monitorExpireTime)
-        print(sub.id)
         if not sub_validate_time:
             crud.monitoring.remove(db=db, id=sub.id)
             subs.remove(sub)
@@ -139,6 +137,8 @@ def update_item(
     """
     Update/Replace an existing subscription resource
     """
+    id = int(subscriptionId)
+    
     sub = crud.monitoring.get(db=db, id=int(subscriptionId))
     if not sub:
         raise HTTPException(status_code=404, detail="Subscription not found")
@@ -158,6 +158,7 @@ def update_item(
         add_notifications(http_request, http_response, False)
         return http_response
     else:
+        crud.monitoring.remove(db=db, id=id)
         raise HTTPException(status_code=403, detail="Subscription has expired")
     
 
