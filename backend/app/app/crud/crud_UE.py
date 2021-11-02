@@ -43,6 +43,15 @@ class CRUD_UE(CRUDBase[UE, UECreate, UEUpdate]):
             .first()
         )
 
+    def get_externalId(
+        self, db: Session, *, externalId: str, owner_id: int
+    ) -> UE:
+        return (
+            db.query(self.model)
+            .filter(UE.external_identifier == externalId, UE.owner_id == owner_id)
+            .first()
+        )
+
     def get_by_gNB(
         self, db: Session, *, gNB_id: int, skip: int = 0, limit: int = 100
     ) -> List[UE]:

@@ -2,4 +2,4 @@
 .card .spinner-grow {position: absolute; bottom: 1rem; right: 1rem;}
 
 .row table.dataTable thead th {border-bottom: none;}
-.row table.dataTable.no-footer {border-bottom: none}
+.row table.dataTable.no-footer {border-bottom: none; font-size: 14px;}

@@ -20,15 +20,42 @@ var cells_lg         = L.layerGroup(),
 //  markers
 var ue_markers   = {};
 var cell_markers = {};
+var map_bounds   = [];
 // helper var for correct initialization
 var UEs_first_paint = true;
 
-var UE_refresh_interval = null;
+// for UE & map refresh
+var UE_refresh_interval    = null;
+var UE_refresh_sec_default = 1000; // 1 sec
+var UE_refresh_sec         = -1;   // when select = "off" AND disabled = true
 
 // template for UE buttons
 var ue_btn_tpl = `<button class="btn btn-success px-4 btn-ue" type="button" id="btn-ue-{{id}}" data-supi={{supi}} data-running=false>{{name}}</button> `
 
 var looping_UEs = 0;
+
+// variables used for events
+var events                  = null;
+var events_datatbl          = null;
+var events_first_fetch      = true;
+var latest_event_id_fetched = -1;
+
+// for events & datatables refresh
+var events_refresh_interval    = null;
+var events_refresh_sec_default = 5000; // 5 sec
+var events_refresh_sec         = 5000; // 5 sec
+
+// template for Details buttons
+var detail_btn_tpl = `<button class="btn btn-light" type="button" onclick="show_details_modal({{id}});">
+  <svg class="icon">
+    <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-fullscreen"></use>
+  </svg>
+</button>`;
+
+
+// modal for details
+var modal = new coreui.Modal(document.getElementById('details_modal'), {});
+
 // ===============================================
 
 
@@ -74,6 +101,15 @@ $( document ).ready(function() {
     wait_for_UEs_data();
 
 
+    // add listener to the select option for map refresh
+    ui_add_select_listener_map_reload();
+
+
+    // events
+    api_get_all_monitoring_events();
+    start_events_refresh_interval();
+    ui_add_select_listener_events_reload();
+
 });
 
 $( window ).resize(function() {
@@ -90,22 +126,112 @@ $( window ).resize(function() {
 // ===============================================
 // 
 // Initializes the "UE_refresh_interval"
-// which triggers an Ajax call every second
+// which triggers an Ajax call every "UE_refresh_sec"
 // to fetch the UE data and update the map
+// 
 function start_map_refresh_interval() {
 
     if (UE_refresh_interval == null) {
-        // start updating every second
+
+        if ( UE_refresh_sec == 0 ) {
+            $('.map-reload-select').prop("disabled",false);
+            return;
+        }
+
+        // specify the seconds between every interval
+        if ( UE_refresh_sec ==-1 ) { // select is "off" and "disabled"
+             UE_refresh_sec = UE_refresh_sec_default;
+        }
+
+        // start updating
         UE_refresh_interval = setInterval(function(){ 
             api_get_UEs();
-        }, 1000);
+        }, UE_refresh_sec);
+
+        // enable the select button
+        $('.map-reload-select').prop("disabled",false);
+        $('.map-reload-select').val(UE_refresh_sec);
     }
 }
+
 
 function stop_map_refresh_interval() {
     // stop updating every second
     clearInterval( UE_refresh_interval );
     UE_refresh_interval = null;
+    
+    // disable the select button
+    $('.map-reload-select').prop("disabled",true);
+    // UE_refresh_sec = 0;
+    // $('.map-reload-select').val(0);
+}
+
+
+function reload_map_refresh_interval( new_option ) {
+    
+    stop_map_refresh_interval();
+    UE_refresh_sec  = new_option;
+
+    if (new_option==0) {
+        // user has choosed 0 / off
+        // and wants to stop fetcing UEs...
+        return;
+    } else {
+        start_map_refresh_interval();
+    }
+}
+// ===============================================
+
+
+
+
+
+
+
+
+// ===============================================
+//         Interval - event refresh functions
+// ===============================================
+// 
+// Initializes the "events_refresh_interval"
+// which triggers an Ajax call every "events_refresh_sec"
+// to fetch the event data and update datatable
+// 
+function start_events_refresh_interval() {
+
+    if (events_refresh_interval == null) {
+
+        // start updating
+        events_refresh_interval = setInterval(function(){ 
+            api_get_last_monitoring_events();
+        }, events_refresh_sec);
+
+        $('.events-reload-select').val(events_refresh_sec);
+    }
+}
+
+
+function stop_events_refresh_interval() {
+    // stop updating every second
+    clearInterval( events_refresh_interval );
+    events_refresh_interval = null;
+    
+    events_refresh_sec = 0;
+    $('.events-reload-select').val(0);
+}
+
+
+function reload_events_refresh_interval( new_option ) {
+    stop_events_refresh_interval();
+    events_refresh_sec  = new_option;
+
+    if (new_option==0) {
+        // user has choosed 0 / off
+        // and wants to stop fetcing new events...
+        return;
+    } else {
+        start_events_refresh_interval();
+    }
 }
 // ===============================================
 
@@ -131,14 +257,16 @@ function ui_initialize_map() {
                 'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
         mbUrl = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
 
-    var grayscale   = L.tileLayer(mbUrl, {id: 'mapbox/light-v9', tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
+    var grayscale   = L.tileLayer(mbUrl, {id: 'mapbox/light-v9',    tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
         streets     = L.tileLayer(mbUrl, {id: 'mapbox/streets-v11', tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23});
 
 
     // map initialization
     mymap = L.map('mapid', {
         layers: [grayscale, cells_lg, cell_coverage_lg, ues_lg, paths_lg]
-    }).setView([37.996349, 23.819861], 17);
+    }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
+    //.setView([37.996349, 23.819861], 17);  // previous "hard-coded" center for the first map scenario at NCSRD
+
 
     var baseLayers = {
             "Grayscale": grayscale,
@@ -180,7 +308,7 @@ function api_get_UEs() {
         },
         success: function(data)
         {
-            console.log(data);
+            // console.log(data);
             ues = data;
             ui_map_paint_UEs();
         },
@@ -221,6 +349,7 @@ function ui_map_paint_UEs() {
                            // ue.description +"<br />"+
                            "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
                            "Cell ID: " + ue.cell_id_hex +"<br />"+
+                           "External identifier: " + ue.external_identifier +"<br />"+
                            "Speed:"+ ue.speed)
                 .addTo(ues_lg); // add to layer group
 
@@ -233,6 +362,7 @@ function ui_map_paint_UEs() {
                            // ue.description +"<br />"+
                            "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
                            "Cell ID: " + ue.cell_id_hex +"<br />"+
+                           "External identifier: " + ue.external_identifier +"<br />"+
                            "Speed:"+ ue.speed);
         }
     }
@@ -299,7 +429,11 @@ function ui_map_paint_Cells() {
         
         cell_markers[cell.cell_id] = L.marker([cell.latitude,cell.longitude], {icon: cell_icon_5g}).addTo(mymap)
             .bindTooltip(cell.cell_id)
-            .bindPopup("<b>"+ cell.name +"</b><br />"+ cell.description)
+            .bindPopup("<b>"+ cell.name +"</b><br />"+ 
+                           cell.description  +"<br />"+
+                           "location: ["  + cell.latitude.toFixed(6) + "," + cell.longitude.toFixed(6) +"]<br />"+
+                           "radius: "  + cell.radius
+                )
             .addTo(cells_lg); // add to layer group        
         
         L.circle([cell.latitude,cell.longitude], cell.radius, {
@@ -307,8 +441,17 @@ function ui_map_paint_Cells() {
             fillColor: '#f03',
             fillOpacity: 0.05
         }).addTo(cell_coverage_lg).addTo(mymap);
-          
-    }    
+        
+        // keep (lat, long) to later set view of the map
+        map_bounds.push([cell.latitude,cell.longitude]);
+    }
+    
+    // if cells where found, map -> set view
+    if ( cells.length >0 ) {
+        var leaflet_bounds = new L.LatLngBounds(map_bounds);
+        mymap.fitBounds( leaflet_bounds );
+    }
+
 }
 
 
@@ -418,6 +561,7 @@ function api_start_loop( ue ) {
             $("#btn-ue-"+ue.id).data("running",true);
             $("#btn-ue-"+ue.id).removeClass('btn-success').addClass('btn-danger');
             looping_UEs++;
+
             if (looping_UEs == ues.length) {
                 $('#btn-start-all').removeClass('btn-success').addClass('btn-danger');
                 $('#btn-start-all').text("Stop all");
@@ -443,8 +587,6 @@ function api_start_loop( ue ) {
 // 
 function api_stop_loop( ue ) {
 
-    console.log(ue);
-
     var url = app.api_url + '/utils/stop-loop/';
     var data = {
         "supi": ue.supi
@@ -468,6 +610,7 @@ function api_stop_loop( ue ) {
             $("#btn-ue-"+ue.id).data("running",false);
             $("#btn-ue-"+ue.id).addClass('btn-success').removeClass('btn-danger');
             looping_UEs--;
+
             if (looping_UEs == 0) {
                 $('#btn-start-all').addClass('btn-success').removeClass('btn-danger');
                 $('#btn-start-all').text("Start all");
@@ -529,6 +672,12 @@ function ui_set_loop_btn_status_for(ue) {
                 $('#btn-ue-'+ue.id).removeClass('btn-success').addClass('btn-danger');
                 $('#btn-ue-'+ue.id).data("running",data.running);
                 
+                looping_UEs++;
+                if (looping_UEs == ues.length) {
+                    $('#btn-start-all').removeClass('btn-success').addClass('btn-danger');
+                    $('#btn-start-all').text("Stop all");
+                }
+                
                 start_map_refresh_interval();
             }
         },
@@ -553,8 +702,7 @@ function ui_add_ue_btn_listeners(){
     $('.btn-ue').on('click', function(){
 
         curr_supi = $(this).data("supi");
-        // console.log(curr_supi);
-        // console.log($(this).data("running"));
+        
         if ( $(this).data("running") == false) {
             
             // start location UE loop
@@ -577,7 +725,7 @@ function ui_add_ue_btn_listeners(){
 
 
 
-// Adds a listener start/stop ALL button
+// Adds a listener to start/stop ALL button
 // 
 function ui_add_ue_all_btn_listener() {
     $('#btn-start-all').on('click', function(){
@@ -604,4 +752,270 @@ function ui_add_ue_all_btn_listener() {
             $(this).text("Start all");
         }
     });
+}
+
+
+// Adds a listener to the select button (top right)
+// to handle the reload interval for the map.
+// On change, it takes the selected value (seconds)
+// and reloads the interval
+// 
+function ui_add_select_listener_map_reload(){
+    $('.map-reload-select').on('change', function(){
+        reload_map_refresh_interval( $(this).val() );
+    });
+}
+
+
+
+// Adds a listener to the select button (top right)
+// to handle the reload interval for the events.
+// On change, it takes the selected value (seconds)
+// and reloads the interval
+// 
+function ui_add_select_listener_events_reload(){
+    $('.events-reload-select').on('change', function(){
+        reload_events_refresh_interval( $(this).val() );
+    });
+}
+
+
+
+
+
+// Ajax request to get all monitoring events data
+// 
+// 
+function api_get_all_monitoring_events() {
+    
+    var url = app.api_url + '/utils/monitoring/notifications?skip=0&limit=100';
+
+    $.ajax({
+        type: 'GET',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            console.log(data);
+            events = data;
+            if ( events_first_fetch ) {
+                // initialize datatable
+                ui_init_datatable_events();
+                events_first_fetch = false;
+            }
+        },
+        error: function(err)
+        {
+            console.log(err);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
+
+
+// Ajax request to get all monitoring events data
+// 
+// 
+function api_get_all_monitoring_events() {
+    
+    var url = app.api_url + '/utils/monitoring/notifications?skip=0&limit=100';
+
+    $.ajax({
+        type: 'GET',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            // console.log(data);
+            events = data;
+            if ( events_first_fetch ) {
+                // initialize datatable
+                ui_init_datatable_events();
+                events_first_fetch = false;
+            }
+        },
+        error: function(err)
+        {
+            console.log(err);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
+
+
+
+
+
+// Ajax request to get all monitoring events data
+// 
+// 
+function api_get_last_monitoring_events() {
+    
+    var url = app.api_url + '/utils/monitoring/last_notifications?id=' + latest_event_id_fetched;
+
+    $.ajax({
+        type: 'GET',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            // console.log(data);
+            events.push(...data);
+            ui_append_datatable_events(data);
+            
+        },
+        error: function(err)
+        {
+            console.log(err);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
+
+
+
+// Called to create the Datatable instance of the events.
+// 
+function ui_init_datatable_events() {
+    events_datatbl = $('#dt-events').DataTable( {
+        data: events,
+        responsive: true,
+        paging: false,
+        searching: false,
+        info: false,
+        order: [[4, 'desc']],
+        pageLength: -1,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        columnDefs: [
+            {
+                "targets": 0,
+                "data": "id",
+                "visible": true,
+                "orderable" : true,
+                "searchable": false,
+            },
+            {
+                "targets": 5,
+                "data": null,
+                "defaultContent": '',
+                "orderable" : false,
+                "searchable": false,
+                "render": function ( data, type, row ) {
+                    // return row.id;
+                    return detail_btn_tpl.replaceAll("{{id}}", row.id);
+                },
+            },
+        ],
+        columns: [
+            { "data": "id", className: "dt-center" },
+            { "data": "isNotification",
+              "render": function(data) {
+                if (data) {
+                    return 'Notification';
+                }
+                return 'Request';
+              }
+            },
+            { "data": "method", className: "dt-center" },
+            { "data": "status_code", className: "dt-center" },
+            { "data": "timestamp", className: "dt-center" },
+            { "data": null, className: "dt-center" },
+        ]
+    } );
+
+    // update id value of latest event
+    if (events.length > 0) { latest_event_id_fetched = events[ events.length-1 ].id }
+}
+
+
+
+// called after fetching new events and uses the
+// Datatables API to add data as new "rows".
+// 
+function ui_append_datatable_events(data) {
+
+    if (data.length == 0) return;
+
+    for (const event of data) {
+
+        // console.log(event);
+
+        events_datatbl.rows.add( [{
+            id:             event.id,
+            isNotification: event.isNotification,
+            method:         event.method,
+            status_code:    event.status_code,
+            timestamp:      event.timestamp,
+        }] ).draw( false );
+    }
+
+    // update id value of latest event
+    latest_event_id_fetched = data[ data.length-1 ].id
+}
+
+
+
+
+
+function show_details_modal( event_id ) {
+
+    details = get_event_details( event_id );
+
+    // load event details
+    $("#modal_srv").html( details.serviceAPI );
+    $("#modal_endpoint").html(details.endpoint);
+    $("#modal_type").html( (details.isNotification)? "Notification" : "Request" );
+    $("#modal_code").html(details.status_code);
+    $("#modal_method").html(details.method);
+    $("#modal_tstamp").html(details.timestamp);
+
+    if (details.request_body != null) {
+        $("#modal_req").html(  JSON.stringify( JSON.parse(details.request_body),  null, 4 ) );
+    } else {
+        $("#modal_req").html(  "empty" );
+    }
+    
+    $("#modal_resp").html( JSON.stringify( JSON.parse(details.response_body), null, 4 ) );
+
+    modal.show();
+}
+
+
+function get_event_details( event_id ) {
+    for (const event of events) {
+        if (event.id == event_id) return event;
+    }
 }

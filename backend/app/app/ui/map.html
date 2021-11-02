@@ -32,7 +32,10 @@
     <link rel="stylesheet" href="static/leaflet@1.7.1/leaflet.css" >
     <script src="static/leaflet@1.7.1/leaflet.js"></script>
 
-        <link href="https://unpkg.com/ionicons@4.5.10-0/dist/css/ionicons.min.css" rel="stylesheet">
+    <!-- datatables -->
+    <link rel="stylesheet" href="static/datatables@1.10.18/datatables.min.css">
+
+    <link href="https://unpkg.com/ionicons@4.5.10-0/dist/css/ionicons.min.css" rel="stylesheet">
   </head>
   <body>
     <div class="sidebar sidebar-dark sidebar-fixed" id="sidebar">
@@ -77,7 +80,7 @@
       <button class="sidebar-toggler" type="button" data-coreui-toggle="unfoldable"></button>
     </div>
     <div class="wrapper d-flex flex-column min-vh-100 bg-light">
-      <header class="header header-sticky mb-4">
+      <header class="header header-sticky">
         <div class="container-fluid">
           <button class="header-toggler px-md-0 me-md-3" type="button" onclick="coreui.Sidebar.getInstance(document.querySelector('#sidebar')).toggle()">
             <svg class="icon icon-lg">
@@ -115,12 +118,162 @@
         </div>
       </header>
       <div class="body flex-grow-1 px-3">
-        <div id="mapid"></div>
-        <div class="row mt-2">
+        <div class="mt-2 mb-2">
+          
+        </div>
+        
+        <!-- leaflet js map -->
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-header">Map
+                <div class="select-wrapper">
+                  <svg class="icon me-2">
+                    <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-reload"></use>
+                  </svg>
+                  <select class="form-select form-select-sm map-reload-select" aria-label=".form-select-sm" disabled="true">
+                    <option value=0 selected>off</option>
+                    <option value=1000>1s</option>
+                    <option value=2000>2s</option>
+                    <option value=5000>5s</option>
+                    <option value=15000>15s</option>
+                    <option value=30000>30s</option>
+                    <option value=60000>1m</option>
+                  </select>
+                </div>
+              </div>
+              <div id="mapid"></div>
+            </div>
+          </div>
+        </div>
+        
+
+        <!-- UE button area -->
+        <div class="row mt-2 mb-4">
           <div class="col-12 ue-btn-area">
             <button class="btn btn-success px-4" type="button" id="btn-start-all">Start all</button> 
           </div>
         </div>
+        <!-- row -->
+
+        <!-- events -->
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card mb-4">
+              <div class="card-header">API User Interface
+                <div class="select-wrapper">
+                  <svg class="icon me-2">
+                    <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-reload"></use>
+                  </svg>
+                  <select class="form-select form-select-sm events-reload-select" aria-label=".form-select-sm">
+                    <option value=0>off</option>
+                    <option value=1000>1s</option>
+                    <option value=2000>2s</option>
+                    <option value=5000 selected >5s</option>
+                    <option value=15000>15s</option>
+                    <option value=30000>30s</option>
+                    <option value=60000>1m</option>
+                  </select>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row">
+
+                  <table id="dt-events" class="hover" style="width:100%;">
+                      <thead>
+                          <tr>
+                            <th>ID</th>
+                            <th>TYPE</th>
+                            <th>METHOD</th>
+                            <th>RESPONSE</th>
+                            <th>TIMESTAMP</th>
+                            <th>DETAILS</th>
+                          </tr>
+                      </thead>
+                  </table>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- row -->
+
+
+
+
+
+        <!-- <div class="docs-example-modal"> -->
+        <div class="modal" tabindex="-1" id="details_modal">
+          <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title"></h5>
+                <button type="button" class="btn-close" data-coreui-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body p-5">
+
+                <div class="mb-5">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Service API</th>
+                        <th scope="col">Endpoint</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td scope="row" id="modal_srv"></th>
+                        <td><code id="modal_endpoint"></code></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="mb-5">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Type</th>
+                        <th scope="col">Status code</th>
+                        <th scope="col">Method</th>
+                        <th scope="col">Timestamp</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td id="modal_type"></td>
+                        <td><kbd id="modal_code"></kbd></td>
+                        <td><kbd id="modal_method"></kbd></td>
+                        <td id="modal_tstamp"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                
+                <div class="mb-5">
+                  <h4>Request Body</h4>
+                  <pre class="pre-body pre-req p-2"><code id="modal_req"></code></pre>
+                </div>
+
+                <div class="mb-5">
+                  <h4>Response Body</h4>
+                  <pre class="pre-body pre-resp p-2"><code id="modal_resp"></code></pre>
+                </div>
+
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-coreui-dismiss="modal">Close</button>
+                <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
+
+
       </div>
       <footer class="footer">
         <div> © Evolved-5G </div>
@@ -136,6 +289,7 @@
     <!-- <script src="vendors/@coreui/chartjs/js/coreui-chartjs.js"></script> -->
     <script src="static/vendors/@coreui/utils/js/coreui-utils.js"></script>
     <script src="static/js/map.js"></script>
+    <script src="static/datatables@1.10.18/datatables.min.js"></script>
     <script>
     </script>
 

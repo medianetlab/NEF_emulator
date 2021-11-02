@@ -1,18 +1,33 @@
+// ===============================================
+//               Global variables
+// ===============================================
 var gNBs  = null;
 var cells = null;
 var ues   = null;
 var paths = null;
 
+
+
+
+// ===============================================
+//                 Document ready
+// ===============================================
 $( document ).ready(function() {
     api_get_gNBs();
     api_get_Cells()
     api_get_UEs()
     api_get_paths()
 });
+// ===============================================
 
 
 
 
+
+// Ajax request to get gNBs data
+// on success: update the card at the top of the page
+// and fill the datatable with values
+// 
 function api_get_gNBs() {
     
     var url = app.api_url + '/gNBs/?skip=0&limit=100';
@@ -48,6 +63,11 @@ function api_get_gNBs() {
 }
 
 
+
+// Ajax request to get Cells data
+// on success: update the card at the top of the page
+// and fill the datatable with values
+// 
 function api_get_Cells() {
     
     var url = app.api_url + '/Cells/?skip=0&limit=100';
@@ -83,7 +103,10 @@ function api_get_Cells() {
 }
 
 
-
+// Ajax request to get UEs data
+// on success: update the card at the top of the page
+// and fill the datatable with values
+// 
 function api_get_UEs() {
     
     var url = app.api_url + '/UEs/?skip=0&limit=100';
@@ -119,6 +142,11 @@ function api_get_UEs() {
 }
 
 
+
+// Ajax request to get Paths data
+// on success: update the card at the top of the page
+// and fill the datatable with values
+// 
 function api_get_paths() {
     
     var url = app.api_url + '/frontend/location/?skip=0&limit=100';
@@ -153,12 +181,17 @@ function api_get_paths() {
 }
 
 
-
+// Helper function to update the numbers displayed on every card
+// 
 function ui_update_card( element_id, number ) {
     $( element_id ).html(number);
 }
 
 
+
+// ===============================================
+//               Datatable functions
+// ===============================================
 function ui_init_datatable_gNBs() {
     $('#dt-gNBs').DataTable( {
         data: gNBs,
@@ -177,7 +210,6 @@ function ui_init_datatable_gNBs() {
         ]
     } );
 }
-
 function ui_init_datatable_Cells() {
     $('#dt-cells').DataTable( {
         data: cells,
@@ -196,7 +228,6 @@ function ui_init_datatable_Cells() {
         ]
     } );
 }
-
 function ui_init_datatable_UEs() {
     $('#dt-ues').DataTable( {
         data: ues,
@@ -217,3 +248,4 @@ function ui_init_datatable_UEs() {
         ]
     } );
 }
+// ===============================================

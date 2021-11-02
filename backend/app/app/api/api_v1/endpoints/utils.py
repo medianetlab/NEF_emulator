@@ -1,14 +1,14 @@
-import threading, logging, time, requests, json
-import fastapi
+from datetime import datetime
+import threading, logging, time, requests
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, Path, responses
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
+from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from pydantic.networks import EmailStr
-from sqlalchemy.orm import Session
+from fastapi.exceptions import HTTPException
+from sqlalchemy.util.langhelpers import counter
 from app.db.session import SessionLocal
 from app import models, schemas, crud
 from app.api import deps
-from app.core.celery_app import celery_app
 from app.schemas import monitoringevent 
 from app.utils import send_test_email
 from app.tools.distance import check_distance
@@ -30,7 +30,6 @@ class BackgroundTasks(threading.Thread):
 
     def run(self):
         
-        # logging.warning(f'Looping... ^_^ User: {path}')
         current_user = self._args[0]
         supi = self._args[1]
 
@@ -92,8 +91,8 @@ class BackgroundTasks(threading.Thread):
                         logging.info(f"UE({UE.supi}) with ipv4 {UE.ip_address_v4} handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
                         crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
                         
-                        #Retrieve the subscription of the UE by ipv4 | This could be outside while true but then the user cannot subscribe when the loop runs
-                        sub = crud.monitoring.get_sub_ipv4(db=db, ipv4=UE.ip_address_v4)
+                        #Retrieve the subscription of the UE by external Id | This could be outside while true but then the user cannot subscribe when the loop runs
+                        sub = crud.monitoring.get_sub_externalId(db=db, externalId=UE.external_identifier)
 
                         #Validation of subscription
                         if not sub:
@@ -106,7 +105,7 @@ class BackgroundTasks(threading.Thread):
                                 sub = tools.check_numberOfReports(db=db, item_in=sub)
                                 if sub: #return the callback request only if subscription is valid
                                     try:
-                                        response = location_callback(UE.Cell.cell_id, UE.Cell.gNB.gNB_id, sub.notificationDestination)
+                                        response = location_callback(UE.external_identifier, UE.Cell.cell_id, UE.Cell.gNB.gNB_id, sub.notificationDestination, sub.link)
                                         logging.info(response.json())
                                     except requests.exceptions.ConnectionError as ex:
                                         logging.warning("Failed to send the callback request")
@@ -139,37 +138,95 @@ class BackgroundTasks(threading.Thread):
         self._stop_threads = True
 
 
+event_notifications = []
+counter = 0
+
+def add_notifications(request: Request, response: JSONResponse, is_notification: bool):
+
+    global counter
+
+    json_data = {}
+    json_data.update({"id" : counter})
+
+    #Find the service API 
+    #Keep in mind that whether endpoint changes format, the following if statement needs review
+    #Since new APIs are added in the emulator, the if statement will expand. e.g.,   elif endpoint.find('qos') != -1: serviceAPI = "As Session With QoS"
+    endpoint = request.url.path
+    if endpoint.find('monitoring') != -1:
+        serviceAPI = "Monitoring Event API"
+
+    #Request body check and trim
+    if(request.method == 'POST') or (request.method == 'PUT'):  
+        req_body = request._body.decode("utf-8").replace('\n', '')
+        req_body = req_body.replace(' ', '')
+        json_data["request_body"] = req_body
+
+    json_data["response_body"] = response.body.decode("utf-8")  
+    json_data["endpoint"] = endpoint
+    json_data["serviceAPI"] = serviceAPI
+    json_data["method"] = request.method    
+    json_data["status_code"] = response.status_code
+    json_data["isNotification"] = is_notification
+    json_data["timestamp"] = datetime.now()
+
+    #Check that event_notifications length does not exceed 100
+    event_notifications.append(json_data)
+    if len(event_notifications) > 100:
+        event_notifications.pop(0)
+
+    counter += 1
+
+    return json_data
+
 
 router = APIRouter()
 
 
 @router.post("/monitoring/callback")
-def create_item(item: monitoringevent.MonitoringEventReport):
+def create_item(item: monitoringevent.MonitoringNotification, request: Request):
     logging.info(item.json())
-    return {'ack' : 'TRUE'}
 
-@router.post("/test-celery/", response_model=schemas.Msg, status_code=201)
-def test_celery(
-    msg: schemas.Msg,
-    current_user: models.User = Depends(deps.get_current_active_superuser),
-) -> Any:
-    """
-    Test Celery worker.
-    """
-    celery_app.send_task("app.worker.test_celery", args=[msg.msg])
-    return {"msg": "Word received"}
+    http_response = JSONResponse(content={'ack' : 'TRUE'}, status_code=200)
+    add_notifications(request, http_response, True)
+    return http_response 
+
+@router.get("/monitoring/notifications")
+def get_notifications(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: models.User = Depends(deps.get_current_active_user)
+    ):
+    notification = event_notifications[skip:limit]
+    return notification
+
+@router.get("/monitoring/last_notifications")
+def get_last_notifications(
+    id: int = Query(..., description="The id of the last retrieved item"),
+    current_user: models.User = Depends(deps.get_current_active_user)
+    ):
+    updated_notification = []
+    event_notifications_snapshot = event_notifications
 
 
-@router.post("/test-email/", response_model=schemas.Msg, status_code=201)
-def test_email(
-    email_to: EmailStr,
-    current_user: models.User = Depends(deps.get_current_active_superuser),
-) -> Any:
-    """
-    Test emails.
-    """
-    send_test_email(email_to=email_to)
-    return {"msg": "Test email sent"}
+    if id == -1:
+        return event_notifications_snapshot
+
+    if event_notifications_snapshot:
+        if event_notifications_snapshot[0].get('id') > id:
+            return event_notifications_snapshot
+    else:
+        raise HTTPException(status_code=409, detail="Event notification list is empty")
+            
+    skipped_items = 0
+
+
+    for notification in event_notifications_snapshot:
+        if notification.get('id') == id:
+            updated_notification = event_notifications_snapshot[(skipped_items+1):]
+            break
+        skipped_items += 1
+    
+    return updated_notification
 
 @router.post("/start-loop/", status_code=200)
 def initiate_movement(

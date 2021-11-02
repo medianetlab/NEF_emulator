@@ -8,8 +8,7 @@ from app import crud, models, schemas
 from app.api import deps
 from app import tools
 from app.core.config import settings
-
-location_header = settings.BACKEND_CORS_ORIGINS[1] + settings.API_V1_STR + "/3gpp-monitoring-event/v1/" 
+from app.api.api_v1.endpoints.utils import add_notifications
 
 
 def location_reporting(db: Session,  item_in_json: Any, user: models.User):
@@ -31,7 +30,7 @@ def location_reporting(db: Session,  item_in_json: Any, user: models.User):
 router = APIRouter()
 
 
-@router.get("/{scsAsId}/subscriptions", response_model=List[schemas.MonitoringEventSubscription])
+@router.get("/{scsAsId}/subscriptions", response_model=List[schemas.MonitoringEventSubscription], responses={204: {"model" : None}})
 def read_active_subscriptions(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that read all the subscriptions", example="myNetapp"),
@@ -39,6 +38,7 @@ def read_active_subscriptions(
     limit: int = 100,
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
+    http_request: Request
 ) -> Any:
     """
     Read all active subscriptions
@@ -50,14 +50,27 @@ def read_active_subscriptions(
             db=db, owner_id=current_user.id, skip=skip, limit=limit
         )
 
-    for sub in subs:
-        sub_validate_time = tools.check_expiration_time(expire_time=sub.monitorExpireTime)
-        print(sub.id)
+    json_subs = jsonable_encoder(subs)
+    temp_json_subs = json_subs.copy() #Create copy of the list (json_subs) -> you cannot remove items from a list while you iterating the list.
+
+    for sub in temp_json_subs:
+        sub_validate_time = tools.check_expiration_time(expire_time=sub.get("monitorExpireTime"))
         if not sub_validate_time:
-            crud.monitoring.remove(db=db, id=sub.id)
-            subs.remove(sub)
-    
-    return subs
+            crud.monitoring.remove(db=db, id=sub.get("id"))
+            json_subs.remove(sub)
+            
+    temp_json_subs.clear()
+
+    if json_subs:
+        for data in json_subs:
+            data.pop("owner_id")
+            data.pop("id")
+
+        http_response = JSONResponse(content=json_subs, status_code=200)
+        add_notifications(http_request, http_response, False)
+        return http_response
+    else:
+        return Response(status_code=204)
 
 
 
@@ -70,50 +83,66 @@ def monitoring_notification(body: schemas.MonitoringEventReport):
     pass
 
 @router.post("/{scsAsId}/subscriptions", response_model=schemas.MonitoringEventReport, responses={201: {"model" : schemas.MonitoringEventSubscription}}, callbacks=monitoring_callback_router.routes)
-def create_item(
+def create_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     db: Session = Depends(deps.get_db),
     item_in: schemas.MonitoringEventSubscriptionCreate,
     current_user: models.User = Depends(deps.get_current_active_user),
+    http_request: Request
 ) -> Any:
     """
     Create new subscription.
     """
-    UE = crud.ue.get_ipv4(db=db, ipv4=str(item_in.ipv4Addr), owner_id=current_user.id)
+    UE = crud.ue.get_externalId(db=db, externalId=str(item_in.externalId), owner_id=current_user.id)
     if not UE: 
-        raise HTTPException(status_code=409, detail="UE with this ipv4 doesn't exist")
+        raise HTTPException(status_code=409, detail="UE with this external identifier doesn't exist")
     
     if item_in.monitoringType == "LOCATION_REPORTING" and item_in.maximumNumberOfReports == 1:
+        
         json_compatible_item_data = {}
         json_compatible_item_data["monitoringType"] = item_in.monitoringType
         json_compatible_item_data["locationInfo"] = {'cellId' : UE.Cell.cell_id, 'gNBId' : UE.Cell.gNB.gNB_id}
-        return JSONResponse(content=json_compatible_item_data, status_code=200)
-    elif item_in.monitoringType == "LOCATION_REPORTING" and item_in.maximumNumberOfReports>1:    
+        json_compatible_item_data["externalId"] = item_in.externalId
+        
+        http_response = JSONResponse(content=json_compatible_item_data, status_code=200)
+        add_notifications(http_request, http_response, False)
+        
+        return http_response 
+    elif item_in.monitoringType == "LOCATION_REPORTING" and item_in.maximumNumberOfReports>1:
+        
         response = crud.monitoring.create_with_owner(db=db, obj_in=item_in, owner_id=current_user.id)
+        
         json_compatible_item_data = jsonable_encoder(response)
         json_compatible_item_data.pop("owner_id")
         json_compatible_item_data.pop("id")
-        link = location_header + scsAsId + "/subscriptions/" + str(response.id)
-        json_compatible_item_data["link"] = link                      
+        link = str(http_request.url) + '/' + str(response.id)
+        json_compatible_item_data["link"] = link
         crud.monitoring.update(db=db, db_obj=response, obj_in={"link" : link})
+        
         response_header = {"location" : link}
-        return JSONResponse(content=json_compatible_item_data, status_code=201, headers=response_header)
+        http_response = JSONResponse(content=json_compatible_item_data, status_code=201, headers=response_header)
+        add_notifications(http_request, http_response, False)
+        
+        return http_response
 
 
 
 @router.put("/{scsAsId}/subscriptions/{subscriptionId}", response_model=schemas.MonitoringEventSubscription)
-def update_item(
+def update_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     subscriptionId: str = Path(..., title="Identifier of the subscription resource"),
     db: Session = Depends(deps.get_db),
     item_in: schemas.MonitoringEventSubscription,
     current_user: models.User = Depends(deps.get_current_active_user),
+    http_request: Request
 ) -> Any:
     """
     Update/Replace an existing subscription resource
     """
+    id = int(subscriptionId)
+    
     sub = crud.monitoring.get(db=db, id=int(subscriptionId))
     if not sub:
         raise HTTPException(status_code=404, detail="Subscription not found")
@@ -124,18 +153,27 @@ def update_item(
     
     if sub_validate_time:
         sub = crud.monitoring.update(db=db, db_obj=sub, obj_in=item_in)
-        return sub
+
+        json_compatible_item_data = jsonable_encoder(sub)
+        json_compatible_item_data.pop("owner_id")
+        json_compatible_item_data.pop("id")
+        http_response = JSONResponse(content=json_compatible_item_data, status_code=200)
+
+        add_notifications(http_request, http_response, False)
+        return http_response
     else:
+        crud.monitoring.remove(db=db, id=id)
         raise HTTPException(status_code=403, detail="Subscription has expired")
     
 
 @router.get("/{scsAsId}/subscriptions/{subscriptionId}", response_model=schemas.MonitoringEventSubscription)
-def read_item(
+def read_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     subscriptionId: str = Path(..., title="Identifier of the subscription resource"),
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
+    http_request: Request
 ) -> Any:
     """
     Get subscription by id
@@ -151,18 +189,25 @@ def read_item(
     sub_validate_time = tools.check_expiration_time(expire_time=sub.monitorExpireTime)
     
     if sub_validate_time:
-        return sub
+        json_compatible_item_data = jsonable_encoder(sub)
+        json_compatible_item_data.pop("owner_id")
+        json_compatible_item_data.pop("id")
+        http_response = JSONResponse(content=json_compatible_item_data, status_code=200)
+
+        add_notifications(http_request, http_response, False)
+        return http_response
     else:
         crud.monitoring.remove(db=db, id=id)
         raise HTTPException(status_code=403, detail="Subscription has expired")
 
 @router.delete("/{scsAsId}/subscriptions/{subscriptionId}", response_model=schemas.MonitoringEventSubscription)
-def delete_item(
+def delete_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     subscriptionId: str = Path(..., title="Identifier of the subscription resource"),
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
+    http_request: Request
 ) -> Any:
     """
     Delete a subscription
@@ -177,7 +222,14 @@ def delete_item(
     
     if sub_validate_time:
         sub = crud.monitoring.remove(db=db, id=int(subscriptionId))
-        return sub
+        
+        json_compatible_item_data = jsonable_encoder(sub)
+        json_compatible_item_data.pop("owner_id")
+        json_compatible_item_data.pop("id")
+        http_response = JSONResponse(content=json_compatible_item_data, status_code=200)
+        
+        add_notifications(http_request, http_response, False)
+        return http_response
     else:
         crud.monitoring.remove(db=db, id=id)
         raise HTTPException(status_code=403, detail="Subscription has expired")
