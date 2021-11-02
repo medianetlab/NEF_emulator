@@ -29,7 +29,7 @@ def read_active_subscriptions(
 
 
 @router.post("/{scsAsId}/subscriptions")
-def create_item(
+def create_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     db: Session = Depends(deps.get_db),
@@ -42,7 +42,7 @@ def create_item(
     return {"msg" : "test"}
 
 @router.put("/{scsAsId}/subscriptions/{subscriptionId}")
-def update_item(
+def update_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     subscriptionId: str = Path(..., title="Identifier of the subscription resource"),
@@ -57,7 +57,7 @@ def update_item(
     
 
 @router.get("/{scsAsId}/subscriptions/{subscriptionId}")
-def read_item(
+def read_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     subscriptionId: str = Path(..., title="Identifier of the subscription resource"),
@@ -72,7 +72,7 @@ def read_item(
 
 
 @router.delete("/{scsAsId}/subscriptions/{subscriptionId}")
-def delete_item(
+def delete_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     subscriptionId: str = Path(..., title="Identifier of the subscription resource"),

@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Response, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.expression import null
 
 from app import crud, models, schemas
 from app.api import deps
@@ -84,7 +83,7 @@ def monitoring_notification(body: schemas.MonitoringEventReport):
     pass
 
 @router.post("/{scsAsId}/subscriptions", response_model=schemas.MonitoringEventReport, responses={201: {"model" : schemas.MonitoringEventSubscription}}, callbacks=monitoring_callback_router.routes)
-def create_item(
+def create_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     db: Session = Depends(deps.get_db),
@@ -130,7 +129,7 @@ def create_item(
 
 
 @router.put("/{scsAsId}/subscriptions/{subscriptionId}", response_model=schemas.MonitoringEventSubscription)
-def update_item(
+def update_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     subscriptionId: str = Path(..., title="Identifier of the subscription resource"),
@@ -168,7 +167,7 @@ def update_item(
     
 
 @router.get("/{scsAsId}/subscriptions/{subscriptionId}", response_model=schemas.MonitoringEventSubscription)
-def read_item(
+def read_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     subscriptionId: str = Path(..., title="Identifier of the subscription resource"),
@@ -202,7 +201,7 @@ def read_item(
         raise HTTPException(status_code=403, detail="Subscription has expired")
 
 @router.delete("/{scsAsId}/subscriptions/{subscriptionId}", response_model=schemas.MonitoringEventSubscription)
-def delete_item(
+def delete_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     subscriptionId: str = Path(..., title="Identifier of the subscription resource"),
