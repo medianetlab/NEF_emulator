@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Response, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.expression import null
 
 from app import crud, models, schemas
 from app.api import deps
@@ -30,7 +31,7 @@ def location_reporting(db: Session,  item_in_json: Any, user: models.User):
 router = APIRouter()
 
 
-@router.get("/{scsAsId}/subscriptions", response_model=List[schemas.MonitoringEventSubscription])
+@router.get("/{scsAsId}/subscriptions", response_model=List[schemas.MonitoringEventSubscription], responses={204: {"model" : None}})
 def read_active_subscriptions(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that read all the subscriptions", example="myNetapp"),
@@ -50,23 +51,27 @@ def read_active_subscriptions(
             db=db, owner_id=current_user.id, skip=skip, limit=limit
         )
 
-    for sub in subs:
-        sub_validate_time = tools.check_expiration_time(expire_time=sub.monitorExpireTime)
-        if not sub_validate_time:
-            crud.monitoring.remove(db=db, id=sub.id)
-            subs.remove(sub)
-    
-    json_compatible_item_data = jsonable_encoder(subs)
-    
-    for json_data in json_compatible_item_data:
-        json_data.pop("owner_id")
-        json_data.pop("id")
-        
-    http_response = JSONResponse(content=json_compatible_item_data, status_code=200)
+    json_subs = jsonable_encoder(subs)
+    temp_json_subs = json_subs.copy() #Create copy of the list (json_subs) -> you cannot remove items from a list while you iterating the list.
 
-    add_notifications(http_request, http_response, False)
-    return http_response
-    
+    for sub in temp_json_subs:
+        sub_validate_time = tools.check_expiration_time(expire_time=sub.get("monitorExpireTime"))
+        if not sub_validate_time:
+            crud.monitoring.remove(db=db, id=sub.get("id"))
+            json_subs.remove(sub)
+            
+    temp_json_subs.clear()
+
+    if json_subs:
+        for data in json_subs:
+            data.pop("owner_id")
+            data.pop("id")
+
+        http_response = JSONResponse(content=json_subs, status_code=200)
+        add_notifications(http_request, http_response, False)
+        return http_response
+    else:
+        return Response(status_code=204)
 
 
 
