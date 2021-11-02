@@ -46,6 +46,8 @@ services:
       args:
         INSTALL_DEV: ${INSTALL_DEV-true}
         INSTALL_JUPYTER: ${INSTALL_JUPYTER-true}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 
 
