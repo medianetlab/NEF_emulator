@@ -7,6 +7,7 @@ DOCKER_IMAGE_FRONTEND=frontend
 # Backend
 SERVER_NAME=localhost
 SERVER_HOST=localhost
+SERVER_PORT=8888
 BACKEND_CORS_ORIGINS=["https://5g-api-emulator.medianetlab.eu","http://localhost"]
 PROJECT_NAME=NEF_Emulator
 SECRET_KEY=2D47CF2958CEC7CC86C988E9F9684
