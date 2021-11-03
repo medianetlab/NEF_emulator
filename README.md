@@ -57,3 +57,39 @@ Short reasoning on why we choose tags over branches:
 
 >**A tag is immutable.**  
 >[source](https://stackoverflow.com/questions/9810050/why-should-i-use-tags-vs-release-beta-branches-for-versioning/)
+
+
+
+<br><br>
+
+
+
+## NetApp communication options
+
+Below, you may find different options for establishing a bi-directional communication between the NetApp and the NEF_emulator (for example to be used for `callbacks`.
+
+### 1. via `host.docker.internal`
+
+If you develop your NetApp directly on the host, for example a `Flask` app running on port `9999`:
+ - you will be able to connect to the NEF_emulator at: `http://localhost:8888`
+ - the NEF_emulator will **not** be able to connect to `http://localhost:9999` because "localhost" for a container is itself, not the host.
+ - to overcome the above problem, Docker provides `host.docker.internal`
+ - the NEF_emulator will be able to connect to `http://host.docker.internal:9999`
+
+```
+┌───────────────────────────────────────────────────────────────┐
+│                          HOST                                 │
+│                                                               │
+│                        ┌───────────────────────────────┐      │
+│      NetApp            │    docker-compose network     │      │
+│         │              ├───────────────────────────────┤      │
+│         │              │    NEF_emulator containers    │      │
+│         │              │           live here           │      │
+│         │              └── :80 ────────────── :5050 ───┘      │
+│         │                   │                   │             │
+│         │                   │                   │             │
+└────── :9999 ───────────── :8888 ───────────── :5050 ──────────┘
+          │                   │ 
+          └─< communication >─┘
+```
+
