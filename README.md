@@ -39,3 +39,15 @@ After the containers are up and running:
  - login to the admin dashboard at: [localhost:8888/login](http://localhost:8888/login)
      - Default credentials: `admin@my-email.com` / `pass`
      - they can be found/changed inside your `.env` file
+
+
+
+
+## 🏷️ How to work on a specific tag / release
+
+After `git clone` or `git pull` you can specify the release you want to work on by just using its `tag` in the following command:
+
+    git switch --detach tag_here
+
+You will get into a *detached HEAD* state in Git, but this is perfectly fine, you can go back anytime by just using `git switch main`.  
+Short reasoning on why we choose tags over branches: **tags are immutable**. More on this [here](https://stackoverflow.com/questions/9810050/why-should-i-use-tags-vs-release-beta-branches-for-versioning/).
