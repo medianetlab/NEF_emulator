@@ -42,6 +42,9 @@ After the containers are up and running:
 
 
 
+<br><br>
+
+
 
 ## 🏷️ How to work on a specific tag / release
 
@@ -50,4 +53,7 @@ After `git clone` or `git pull` you can specify the release you want to work on 
     git switch --detach tag_here
 
 You will get into a *detached HEAD* state in Git, but this is perfectly fine, you can go back anytime by just using `git switch main`.  
-Short reasoning on why we choose tags over branches: **tags are immutable**. More on this [here](https://stackoverflow.com/questions/9810050/why-should-i-use-tags-vs-release-beta-branches-for-versioning/).
+Short reasoning on why we choose tags over branches:
+
+>**A tag is immutable.**  
+>[source](https://stackoverflow.com/questions/9810050/why-should-i-use-tags-vs-release-beta-branches-for-versioning/)
