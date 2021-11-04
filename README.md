@@ -64,9 +64,9 @@ Short reasoning on why we choose tags over branches:
 
 
 
-## NetApp communication options
+## ↔️ NetApp communication options
 
-Below, you may find different options for establishing a bi-directional communication between the NetApp and the NEF_emulator (for example to be used for `callbacks`.
+Below, you may find different options for establishing a bi-directional communication over HTTP between the NetApp and the NEF_emulator (for example to be used for `callbacks`).
 
 ### 1. via `host.docker.internal`
 
@@ -75,6 +75,7 @@ If you develop your NetApp directly on the host, for example a `Flask` app runni
  - the NEF_emulator will **not** be able to connect to `http://localhost:9999` because "localhost" for a container is itself, not the host.
  - to overcome the above problem, Docker provides `host.docker.internal`
  - the NEF_emulator will be able to connect to `http://host.docker.internal:9999`
+ - ⚠ make sure you bind your NetApp on `0.0.0.0:[port]` and not only on `127.0.0.1:[port]`
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
@@ -93,3 +94,57 @@ If you develop your NetApp directly on the host, for example a `Flask` app runni
           └─< communication >─┘
 ```
 
+<br>
+
+### 2. via the same docker `bridge` network
+
+If you develop your NetApp as a container, the easiest way to establish a bi-directional communication would be to `attach` it to the pre-existing bridge network that the NEF_emulator containers use:
+ - this bridge network is automatically created whenever you `docker-compose up` a project, in our case that would probably be named as `nef_emulator_default`
+ - Docker will provide automatic DNS resolution between these containers names
+ - your NetApp will be able to connect to the NEF_emulator at `http://backend`
+ - the NEF_emulator will be able to connect to your NetApp at `http://your_netapp_container_name:9999`
+ - ⚠ make sure you use the container ports directly, not the `published` ones
+ - ⚠ make sure you first `docker-compose up` the NEF_emulator and then `attach` your NetApp container
+ - more details at Docker docs: [Use bridge networks](https://docs.docker.com/network/bridge/) and [Networking in Compose](https://docs.docker.com/compose/networking/)
+
+```
+┌───────────────────────────────────────────────────────────────┐
+│                          HOST                                 │
+│                                                               │
+│    ┌───────────────────────────────────────────────────┐      │
+│    │               docker-compose network              │      │
+│    ├───────────────────────────────────────────────────┤      │
+│    │                                                   │      │
+│    │  NetApp                NEF_emulator containers    │      │
+│    │ also lives here               live here           │      │
+│    │                                                   │      │
+│    └─── :9999 ──────────── :80 ────────────── :5050 ───┘      │
+│         │                   │                   │             │
+│         ├─< communication >─┤                   │             │
+│         │                   │                   │             │
+│         │                   │                   │             │
+└────── :9999 ───────────── :8888 ───────────── :5050 ──────────┘
+```
+
+Three possible ways to achieve the above approach:
+
+1. with **docker**, try the `--net=...` option and provide the bridge name that you want to `attach` to:
+
+       docker container run --net=nef_emulator_default ...
+
+2. with **docker-compose**, try adding the bridge as an external network, something like:
+
+
+       services:
+       ....
+           netapp:
+           ....
+               networks:
+                  - nef_emulator_default
+       networks:
+         nef_emulator_default:
+           external: true
+
+3. with **docker network connect**, try adding your container to the bridge network:
+
+       docker network connect BRIDGE_NAME NETAPP_NAME
