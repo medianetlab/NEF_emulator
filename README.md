@@ -105,7 +105,7 @@ If you develop your NetApp as a container, the easiest way to establish a bi-dir
  - the NEF_emulator will be able to connect to your NetApp at `http://your_netapp_container_name:9999`
  - ⚠ make sure you use the container ports directly, not the `published` ones
  - ⚠ make sure you first `docker-compose up` the NEF_emulator and then `attach` your NetApp container
- - more details: [Docker docs: Use bridge networks](https://docs.docker.com/network/bridge/)
+ - more details at Docker docs: [Use bridge networks](https://docs.docker.com/network/bridge/) and [Networking in Compose](https://docs.docker.com/compose/networking/)
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
