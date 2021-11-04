@@ -66,7 +66,7 @@ Short reasoning on why we choose tags over branches:
 
 ## NetApp communication options
 
-Below, you may find different options for establishing a bi-directional communication between the NetApp and the NEF_emulator (for example to be used for `callbacks`.
+Below, you may find different options for establishing a bi-directional communication over HTTP between the NetApp and the NEF_emulator (for example to be used for `callbacks`.
 
 ### 1. via `host.docker.internal`
 
@@ -94,3 +94,32 @@ If you develop your NetApp directly on the host, for example a `Flask` app runni
           └─< communication >─┘
 ```
 
+<br>
+
+### 2. via the same docker bridge network
+
+If you develop your NetApp as a container, the easiest way to establish a bi-directional communication would be to `attach` it to the pre-existing bridge network that the NEF_emulator containers use:
+ - this bridge network is automatically created whenever you `docker-compose up` a project, in our case that would probably be named as `nef_emulator_default`
+ - Docker will provide automatic DNS resolution between these containers names
+ - your NetApp will be able to connect to the NEF_emulator at `http://backend`
+ - the NEF_emulator will be able to connect to your NetApp at `http://your_netapp_container_name:9999`
+ - ⚠ make sure you use the container ports directly, not the `published` ones
+
+```
+┌───────────────────────────────────────────────────────────────┐
+│                          HOST                                 │
+│                                                               │
+│    ┌───────────────────────────────────────────────────┐      │
+│    │               docker-compose network              │      │
+│    ├───────────────────────────────────────────────────┤      │
+│    │                                                   │      │
+│    │  NetApp                NEF_emulator containers    │      │
+│    │ also lives here               live here           │      │
+│    │                                                   │      │
+│    └─── :9999 ──────────── :80 ────────────── :5050 ───┘      │
+│         │                   │                   │             │
+│         ├─< communication >─┤                   │             │
+│         │                   │                   │             │
+│         │                   │                   │             │
+└────── :9999 ───────────── :8888 ───────────── :5050 ──────────┘
+```
