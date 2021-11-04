@@ -75,6 +75,7 @@ If you develop your NetApp directly on the host, for example a `Flask` app runni
  - the NEF_emulator will **not** be able to connect to `http://localhost:9999` because "localhost" for a container is itself, not the host.
  - to overcome the above problem, Docker provides `host.docker.internal`
  - the NEF_emulator will be able to connect to `http://host.docker.internal:9999`
+ - ⚠ make sure you bind your NetApp on `0.0.0.0:[port]` and not only on `127.0.0.1:[port]`
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
