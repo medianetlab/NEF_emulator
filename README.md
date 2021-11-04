@@ -66,7 +66,7 @@ Short reasoning on why we choose tags over branches:
 
 ## ↔️ NetApp communication options
 
-Below, you may find different options for establishing a bi-directional communication over HTTP between the NetApp and the NEF_emulator (for example to be used for `callbacks`.
+Below, you may find different options for establishing a bi-directional communication over HTTP between the NetApp and the NEF_emulator (for example to be used for `callbacks`).
 
 ### 1. via `host.docker.internal`
 
