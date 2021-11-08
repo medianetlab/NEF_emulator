@@ -914,7 +914,7 @@ function ui_init_datatable_events() {
         data: events,
         responsive: true,
         paging: false,
-        searching: false,
+        searching: true,
         info: false,
         order: [[4, 'desc']],
         pageLength: -1,
@@ -925,7 +925,7 @@ function ui_init_datatable_events() {
                 "data": "id",
                 "visible": true,
                 "orderable" : true,
-                "searchable": false,
+                "searchable": true,
             },
             {
                 "targets": 5,
@@ -953,8 +953,20 @@ function ui_init_datatable_events() {
             { "data": "status_code", className: "dt-center" },
             { "data": "timestamp", className: "dt-center" },
             { "data": null, className: "dt-center" },
-        ]
+        ],
+        oLanguage: {
+           "sSearch": "quick search: "
+         }
     } );
+
+
+    $('#dt-filter-input').keyup(function(){
+        events_datatbl.search($(this).val()).draw() ;
+    })
+    // $('#dt-filter-input').on('keyup change', function () {
+    //     console.log( this.value );
+    //     events_datatbl.search(this.value).draw();
+    // });
 
     // update id value of latest event
     if (events.length > 0) { latest_event_id_fetched = events[ events.length-1 ].id }
