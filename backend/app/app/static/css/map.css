@@ -13,6 +13,7 @@
 
 .dt-filter-wrapper {display: inline-block; float: right; margin-right: 50px;}
 .dt-filter-wrapper input {display: inline; width: auto; height: 24px; font-size: 11px; border: 1px solid #b1b7c1; border-radius: 0.25rem; }
+.dt-filter-wrapper input:focus-visible { outline: 1px solid #ebebeb; }
 .row .dataTables_filter { display: none; }
 
 
