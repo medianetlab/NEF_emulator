@@ -28,12 +28,14 @@
     <link href="https://unpkg.com/ionicons@4.5.10-0/dist/css/ionicons.min.css" rel="stylesheet">
     <!-- datatables -->
     <link rel="stylesheet" href="static/datatables@1.10.18/datatables.min.css">
+    <!-- toaster -->
+    <link rel="stylesheet" href="static/toastr@2.1.4/toastr.min.css">
 
 
     <script src="static/app/jquery-3.6.0.min.js"></script>
     <script src="static/app/app.js"></script>
   </head>
-  <body>
+  <body class="dashboard-page">
     <div class="sidebar sidebar-dark sidebar-fixed" id="sidebar">
       <div class="sidebar-brand d-none d-md-flex">
         <!-- <svg class="sidebar-brand-full" width="118" height="46" alt="CoreUI Logo">
@@ -188,6 +190,7 @@
                               <th>name</th>
                               <th>description</th>
                               <th>location</th>
+                              <th>actions</th>
                             </tr>
                         </thead>
                     </table>
@@ -263,6 +266,29 @@
           <!-- row -->
 
 
+          <!-- modal for confirming gNB removal -->
+          <div class="modal fade" id="del_gNB_modal" tabindex="-1" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalCenterTitle">Confirm gNB deletion?</h5>
+                  <button class="btn-close" type="button" data-coreui-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <p>If you proceed the gNB will permanently be <strong>removed</strong>. This change can't be undone.</p>
+                </div>
+                <div class="modal-footer">
+                  <button class="btn btn-light" type="button" data-coreui-dismiss="modal">Cancel</button>
+                  <button class="btn btn-danger" type="button" id="del_gNB_btn">
+                    <svg class="icon">
+                      <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-trash"></use>
+                    </svg> Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
 
         </div>
       </div>
@@ -282,6 +308,7 @@
     <!-- <script src="static/js/main.js"></script> -->
     <script src="static/js/dashboard.js"></script>
     <script src="static/datatables@1.10.18/datatables.min.js"></script>
+    <script src="static/toastr@2.1.4/toastr.min.js"></script>
 
   </body>
 </html>
