@@ -13,22 +13,24 @@ var gNBs_datatable = null;
 // templates for buttons
 // =====================
 // delete_gNB
-var del_gNB_btn_tpl = `<button class="btn btn-sm btn-outline-secondary" type="button" onclick="show_delete_gNB_modal( '{{gNB_id}}' );">
+var del_gNB_btn_tpl = `<button class="btn btn-sm btn-outline-secondary" type="button" onclick="ui_show_delete_gNB_modal( '{{gNB_id}}' );">
   <svg class="icon">
     <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-trash"></use>
   </svg>
 </button>`;
 
 // edit gNB
-var edit_gNB_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="button" onclick="show_edit_gNB_modal( '{{gNB_id}}' );">
+var edit_gNB_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="button" onclick="ui_show_edit_gNB_modal( '{{gNB_id}}' );">
   <svg class="icon">
     <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-pencil"></use>
   </svg>
 </button>`;
 
 // modal for delete_gNB confirmation
-var del_gNB_modal = new coreui.Modal(document.getElementById('del_gNB_modal'), {});
+var  del_gNB_modal = new coreui.Modal(document.getElementById('del_gNB_modal'),  {});
+var edit_gNB_modal = new coreui.Modal(document.getElementById('edit_gNB_modal'), {});
 var gNB_to_be_deleted = -1;
+var gNB_to_be_edited  = -1;
 
 
 
@@ -224,8 +226,8 @@ function api_get_paths() {
 
 
 // Ajax request to delete gNB
-// on success:
-//
+// on success: remove it from datatables
+// by using its functions API
 // 
 function api_delete_gNB( gNB_id ) {
     
@@ -254,7 +256,7 @@ function api_delete_gNB( gNB_id ) {
                 .filter( function ( value, index ) {
                     return gNB_id === gNBs_datatable.row(value).data().gNB_id;
                 } );
-                
+
             gNBs_datatable.rows(indexes).remove().draw();
         },
         error: function(err)
@@ -365,15 +367,37 @@ function ui_display_toast_msg( type, title, text ) {
     };
     toastr[type](text, title, toastr_options);
 }
-// ===============================================
 
 
 
 
-
-function show_delete_gNB_modal( gNB_id ) {
+function ui_show_delete_gNB_modal( gNB_id ) {
 
     gNB_to_be_deleted = gNB_id;
     del_gNB_modal.show();
 
 }
+
+
+function ui_show_edit_gNB_modal( gNB_id ) {
+
+    gNB_to_be_edited = gNB_id;
+
+    for (const item of gNBs) {
+        console.log(item);
+        if ( item.gNB_id == gNB_id ) {
+            console.log(gNB_id);
+            $('#db_gNB_id').val( item.id );
+            $('#gNB_id').val( item.gNB_id );
+            $('#gNB_name').val( item.name );
+            $('#db_gNB_id').val( item.id );
+            $('#gNB_location').val( item.location );
+            $('#gNB_description').val( item.description );
+            break; // gNB was found
+        }
+    }
+
+    edit_gNB_modal.show();
+
+}
+// ===============================================
