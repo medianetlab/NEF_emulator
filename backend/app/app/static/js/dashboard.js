@@ -31,6 +31,7 @@ var  del_gNB_modal = new coreui.Modal(document.getElementById('del_gNB_modal'), 
 var edit_gNB_modal = new coreui.Modal(document.getElementById('edit_gNB_modal'), {});
 var gNB_to_be_deleted = -1;
 var gNB_to_be_edited  = -1;
+var gNB_tmp_obj       = null;
 
 
 
@@ -54,6 +55,18 @@ $( document ).ready(function() {
         // console.log(gNB_to_be_deleted);
         api_delete_gNB( gNB_to_be_deleted );
         del_gNB_modal.hide();
+    });
+    
+    $('#update_gNB_btn').on('click', function(){
+
+        // get possible changes from form
+        gNB_tmp_obj.gNB_id      = $('#gNB_id').val();
+        gNB_tmp_obj.name        = $('#gNB_name').val();
+        gNB_tmp_obj.location    = $('#gNB_location').val();
+        gNB_tmp_obj.description = $('#gNB_description').val();
+        
+        api_put_gNB( gNB_tmp_obj );
+        edit_gNB_modal.hide();
     });
 
 
@@ -272,6 +285,58 @@ function api_delete_gNB( gNB_id ) {
     });
 }
 
+// Ajax request to update gNB
+// on success: update it inside datatables too
+// by using its functions API
+// 
+function api_put_gNB( gNB_obj ) {
+    
+    var url = app.api_url + '/gNBs/' + gNB_to_be_edited; // using gNB_obj.gNB_id would not work if the user has provided new gNB_id value
+
+    var gNB_obj_copy =  JSON.parse(JSON.stringify( gNB_obj )); // copy to be used with fewer object fields
+
+    // remove not required fields
+    delete gNB_obj_copy.id;
+    delete gNB_obj_copy.owner_id;
+
+    $.ajax({
+        type: 'PUT',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        data:         JSON.stringify(gNB_obj_copy),
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            // console.log(data);
+            ui_display_toast_msg("success", "Success!", "The gNB has been updated");
+            
+            helper_update_gNB( gNB_obj );
+            
+            gNBs_datatable.clear().rows.add( gNBs ).draw();
+        },
+        error: function(err)
+        {
+            console.log(err);
+            ui_display_toast_msg("error", "Error: gNB could not be updated", err.responseJSON.detail[0].msg);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
+
+
+
+
+
 
 // Helper function to update the numbers displayed on every card
 // 
@@ -379,25 +444,50 @@ function ui_show_delete_gNB_modal( gNB_id ) {
 }
 
 
+// shows modal for editing gNBs
+// looks up for the specific gNB and loads its details to the form fields
+// 
 function ui_show_edit_gNB_modal( gNB_id ) {
 
     gNB_to_be_edited = gNB_id;
 
-    for (const item of gNBs) {
-        console.log(item);
-        if ( item.gNB_id == gNB_id ) {
-            console.log(gNB_id);
-            $('#db_gNB_id').val( item.id );
-            $('#gNB_id').val( item.gNB_id );
-            $('#gNB_name').val( item.name );
-            $('#db_gNB_id').val( item.id );
-            $('#gNB_location').val( item.location );
-            $('#gNB_description').val( item.description );
-            break; // gNB was found
-        }
-    }
+    gNB_tmp_obj = helper_find_gNB( gNB_id );
+    
+    $('#db_gNB_id').val( gNB_tmp_obj.id );
+    $('#gNB_id').val( gNB_tmp_obj.gNB_id );
+    $('#gNB_name').val( gNB_tmp_obj.name );
+    $('#gNB_location').val( gNB_tmp_obj.location );
+    $('#gNB_description').val( gNB_tmp_obj.description );
 
     edit_gNB_modal.show();
 
 }
 // ===============================================
+
+
+
+// iterates through the gNB lists
+// and returns the gNB object with the gNB_id provided
+// (if not found it returns null)
+// 
+function helper_find_gNB( gNB_id ) {
+    for (const item of gNBs) {
+        if ( item.gNB_id == gNB_id ) {
+            return JSON.parse(JSON.stringify( item )); // return a copy of the item
+        }
+    }
+    return null;
+}
+
+
+
+function helper_update_gNB( gNB_obj ) {
+
+    console.log( gNB_obj );
+
+    for (i=0 ; i<gNBs.length ; i++) {
+        if ( gNBs[i].id == gNB_obj.id ) {
+            gNBs[i] = gNB_obj; // found, updated
+        }
+    }
+}
