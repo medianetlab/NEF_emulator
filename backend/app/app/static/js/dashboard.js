@@ -10,8 +10,8 @@ var gNBs_datatable = null;
 
 
 
-// templates for buttons
-// =====================
+// templates for buttons added to datatbles rows (DELETE / EDIT)
+// =============================================================
 // delete_gNB
 var del_gNB_btn_tpl = `<button class="btn btn-sm btn-outline-secondary" type="button" onclick="ui_show_delete_gNB_modal( '{{gNB_id}}' );">
   <svg class="icon">
@@ -29,6 +29,7 @@ var edit_gNB_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="button
 // modal for delete_gNB confirmation
 var  del_gNB_modal = new coreui.Modal(document.getElementById('del_gNB_modal'),  {});
 var edit_gNB_modal = new coreui.Modal(document.getElementById('edit_gNB_modal'), {});
+var add_gNB_modal  = new coreui.Modal(document.getElementById('add_gNB_modal'),  {});
 var gNB_to_be_deleted = -1;
 var gNB_to_be_edited  = -1;
 var gNB_tmp_obj       = null;
@@ -67,6 +68,19 @@ $( document ).ready(function() {
         
         api_put_gNB( gNB_tmp_obj );
         edit_gNB_modal.hide();
+    });
+
+    $('#add_gNB_btn').on('click', function(){
+
+        var data = {
+          gNB_id      : $('#new_gNB_id').val(),
+          name        : $('#new_gNB_name').val(),
+          location    : $('#new_gNB_location').val(),
+          description : $('#new_gNB_description').val(),  
+        };
+
+        api_post_gNB( data );
+        add_gNB_modal.hide();
     });
 
 
@@ -239,8 +253,7 @@ function api_get_paths() {
 
 
 // Ajax request to delete gNB
-// on success: remove it from datatables
-// by using its functions API
+// on success: remove it from datatables too
 // 
 function api_delete_gNB( gNB_id ) {
     
@@ -262,15 +275,8 @@ function api_delete_gNB( gNB_id ) {
             // console.log(data);
             ui_display_toast_msg("success", "Success!", "The gNB has been permanently deleted");
             
-            // find index and remove from datatable
-            var indexes = gNBs_datatable
-                .rows()
-                .indexes()
-                .filter( function ( value, index ) {
-                    return gNB_id === gNBs_datatable.row(value).data().gNB_id;
-                } );
-
-            gNBs_datatable.rows(indexes).remove().draw();
+            helper_delete_gNB( gNB_id );
+            gNBs_datatable.clear().rows.add( gNBs ).draw();
         },
         error: function(err)
         {
@@ -287,7 +293,6 @@ function api_delete_gNB( gNB_id ) {
 
 // Ajax request to update gNB
 // on success: update it inside datatables too
-// by using its functions API
 // 
 function api_put_gNB( gNB_obj ) {
     
@@ -332,6 +337,49 @@ function api_put_gNB( gNB_obj ) {
         timeout: 5000
     });
 }
+
+
+
+// Ajax request to create gNB
+// on success: add it inside datatables too
+// 
+function api_post_gNB( gNB_obj ) {
+    
+    var url = app.api_url + '/gNBs/';
+
+    $.ajax({
+        type: 'POST',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        data:         JSON.stringify(gNB_obj),
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            // console.log(data);
+            ui_display_toast_msg("success", "Success!", "The gNB has been created");
+            
+            gNBs.push(data);
+            gNBs_datatable.clear().rows.add( gNBs ).draw();
+        },
+        error: function(err)
+        {
+            console.log(err);
+            ui_display_toast_msg("error", "Error: gNB could not be created", err.responseJSON.detail[0].msg);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
+
 
 
 
@@ -462,6 +510,13 @@ function ui_show_edit_gNB_modal( gNB_id ) {
     edit_gNB_modal.show();
 
 }
+
+
+function ui_show_add_gNB_modal(  ) {
+
+    add_gNB_modal.show();
+
+}
 // ===============================================
 
 
@@ -483,11 +538,20 @@ function helper_find_gNB( gNB_id ) {
 
 function helper_update_gNB( gNB_obj ) {
 
-    console.log( gNB_obj );
-
     for (i=0 ; i<gNBs.length ; i++) {
         if ( gNBs[i].id == gNB_obj.id ) {
             gNBs[i] = gNB_obj; // found, updated
+        }
+    }
+}
+
+
+function helper_delete_gNB( gNB_id ) {
+
+    var i = gNBs.length;
+    while (i--) {
+        if ( gNBs[i].gNB_id == gNB_id ) {
+            gNBs.splice(i, 1);
         }
     }
 }

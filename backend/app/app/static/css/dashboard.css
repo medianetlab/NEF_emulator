@@ -10,3 +10,6 @@
 .dashboard-page #toast-container>div:hover { box-shadow: 0 0 6px #999; }
 .dashboard-page .toast-error   { background-color: #d72d2d; }
 .dashboard-page .toast-success { background-color: #2eb85c; }
+
+.gnb-row .add-gnb-wrapper {display: inline-block; float: right;}
+.gnb-row .btn-sm { padding: 0rem 0.5rem;  }
