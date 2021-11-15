@@ -52,36 +52,8 @@ $( document ).ready(function() {
 
 
     // add listener to buttons
-    $('#del_gNB_btn').on('click', function(){
-        // console.log(gNB_to_be_deleted);
-        api_delete_gNB( gNB_to_be_deleted );
-        del_gNB_modal.hide();
-    });
-    
-    $('#update_gNB_btn').on('click', function(){
+    ui_add_btn_listeners_for_gNB_CUD_operations();
 
-        // get possible changes from form
-        gNB_tmp_obj.gNB_id      = $('#gNB_id').val();
-        gNB_tmp_obj.name        = $('#gNB_name').val();
-        gNB_tmp_obj.location    = $('#gNB_location').val();
-        gNB_tmp_obj.description = $('#gNB_description').val();
-        
-        api_put_gNB( gNB_tmp_obj );
-        edit_gNB_modal.hide();
-    });
-
-    $('#add_gNB_btn').on('click', function(){
-
-        var data = {
-          gNB_id      : $('#new_gNB_id').val(),
-          name        : $('#new_gNB_name').val(),
-          location    : $('#new_gNB_location').val(),
-          description : $('#new_gNB_description').val(),  
-        };
-
-        api_post_gNB( data );
-        add_gNB_modal.hide();
-    });
 
 
 
@@ -554,4 +526,52 @@ function helper_delete_gNB( gNB_id ) {
             gNBs.splice(i, 1);
         }
     }
+}
+
+
+
+
+// adds listeners for CUD operations regarding gNBs
+//   C: CREATE (add)
+//   U: UPDATE (edit)
+//   D: DELETE
+// The steps are more or less:
+//  - show the relevant modal message
+//  - call the relevant API call
+//  - hide the modal message
+// 
+function ui_add_btn_listeners_for_gNB_CUD_operations() {
+
+    // CREATE
+    $('#add_gNB_btn').on('click', function(){
+
+        var data = {
+          gNB_id      : $('#new_gNB_id').val(),
+          name        : $('#new_gNB_name').val(),
+          location    : $('#new_gNB_location').val(),
+          description : $('#new_gNB_description').val(),  
+        };
+
+        api_post_gNB( data );
+        add_gNB_modal.hide();
+    });
+
+    // UPDATE
+    $('#update_gNB_btn').on('click', function(){
+
+        // get possible changes from form
+        gNB_tmp_obj.gNB_id      = $('#gNB_id').val();
+        gNB_tmp_obj.name        = $('#gNB_name').val();
+        gNB_tmp_obj.location    = $('#gNB_location').val();
+        gNB_tmp_obj.description = $('#gNB_description').val();
+        
+        api_put_gNB( gNB_tmp_obj );
+        edit_gNB_modal.hide();
+    });
+
+    // DELETE
+    $('#del_gNB_btn').on('click', function(){
+        api_delete_gNB( gNB_to_be_deleted );
+        del_gNB_modal.hide();
+    }); 
 }
