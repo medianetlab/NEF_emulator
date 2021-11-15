@@ -79,7 +79,7 @@ def read_active_subscriptions(
 monitoring_callback_router = APIRouter()
 
 @monitoring_callback_router.post("{$request.body.notificationDestination}", response_model=schemas.MonitoringEventReportReceived, status_code=200, response_class=Response)
-def monitoring_notification(body: schemas.MonitoringEventReport):
+def monitoring_notification(body: schemas.MonitoringNotification):
     pass
 
 @router.post("/{scsAsId}/subscriptions", response_model=schemas.MonitoringEventReport, responses={201: {"model" : schemas.MonitoringEventSubscription}}, callbacks=monitoring_callback_router.routes)
@@ -104,6 +104,7 @@ def create_subscription(
         json_compatible_item_data["monitoringType"] = item_in.monitoringType
         json_compatible_item_data["locationInfo"] = {'cellId' : UE.Cell.cell_id, 'gNBId' : UE.Cell.gNB.gNB_id}
         json_compatible_item_data["externalId"] = item_in.externalId
+        json_compatible_item_data["ipv4Addr"] = UE.ip_address_v4
         
         http_response = JSONResponse(content=json_compatible_item_data, status_code=200)
         add_notifications(http_request, http_response, False)
