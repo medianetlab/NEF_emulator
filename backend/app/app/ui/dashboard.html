@@ -229,6 +229,7 @@
                               <th>name</th>
                               <th>description</th>
                               <th>gNB_id</th>
+                              <th>actions</th>
                             </tr>
                         </thead>
                     </table>
@@ -390,6 +391,37 @@
                 <div class="modal-footer">
                   <button type="button" class="btn btn-light" data-coreui-dismiss="modal">Cancel</button>
                   <button type="button" class="btn btn-dark"  id="add_gNB_btn">Create</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+
+
+
+
+
+
+
+          <!-- modal for confirming Cell removal -->
+          <div class="modal fade" id="del_cell_modal" tabindex="-1" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalCenterTitle">Confirm cell deletion?</h5>
+                  <button class="btn-close" type="button" data-coreui-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <p>If you proceed the cell will permanently be <strong>removed</strong>. This change can't be undone.</p>
+                </div>
+                <div class="modal-footer">
+                  <button class="btn btn-light" type="button" data-coreui-dismiss="modal">Cancel</button>
+                  <button class="btn btn-danger" type="button" id="del_cell_btn">
+                    <svg class="icon">
+                      <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-trash"></use>
+                    </svg> Delete
+                  </button>
                 </div>
               </div>
             </div>

@@ -6,13 +6,14 @@ var cells = null;
 var ues   = null;
 var paths = null;
 
-var gNBs_datatable = null;
+var gNBs_datatable  = null;
+var cells_datatable = null;
 
 
 
 // templates for buttons added to datatbles rows (DELETE / EDIT)
 // =============================================================
-// delete_gNB
+// delete gNB
 var del_gNB_btn_tpl = `<button class="btn btn-sm btn-outline-secondary" type="button" onclick="ui_show_delete_gNB_modal( '{{gNB_id}}' );">
   <svg class="icon">
     <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-trash"></use>
@@ -26,6 +27,23 @@ var edit_gNB_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="button
   </svg>
 </button>`;
 
+// delete cell
+var del_cell_btn_tpl = `<button class="btn btn-sm btn-outline-secondary" type="button" onclick="ui_show_delete_cell_modal( '{{cell_id}}' );">
+  <svg class="icon">
+    <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-trash"></use>
+  </svg>
+</button>`;
+
+// edit cell
+var edit_cell_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="button" onclick="ui_show_edit_cell_modal( '{{cell_id}}' );">
+  <svg class="icon">
+    <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-pencil"></use>
+  </svg>
+</button>`;
+
+
+
+
 // modal for delete_gNB confirmation
 var  del_gNB_modal = new coreui.Modal(document.getElementById('del_gNB_modal'),  {});
 var edit_gNB_modal = new coreui.Modal(document.getElementById('edit_gNB_modal'), {});
@@ -33,6 +51,14 @@ var add_gNB_modal  = new coreui.Modal(document.getElementById('add_gNB_modal'), 
 var gNB_to_be_deleted = -1;
 var gNB_to_be_edited  = -1;
 var gNB_tmp_obj       = null;
+
+
+var  del_cell_modal = new coreui.Modal(document.getElementById('del_cell_modal'),  {});
+// var edit_cell_modal = new coreui.Modal(document.getElementById('edit_cell_modal'), {});
+// var add_cell_modal  = new coreui.Modal(document.getElementById('add_cell_modal'),  {});
+var cell_to_be_deleted = -1;
+var cell_to_be_edited  = -1;
+var cell_tmp_obj       = null;
 
 
 
@@ -51,9 +77,13 @@ $( document ).ready(function() {
     api_get_paths()
 
 
-    // add listener to buttons
+    // add listeners to buttons for CUD operations
+    //   C: CREATE (add new items)
+    //   U: UPDATE (edit existing items)
+    //   D: DELETE (remove items)
+    // 
     ui_add_btn_listeners_for_gNB_CUD_operations();
-
+    ui_add_btn_listeners_for_cells_CUD_operations();
 
 
 
@@ -263,6 +293,46 @@ function api_delete_gNB( gNB_id ) {
     });
 }
 
+
+// Ajax request to delete gNB
+// on success: remove it from datatables too
+// 
+function api_delete_cell( cell_id ) {
+    
+    var url = app.api_url + '/Cells/' + cell_id;
+
+    $.ajax({
+        type: 'DELETE',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            // console.log(data);
+            ui_display_toast_msg("success", "Success!", "The Cell has been permanently deleted");
+            
+            helper_delete_cell( cell_id );
+            cells_datatable.clear().rows.add( cells ).draw();
+        },
+        error: function(err)
+        {
+            // console.log(err);
+            ui_display_toast_msg("error", "Error: Cell could not be deleted", err.responseJSON.detail);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
+
 // Ajax request to update gNB
 // on success: update it inside datatables too
 // 
@@ -402,8 +472,10 @@ function ui_init_datatable_gNBs() {
         ]
     } );
 }
+
+
 function ui_init_datatable_Cells() {
-    $('#dt-cells').DataTable( {
+    cells_datatable = $('#dt-cells').DataTable( {
         data: cells,
         responsive: true,
         paging: false,
@@ -411,15 +483,32 @@ function ui_init_datatable_Cells() {
         info: false,
         pageLength: -1,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        columnDefs: [
+            {
+                "targets": 5,
+                "data": null,
+                "defaultContent": '',
+                "orderable" : false,
+                "searchable": false,
+                "render": function ( data, type, row ) {
+                    // return row.id;
+                    return  (  del_cell_btn_tpl.replaceAll("{{cell_id}}", row.cell_id) + " " +
+                              edit_cell_btn_tpl.replaceAll("{{cell_id}}", row.cell_id) );
+                }
+            }
+        ],
         columns: [
             { "data": "id", className: "dt-center" },
             { "data": "cell_id", className: "dt-center" },
             { "data": "name", className: "dt-center" },
             { "data": "description" },
             { "data": "gNB_id", className: "dt-center" },
+            { "data": null, className: "dt-right" },
         ]
     } );
 }
+
+
 function ui_init_datatable_UEs() {
     $('#dt-ues').DataTable( {
         data: ues,
@@ -489,11 +578,38 @@ function ui_show_add_gNB_modal(  ) {
     add_gNB_modal.show();
 
 }
+
+
+function ui_show_delete_cell_modal( cell_id ) {
+
+    cell_to_be_deleted = cell_id;
+    del_cell_modal.show();
+
+}
+
+// shows modal for editing gNBs
+// looks up for the specific gNB and loads its details to the form fields
+// 
+function ui_show_edit_cell_modal( cell_id ) {
+
+    cell_to_be_edited = cell_id;
+
+    cell_tmp_obj = helper_find_cell( cell_id );
+    
+    $('#db_cell_id').val( cell_tmp_obj.id );
+    $('#cell_id').val( cell_tmp_obj.cell_id );
+    $('#cell_name').val( cell_tmp_obj.name );
+    $('#cell_location').val( cell_tmp_obj.location );
+    $('#cell_description').val( cell_tmp_obj.description );
+
+    edit_cell_modal.show();
+
+}
 // ===============================================
 
 
 
-// iterates through the gNB lists
+// iterates through the gNB list
 // and returns the gNB object with the gNB_id provided
 // (if not found it returns null)
 // 
@@ -517,13 +633,30 @@ function helper_update_gNB( gNB_obj ) {
     }
 }
 
-
+// iterates through the gNB list
+// and removes (if found) the gNB_id provided
+// 
 function helper_delete_gNB( gNB_id ) {
 
     var i = gNBs.length;
     while (i--) {
         if ( gNBs[i].gNB_id == gNB_id ) {
             gNBs.splice(i, 1);
+        }
+    }
+}
+
+
+
+// iterates through the cells list
+// and removes (if found) the cell_id provided
+// 
+function helper_delete_cell( cell_id ) {
+
+    var i = cells.length;
+    while (i--) {
+        if ( cells[i].cell_id == cell_id ) {
+            cells.splice(i, 1);
         }
     }
 }
@@ -574,4 +707,14 @@ function ui_add_btn_listeners_for_gNB_CUD_operations() {
         api_delete_gNB( gNB_to_be_deleted );
         del_gNB_modal.hide();
     }); 
+}
+
+
+
+function ui_add_btn_listeners_for_cells_CUD_operations() {
+    // DELETE
+    $('#del_cell_btn').on('click', function(){
+        api_delete_cell( cell_to_be_deleted );
+        del_cell_modal.hide();
+    });
 }
