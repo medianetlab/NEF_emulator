@@ -28,12 +28,14 @@
     <link href="https://unpkg.com/ionicons@4.5.10-0/dist/css/ionicons.min.css" rel="stylesheet">
     <!-- datatables -->
     <link rel="stylesheet" href="static/datatables@1.10.18/datatables.min.css">
+    <!-- toaster -->
+    <link rel="stylesheet" href="static/toastr@2.1.4/toastr.min.css">
 
 
     <script src="static/app/jquery-3.6.0.min.js"></script>
     <script src="static/app/app.js"></script>
   </head>
-  <body>
+  <body class="dashboard-page">
     <div class="sidebar sidebar-dark sidebar-fixed" id="sidebar">
       <div class="sidebar-brand d-none d-md-flex">
         <!-- <svg class="sidebar-brand-full" width="118" height="46" alt="CoreUI Logo">
@@ -172,11 +174,18 @@
 
 
 
-          <div class="row">
+          <div class="row gnb-row">
             <div class="col-md-12">
               <div class="card mb-4">
                 
-                <div class="card-header">gNBs</div>
+                <div class="card-header">gNBs
+                  <div class="add-gnb-wrapper">
+                    <button  type="button" class="btn btn-sm btn-dark m-0" onclick="ui_show_add_gNB_modal();">
+                      <svg class="icon m-0">
+                        <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-plus"></use>
+                      </svg></button>
+                  </div>
+                </div>
                 <div class="card-body">
                   <div class="row">
 
@@ -188,6 +197,7 @@
                               <th>name</th>
                               <th>description</th>
                               <th>location</th>
+                              <th>actions</th>
                             </tr>
                         </thead>
                     </table>
@@ -263,6 +273,128 @@
           <!-- row -->
 
 
+          <!-- modal for confirming gNB removal -->
+          <div class="modal fade" id="del_gNB_modal" tabindex="-1" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalCenterTitle">Confirm gNB deletion?</h5>
+                  <button class="btn-close" type="button" data-coreui-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <p>If you proceed the gNB will permanently be <strong>removed</strong>. This change can't be undone.</p>
+                </div>
+                <div class="modal-footer">
+                  <button class="btn btn-light" type="button" data-coreui-dismiss="modal">Cancel</button>
+                  <button class="btn btn-danger" type="button" id="del_gNB_btn">
+                    <svg class="icon">
+                      <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-trash"></use>
+                    </svg> Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+
+
+          <!-- modal pop-up for editing gNBs -->
+          <div class="modal" tabindex="-1" id="edit_gNB_modal">
+            <div class="modal-dialog modal-xl">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Edit gNB</h5>
+                  <button type="button" class="btn-close" data-coreui-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-5">
+
+                  <!-- <div class="row g-3"> -->
+                    <form action="" class="row g-3">
+                      <div class="col-md-4">
+                        <label for="db_gNB_id" class="form-label">Database ID</label>
+                        <input type="text" class="form-control" id="db_gNB_id" disabled>
+                      </div>
+                      <div class="col-md-4">
+                        <label for="gNB_id" class="form-label">gNB_id</label>
+                        <input type="text" class="form-control" id="gNB_id" pattern="[A-Za-z0-9]{6}" title="gNBs have 6 characters: [A-Za-z0-9]{6}">
+                      </div>
+                      <div class="col-md-4">
+                        <label for="gNB_name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="gNB_name">
+                      </div>
+
+                      <div class="col-12">
+                        <label for="gNB_location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="gNB_location" placeholder="Location details">
+                      </div>
+
+                      <div class="col-12">
+                        <label for="gNB_description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="gNB_description" placeholder="Description text">
+                      </div>
+                    </form>
+                  <!-- </div> -->
+
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-light" data-coreui-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-dark" id="update_gNB_btn">
+                    <svg class="icon">
+                      <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-save"></use>
+                    </svg> Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+
+
+
+          <!-- modal pop-up for adding gNBs -->
+          <div class="modal" tabindex="-1" id="add_gNB_modal">
+            <div class="modal-dialog modal-xl">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Add new gNB</h5>
+                  <button type="button" class="btn-close" data-coreui-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-5">
+
+                  <!-- <div class="row g-3"> -->
+                    <form action="" class="row g-3">
+                      <div class="col-md-6">
+                        <label for="new_gNB_id" class="form-label">gNB_id</label>
+                        <input type="text" class="form-control" id="new_gNB_id" pattern="[A-Za-z0-9]{6}" title="gNBs have 6 characters: [A-Za-z0-9]{6}">
+                      </div>
+                      <div class="col-md-6">
+                        <label for="new_gNB_name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="new_gNB_name">
+                      </div>
+
+                      <div class="col-12">
+                        <label for="new_gNB_location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="new_gNB_location" placeholder="Location details">
+                      </div>
+
+                      <div class="col-12">
+                        <label for="new_gNB_description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="new_gNB_description" placeholder="Description text">
+                      </div>
+                    </form>
+                  <!-- </div> -->
+
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-light" data-coreui-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-dark"  id="add_gNB_btn">Create</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
 
         </div>
       </div>
@@ -282,6 +414,7 @@
     <!-- <script src="static/js/main.js"></script> -->
     <script src="static/js/dashboard.js"></script>
     <script src="static/datatables@1.10.18/datatables.min.js"></script>
+    <script src="static/toastr@2.1.4/toastr.min.js"></script>
 
   </body>
 </html>

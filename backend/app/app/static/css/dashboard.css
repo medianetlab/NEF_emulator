@@ -3,3 +3,13 @@
 
 .row table.dataTable thead th {border-bottom: none;}
 .row table.dataTable.no-footer {border-bottom: none; font-size: 14px;}
+
+#del_gNB_btn { color: #fff; }
+
+.dashboard-page #toast-container>div { opacity: 0.9; box-shadow: 0 0 3px #999; }
+.dashboard-page #toast-container>div:hover { box-shadow: 0 0 6px #999; }
+.dashboard-page .toast-error   { background-color: #d72d2d; }
+.dashboard-page .toast-success { background-color: #2eb85c; }
+
+.gnb-row .add-gnb-wrapper {display: inline-block; float: right;}
+.gnb-row .btn-sm { padding: 0rem 0.5rem;  }
