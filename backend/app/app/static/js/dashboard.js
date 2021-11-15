@@ -11,6 +11,11 @@ var cells_datatable = null;
 
 
 
+var edit_cell_map = null;
+var cell_coverage_lg = L.layerGroup(); // map layer group
+
+
+
 // templates for buttons added to datatbles rows (DELETE / EDIT)
 // =============================================================
 // delete gNB
@@ -54,7 +59,7 @@ var gNB_tmp_obj       = null;
 
 
 var  del_cell_modal = new coreui.Modal(document.getElementById('del_cell_modal'),  {});
-// var edit_cell_modal = new coreui.Modal(document.getElementById('edit_cell_modal'), {});
+var edit_cell_modal = new coreui.Modal(document.getElementById('edit_cell_modal'), {});
 // var add_cell_modal  = new coreui.Modal(document.getElementById('add_cell_modal'),  {});
 var cell_to_be_deleted = -1;
 var cell_to_be_edited  = -1;
@@ -84,6 +89,7 @@ $( document ).ready(function() {
     // 
     ui_add_btn_listeners_for_gNB_CUD_operations();
     ui_add_btn_listeners_for_cells_CUD_operations();
+    ui_initialize_edit_cell_map();
 
 
 
@@ -603,6 +609,7 @@ function ui_show_edit_cell_modal( cell_id ) {
     $('#cell_description').val( cell_tmp_obj.description );
 
     edit_cell_modal.show();
+    edit_cell_map.invalidateSize();
 
 }
 // ===============================================
@@ -610,7 +617,7 @@ function ui_show_edit_cell_modal( cell_id ) {
 
 
 // iterates through the gNB list
-// and returns the gNB object with the gNB_id provided
+// and returns a copy of the gNB object with the gNB_id provided
 // (if not found it returns null)
 // 
 function helper_find_gNB( gNB_id ) {
@@ -661,6 +668,18 @@ function helper_delete_cell( cell_id ) {
     }
 }
 
+// iterates through the cells list
+// and returns a copy of the cell object with the cell_id provided
+// (if not found it returns null)
+// 
+function helper_find_cell( cell_id ) {
+    for (const item of cells) {
+        if ( item.cell_id == cell_id ) {
+            return JSON.parse(JSON.stringify( item )); // return a copy of the item
+        }
+    }
+    return null;
+}
 
 
 
@@ -717,4 +736,37 @@ function ui_add_btn_listeners_for_cells_CUD_operations() {
         api_delete_cell( cell_to_be_deleted );
         del_cell_modal.hide();
     });
+}
+
+
+
+function ui_initialize_edit_cell_map() {
+
+    // set map height
+    $('#cell_mapid').css({ "height": 300 } );
+
+    var mbAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
+                'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        mbUrl = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+
+    var grayscale   = L.tileLayer(mbUrl, {id: 'mapbox/light-v9',    tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
+        streets     = L.tileLayer(mbUrl, {id: 'mapbox/streets-v11', tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23});
+
+
+    // map initialization
+    edit_cell_map = L.map('cell_mapid', {
+        layers: [grayscale, cell_coverage_lg]
+    }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
+
+
+    var baseLayers = {
+            "Grayscale": grayscale,
+            "Streets": streets
+        };
+
+    var overlays = {
+        "cell coverage": cell_coverage_lg,
+    };
+
+    L.control.layers(baseLayers, overlays).addTo(mymap);
 }

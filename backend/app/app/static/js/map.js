@@ -245,9 +245,6 @@ function reload_events_refresh_interval( new_option ) {
 //         initialize the Leaflet.js map 
 // ===============================================
 // 
-// TODO: calculate the center of the map depending on
-//       the cells positions.
-// 
 function ui_initialize_map() {
 
     // set map height
