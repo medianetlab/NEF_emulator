@@ -36,8 +36,7 @@ class QosMonitoringInformation(BaseModel):
 class SponsorInfo(BaseModel):
     pass
 
-class AsSessionWithQoSSubscription(BaseModel):
-    link: Optional[AnyHttpUrl] = Field("https://myresource.com", description="String identifying a referenced resource. This is also returned as a location header in 201 Created Response")
+class AsSessionWithQoSSubscriptionCreate(BaseModel):
     #Remember, when you actually trying to access the database through CRUD methods you need to typecast the pydantic types to strings, int etc.
     ipv4Addr: Optional[IPvAnyAddress] = Field(None, description="String identifying an Ipv4 address")    
     ipv6Addr: Optional[IPvAnyAddress] = Field("0:0:0:0:0:0:0:1", description="String identifying an Ipv6 address. Default value ::1/128 (loopback)")
@@ -49,5 +48,9 @@ class AsSessionWithQoSSubscription(BaseModel):
     altQoSReferences: List[int] = Field(None, description="Identifies an ordered list of pre-defined QoS information. The lower the index of the array the higher the priority.", min_items=1)
     usageThreshold: Optional[UsageThreshold] = None
     qosMonInfo: Optional[QosMonitoringInformation] = None
+    
+class AsSessionWithQoSSubscription(AsSessionWithQoSSubscriptionCreate):
+    link: Optional[AnyHttpUrl] = Field("https://myresource.com", description="String identifying a referenced resource. This is also returned as a location header in 201 Created Response")
+    
     class Config:
             orm_mode = True

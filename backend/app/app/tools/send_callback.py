@@ -2,16 +2,17 @@ import requests
 import json
 import logging
 
-def location_callback(externaId, cellid, gnbid, callbackurl, subscription):
+def location_callback(UE_model, callbackurl, subscription):
     url = callbackurl
 
     payload = json.dumps({
-    "externalId" : externaId,
+    "externalId" : UE_model.external_identifier,
+    "ipv4" : UE_model.ip_address_v4,
     "subscription" : subscription,
     "monitoringType": "LOCATION_REPORTING",
     "locationInfo": {
-        "cellId": str(cellid),
-        "enodeBId": str(gnbid)
+        "cellId": str(UE_model.Cell.cell_id),
+        "enodeBId": str(UE_model.Cell.gNB.gNB_id)
     }
     })
     headers = {

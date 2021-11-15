@@ -105,7 +105,7 @@ class BackgroundTasks(threading.Thread):
                                 sub = tools.check_numberOfReports(db=db, item_in=sub)
                                 if sub: #return the callback request only if subscription is valid
                                     try:
-                                        response = location_callback(UE.external_identifier, UE.Cell.cell_id, UE.Cell.gNB.gNB_id, sub.notificationDestination, sub.link)
+                                        response = location_callback(UE, sub.notificationDestination, sub.link)
                                         logging.info(response.json())
                                     except requests.exceptions.ConnectionError as ex:
                                         logging.warning("Failed to send the callback request")
