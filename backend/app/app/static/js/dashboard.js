@@ -556,7 +556,6 @@ function ui_init_datatable_Cells() {
                 "orderable" : true,
                 "searchable": false,
                 "render": function ( data, type, row ) {
-                    console.log(data);
                     return  ( db_ID_to_gNB_id[data.gNB_id] );
                 }
             },
@@ -695,7 +694,8 @@ function ui_show_edit_cell_modal( cell_id ) {
     $('#cell_new_lon').val( cell_tmp_obj.new_longitude );
     $('#cell_new_rad').val( cell_tmp_obj.new_radius );
 
-    // load gNB options
+    // refresh the gNB options in the select input
+    $('#cell_gNB').empty(); // delete the old ones
     $.each(gNBs, function (i, item) {
 
         var data = { 
@@ -775,7 +775,7 @@ function helper_update_gNB( gNB_obj ) {
 
     for (i=0 ; i<gNBs.length ; i++) {
         if ( gNBs[i].id == gNB_obj.id ) {
-            gNBs[i] = gNB_obj; // found, updated
+            gNBs[i] = JSON.parse(JSON.stringify( gNB_obj )); // found, updated
         }
     }
 }
@@ -828,7 +828,7 @@ function helper_update_cell( cell_obj ) {
 
     for (i=0 ; i<cells.length ; i++) {
         if ( cells[i].id == cell_obj.id ) {
-            cells[i] = cell_obj; // found, updated
+            cells[i] = JSON.parse(JSON.stringify( cell_obj )); // found, updated
         }
     }
 }
@@ -906,7 +906,7 @@ function ui_add_btn_listeners_for_cells_CUD_operations() {
         cell_tmp_obj.cell_id     = $('#cell_id').val();
         cell_tmp_obj.name        = $('#cell_name').val();
         cell_tmp_obj.description = $('#cell_description').val();
-        cell_tmp_obj.gNB_id      = $('#cell_gNB').val();
+        cell_tmp_obj.gNB_id      = parseInt( $('#cell_gNB').val() );
 
         // override old values
         cell_tmp_obj.latitude    = parseFloat( cell_tmp_obj.new_latitude );
