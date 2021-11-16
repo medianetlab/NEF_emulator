@@ -150,10 +150,12 @@ def add_notifications(request: Request, response: JSONResponse, is_notification:
 
     #Find the service API 
     #Keep in mind that whether endpoint changes format, the following if statement needs review
-    #Since new APIs are added in the emulator, the if statement will expand. e.g.,   elif endpoint.find('qos') != -1: serviceAPI = "As Session With QoS"
+    #Since new APIs are added in the emulator, the if statement will expand
     endpoint = request.url.path
     if endpoint.find('monitoring') != -1:
         serviceAPI = "Monitoring Event API"
+    elif endpoint.find('qos') != -1:
+        serviceAPI = "AsSession With QoS API"
 
     #Request body check and trim
     if(request.method == 'POST') or (request.method == 'PUT'):  
