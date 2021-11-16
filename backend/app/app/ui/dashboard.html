@@ -31,6 +31,10 @@
     <!-- toaster -->
     <link rel="stylesheet" href="static/toastr@2.1.4/toastr.min.css">
 
+    <!-- leaflet.js -->
+    <link rel="stylesheet" href="static/leaflet@1.7.1/leaflet.css" >
+    <script src="static/leaflet@1.7.1/leaflet.js"></script>
+
 
     <script src="static/app/jquery-3.6.0.min.js"></script>
     <script src="static/app/app.js"></script>
@@ -229,6 +233,7 @@
                               <th>name</th>
                               <th>description</th>
                               <th>gNB_id</th>
+                              <th>actions</th>
                             </tr>
                         </thead>
                     </table>
@@ -390,6 +395,128 @@
                 <div class="modal-footer">
                   <button type="button" class="btn btn-light" data-coreui-dismiss="modal">Cancel</button>
                   <button type="button" class="btn btn-dark"  id="add_gNB_btn">Create</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+
+
+
+
+
+
+
+          <!-- modal for confirming Cell removal -->
+          <div class="modal fade" id="del_cell_modal" tabindex="-1" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalCenterTitle">Confirm Cell deletion?</h5>
+                  <button class="btn-close" type="button" data-coreui-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <p>If you proceed the Cell will permanently be <strong>removed</strong>. This change can't be undone.</p>
+                </div>
+                <div class="modal-footer">
+                  <button class="btn btn-light" type="button" data-coreui-dismiss="modal">Cancel</button>
+                  <button class="btn btn-danger" type="button" id="del_cell_btn">
+                    <svg class="icon">
+                      <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-trash"></use>
+                    </svg> Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- modal pop-up for editing cells -->
+          <div class="modal" tabindex="-1" id="edit_cell_modal">
+            <div class="modal-dialog modal-xl">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Edit Cell</h5>
+                  <button type="button" class="btn-close" data-coreui-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-5">
+
+                  <!-- <div class="row g-3"> -->
+                    <form action="" class="row g-3">
+                      <!-- --------------------------------- -->
+                      <div class="col-md-2">
+                        <label for="db_cell_id" class="form-label">Database ID</label>
+                        <input type="text" class="form-control" id="db_cell_id" disabled>
+                      </div>
+                      <div class="col-md-4">
+                        <label for="cell_id" class="form-label">cell_id</label>
+                        <input type="text" class="form-control" id="cell_id" pattern="[A-Za-z0-9]{6}" title="cells have 6 characters: [A-Za-z0-9]{6}">
+                      </div>
+                      <div class="col-md-3">
+                        <label for="cell_name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="cell_name">
+                      </div>
+                      <div class="col-md-3">
+                        <label for="cell_gNB" class="form-label">gNB</label>
+                        <select name="" class="form-control" id="cell_gNB"></select>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-12 mb-4">
+                        <label for="cell_description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="cell_description" placeholder="Description text">
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-12 mt-4">
+                        <label class="form-label"> ⚫ Current Location details</label>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-md-4">
+                        <label for="cell_current_lat" class="form-label">Latitude </label>
+                        <input type="text" class="form-control" id="cell_current_lat" disabled>
+                      </div>
+                      <div class="col-md-4">
+                        <label for="cell_current_lon" class="form-label">Longitude</label>
+                        <input type="text" class="form-control" id="cell_current_lon" disabled>
+                      </div>
+                      <div class="col-md-4">
+                        <label for="cell_current_rad" class="form-label">Radius</label>
+                        <input type="text" class="form-control" id="cell_current_rad" disabled>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-12">
+                         <div id="cell_mapid"></div>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-12 mt-4">
+                        <label class="form-label mt-2"> 🔵 New Location details</label>
+                        <p class="small"> (Click on the map to set a new <code>[latitude,longitude]</code> pair)</p>
+                      </div>
+
+                      <!-- --------------------------------- -->
+                      <div class="col-md-4">
+                        <label for="cell_new_lat" class="form-label">Latitude </label>
+                        <input type="text" class="form-control" id="cell_new_lat" disabled>
+                      </div>
+                      <div class="col-md-4">
+                        <label for="cell_new_lon" class="form-label">Longitude</label>
+                        <input type="text" class="form-control" id="cell_new_lon" disabled>
+                      </div>
+                      <div class="col-md-4">
+                        <label for="cell_new_rad" class="form-label">Radius (meters)</label>
+                        <input type="number" class="form-control" id="cell_new_rad" min="5" max="500">
+                      </div>
+                    </form>
+                  <!-- </div> -->
+
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-light" data-coreui-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-dark" id="update_cell_btn">
+                    <svg class="icon">
+                      <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-save"></use>
+                    </svg> Save
+                  </button>
                 </div>
               </div>
             </div>
