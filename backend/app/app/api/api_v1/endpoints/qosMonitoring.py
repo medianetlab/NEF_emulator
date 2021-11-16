@@ -15,7 +15,7 @@ from app.api.api_v1.endpoints.utils import add_notifications
 router = APIRouter()
 db_collection= 'QoSMonitoring'
 
-@router.get("/{scsAsId}/subscriptions")
+@router.get("/{scsAsId}/subscriptions", response_model=List[schemas.AsSessionWithQoSSubscription])
 def read_active_subscriptions(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
@@ -36,7 +36,7 @@ def read_active_subscriptions(
     add_notifications(http_request, http_response, False)
     return http_response
 
-@router.post("/{scsAsId}/subscriptions")
+@router.post("/{scsAsId}/subscriptions", responses={201: {"model" : schemas.AsSessionWithQoSSubscription}})
 def create_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
@@ -73,7 +73,7 @@ def create_subscription(
         
     return http_response
 
-@router.get("/{scsAsId}/subscriptions/{subscriptionId}")
+@router.get("/{scsAsId}/subscriptions/{subscriptionId}", response_model=schemas.AsSessionWithQoSSubscription)
 def read_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
@@ -103,7 +103,7 @@ def read_subscription(
     add_notifications(http_request, http_response, False)
     return http_response
 
-@router.put("/{scsAsId}/subscriptions/{subscriptionId}")
+@router.put("/{scsAsId}/subscriptions/{subscriptionId}", response_model=schemas.AsSessionWithQoSSubscription)
 def update_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
@@ -140,7 +140,7 @@ def update_subscription(
     add_notifications(http_request, http_response, False)
     return http_response
 
-@router.delete("/{scsAsId}/subscriptions/{subscriptionId}")
+@router.delete("/{scsAsId}/subscriptions/{subscriptionId}", response_model=schemas.AsSessionWithQoSSubscription)
 def delete_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
