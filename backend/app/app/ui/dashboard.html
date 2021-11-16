@@ -444,6 +444,7 @@
 
                   <!-- <div class="row g-3"> -->
                     <form action="" class="row g-3">
+                      <!-- --------------------------------- -->
                       <div class="col-md-4">
                         <label for="db_cell_id" class="form-label">Database ID</label>
                         <input type="text" class="form-control" id="db_cell_id" disabled>
@@ -456,15 +457,50 @@
                         <label for="cell_name" class="form-label">Name</label>
                         <input type="text" class="form-control" id="cell_name">
                       </div>
-
-                      <div class="col-12">
+                      <!-- --------------------------------- -->
+                      <div class="col-12 mb-4">
                         <label for="cell_description" class="form-label">Description</label>
                         <input type="text" class="form-control" id="cell_description" placeholder="Description text">
                       </div>
-
+                      <!-- --------------------------------- -->
+                      <div class="col-12 mt-4">
+                        <label class="form-label"> ⚫ Current Location details</label>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-md-4">
+                        <label for="cell_current_lat" class="form-label">Latitude </label>
+                        <input type="text" class="form-control" id="cell_current_lat" disabled>
+                      </div>
+                      <div class="col-md-4">
+                        <label for="cell_current_lon" class="form-label">Longitude</label>
+                        <input type="text" class="form-control" id="cell_current_lon" disabled>
+                      </div>
+                      <div class="col-md-4">
+                        <label for="cell_current_rad" class="form-label">Radius</label>
+                        <input type="text" class="form-control" id="cell_current_rad" disabled>
+                      </div>
+                      <!-- --------------------------------- -->
                       <div class="col-12">
-                        <label class="form-label">Location details</label>
                          <div id="cell_mapid"></div>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-12 mt-4">
+                        <label class="form-label mt-2"> 🔵 New Location details</label>
+                        <p class="small"> (Click on the map to set a new <code>[latitude,longitude]</code> pair)</p>
+                      </div>
+
+                      <!-- --------------------------------- -->
+                      <div class="col-md-4">
+                        <label for="cell_new_lat" class="form-label">Latitude </label>
+                        <input type="text" class="form-control" id="cell_new_lat" disabled>
+                      </div>
+                      <div class="col-md-4">
+                        <label for="cell_new_lon" class="form-label">Longitude</label>
+                        <input type="text" class="form-control" id="cell_new_lon" disabled>
+                      </div>
+                      <div class="col-md-4">
+                        <label for="cell_new_rad" class="form-label">Radius (meters)</label>
+                        <input type="number" class="form-control" id="cell_new_rad" min="5" max="500">
                       </div>
                     </form>
                   <!-- </div> -->
@@ -472,7 +508,7 @@
                 </div>
                 <div class="modal-footer">
                   <button type="button" class="btn btn-light" data-coreui-dismiss="modal">Cancel</button>
-                  <button type="button" class="btn btn-dark" id="update_gNB_btn">
+                  <button type="button" class="btn btn-dark" id="update_cell_btn">
                     <svg class="icon">
                       <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-save"></use>
                     </svg> Save

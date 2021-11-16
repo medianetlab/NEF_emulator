@@ -10,9 +10,12 @@ var gNBs_datatable  = null;
 var cells_datatable = null;
 
 
+// leaflet.js map for editing Cell modal
+var edit_cell_map        = null;
+var cell_coverage_lg     = L.layerGroup(); // map layer group
+var edit_cell_circle_dot = null;
+var edit_cell_circle_cov = null;
 
-var edit_cell_map = null;
-var cell_coverage_lg = L.layerGroup(); // map layer group
 
 
 
@@ -90,6 +93,7 @@ $( document ).ready(function() {
     ui_add_btn_listeners_for_gNB_CUD_operations();
     ui_add_btn_listeners_for_cells_CUD_operations();
     ui_initialize_edit_cell_map();
+    ui_edit_cell_modal_add_listeners();
 
 
 
@@ -388,6 +392,54 @@ function api_put_gNB( gNB_obj ) {
 
 
 
+// Ajax request to update gNB
+// on success: update it inside datatables too
+// 
+function api_put_cell( cell_obj ) {
+    
+    var url = app.api_url + '/Cells/' + cell_to_be_edited; // using cell_obj.cell_id would not work if the user has provided new cell_id value
+
+    var cell_obj_copy =  JSON.parse(JSON.stringify( cell_obj )); // copy to be used with fewer object properties
+
+    // remove not required properties
+    delete cell_obj_copy.id;
+    delete cell_obj_copy.owner_id;
+
+    $.ajax({
+        type: 'PUT',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        data:         JSON.stringify(cell_obj_copy),
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            // console.log(data);
+            ui_display_toast_msg("success", "Success!", "The Cell has been updated");
+            
+            helper_update_cell( cell_obj );
+            
+            cells_datatable.clear().rows.add( cells ).draw();
+        },
+        error: function(err)
+        {
+            console.log(err);
+            ui_display_toast_msg("error", "Error: Cell could not be updated", err.responseJSON.detail[0].msg);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
+
+
 // Ajax request to create gNB
 // on success: add it inside datatables too
 // 
@@ -598,19 +650,66 @@ function ui_show_delete_cell_modal( cell_id ) {
 // 
 function ui_show_edit_cell_modal( cell_id ) {
 
+    cell_coverage_lg.clearLayers(); // map layer cleanup
+
     cell_to_be_edited = cell_id;
 
     cell_tmp_obj = helper_find_cell( cell_id );
+
+    cell_tmp_obj["new_latitude"]  = cell_tmp_obj.latitude;
+    cell_tmp_obj["new_longitude"] = cell_tmp_obj.longitude + 0.001; // shift it a little bit right
+    cell_tmp_obj["new_radius"]    = cell_tmp_obj.radius;
     
     $('#db_cell_id').val( cell_tmp_obj.id );
     $('#cell_id').val( cell_tmp_obj.cell_id );
     $('#cell_name').val( cell_tmp_obj.name );
     $('#cell_location').val( cell_tmp_obj.location );
     $('#cell_description').val( cell_tmp_obj.description );
+    $('#cell_current_lat').val( cell_tmp_obj.latitude );
+    $('#cell_current_lon').val( cell_tmp_obj.longitude );
+    $('#cell_current_rad').val( cell_tmp_obj.radius );
+    $('#cell_new_lat').val( cell_tmp_obj.new_longitude );
+    $('#cell_new_lon').val( cell_tmp_obj.new_longitude );
+    $('#cell_new_rad').val( cell_tmp_obj.new_radius );
 
     edit_cell_modal.show();
     edit_cell_map.invalidateSize();
 
+    // add a solid-color small circle (dot) at the current lat,lon
+    // and a transparent circle for coverage 
+    L.circle([cell_tmp_obj.latitude,cell_tmp_obj.longitude], 2, {
+        color: 'none',
+        fillColor: '#000',
+        fillOpacity: 1.0
+    }).addTo(cell_coverage_lg).addTo( edit_cell_map );
+
+    L.circle([cell_tmp_obj.latitude,cell_tmp_obj.longitude], cell_tmp_obj.radius, {
+        color: 'none',
+        fillColor: '#000',
+        fillOpacity: 0.1
+    }).addTo(cell_coverage_lg).addTo( edit_cell_map );
+    
+    edit_cell_map.setView(
+        {
+            lat: cell_tmp_obj.latitude,
+            lon: cell_tmp_obj.longitude
+        },
+        17 // zoom level
+    );
+
+    // add a solid-color small circle (dot) some meters away
+    // and a transparent circle for coverage 
+    edit_cell_circle_dot = L.circle([cell_tmp_obj.latitude,(cell_tmp_obj.longitude + 0.001)], 2, {
+        color: 'none',
+        fillColor: '#2686de',
+        fillOpacity: 1.0
+    }).addTo(cell_coverage_lg).addTo( edit_cell_map );
+
+    edit_cell_circle_cov = L.circle([cell_tmp_obj.latitude,(cell_tmp_obj.longitude + 0.001)], cell_tmp_obj.radius, {
+        color: 'none',
+        fillColor: '#2686de',
+        fillOpacity: 0.2
+    }).addTo(cell_coverage_lg).addTo( edit_cell_map );
 }
 // ===============================================
 
@@ -682,6 +781,16 @@ function helper_find_cell( cell_id ) {
 }
 
 
+function helper_update_cell( cell_obj ) {
+
+    for (i=0 ; i<cells.length ; i++) {
+        if ( cells[i].id == cell_obj.id ) {
+            cells[i] = cell_obj; // found, updated
+        }
+    }
+}
+
+
 
 // adds listeners for CUD operations regarding gNBs
 //   C: CREATE (add)
@@ -736,6 +845,29 @@ function ui_add_btn_listeners_for_cells_CUD_operations() {
         api_delete_cell( cell_to_be_deleted );
         del_cell_modal.hide();
     });
+
+    // UPDATE
+    $('#update_cell_btn').on('click', function(){
+        
+        // get possible changes from form
+        cell_tmp_obj.cell_id     = $('#cell_id').val();
+        cell_tmp_obj.name        = $('#cell_name').val();
+        cell_tmp_obj.description = $('#cell_description').val();
+
+        // override old values
+        cell_tmp_obj.latitude    = parseFloat( cell_tmp_obj.new_latitude );
+        cell_tmp_obj.longitude   = parseFloat( cell_tmp_obj.new_longitude );
+        cell_tmp_obj.radius      =   parseInt( cell_tmp_obj.new_radius );
+
+        // remove obsolete properties
+        delete cell_tmp_obj.new_latitude;
+        delete cell_tmp_obj.new_longitude;
+        delete cell_tmp_obj.new_radius;
+        
+        api_put_cell( cell_tmp_obj );
+        edit_cell_modal.hide();
+    });
+    
 }
 
 
@@ -768,5 +900,31 @@ function ui_initialize_edit_cell_map() {
         "cell coverage": cell_coverage_lg,
     };
 
-    L.control.layers(baseLayers, overlays).addTo(mymap);
+    L.control.layers(baseLayers, overlays).addTo(edit_cell_map);
+
+    
+}
+
+
+function ui_edit_cell_modal_add_listeners() {
+
+    $('#cell_new_rad').on('change', function(){
+        cell_tmp_obj.new_radius = $('#cell_new_rad').val();
+        edit_cell_circle_cov.setRadius(cell_tmp_obj.new_radius);
+    });
+
+    function onMapClick(e) {
+        // console.log(e);
+        edit_cell_circle_dot.setLatLng(e.latlng);
+        edit_cell_circle_cov.setLatLng(e.latlng);
+        edit_cell_circle_cov.setRadius(cell_tmp_obj.new_radius);
+
+        cell_tmp_obj.new_latitude  = e.latlng.lat.toFixed(6);
+        cell_tmp_obj.new_longitude = e.latlng.lng.toFixed(6);
+
+        $('#cell_new_lat').val( cell_tmp_obj.new_latitude );
+        $('#cell_new_lon').val( cell_tmp_obj.new_longitude );
+    }
+
+    edit_cell_map.on('click', onMapClick);
 }
