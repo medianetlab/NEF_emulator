@@ -13,8 +13,8 @@ var cells_datatable = null;
 // leaflet.js map for editing Cell modal
 var edit_cell_map        = null;
 var cell_coverage_lg     = L.layerGroup(); // map layer group
-var edit_cell_circle_dot = null;
-var edit_cell_circle_cov = null;
+var edit_cell_circle_dot = null;           // small circle depicting the position of the cell (to be edited)
+var edit_cell_circle_cov = null;           // large transparent circle depicting the coverage of the above cell
 
 
 
@@ -92,6 +92,10 @@ $( document ).ready(function() {
     // 
     ui_add_btn_listeners_for_gNB_CUD_operations();
     ui_add_btn_listeners_for_cells_CUD_operations();
+
+
+    // initialize the map used inside the edit cell modal
+    // and add listeners to capture user changes (map & radius)
     ui_initialize_edit_cell_map();
     ui_edit_cell_modal_add_listeners();
 
@@ -645,8 +649,11 @@ function ui_show_delete_cell_modal( cell_id ) {
 
 }
 
-// shows modal for editing gNBs
-// looks up for the specific gNB and loads its details to the form fields
+// shows modal for editing cells
+// looks up for the specific cell and loads its details to the form fields
+//   - the user is allowed to modify some fields
+//   - the user can modify the latitude / longitude of the cell by clicking on the map
+//   - the user can modify the radius of the cell
 // 
 function ui_show_edit_cell_modal( cell_id ) {
 
@@ -673,16 +680,16 @@ function ui_show_edit_cell_modal( cell_id ) {
     $('#cell_new_rad').val( cell_tmp_obj.new_radius );
 
     edit_cell_modal.show();
-    edit_cell_map.invalidateSize();
+    edit_cell_map.invalidateSize(); // this helps the map display its tiles correctly after the size of the modal is finalized
 
     // add a solid-color small circle (dot) at the current lat,lon
-    // and a transparent circle for coverage 
     L.circle([cell_tmp_obj.latitude,cell_tmp_obj.longitude], 2, {
         color: 'none',
         fillColor: '#000',
         fillOpacity: 1.0
     }).addTo(cell_coverage_lg).addTo( edit_cell_map );
 
+    // and a transparent circle for coverage 
     L.circle([cell_tmp_obj.latitude,cell_tmp_obj.longitude], cell_tmp_obj.radius, {
         color: 'none',
         fillColor: '#000',
@@ -698,13 +705,13 @@ function ui_show_edit_cell_modal( cell_id ) {
     );
 
     // add a solid-color small circle (dot) some meters away
-    // and a transparent circle for coverage 
     edit_cell_circle_dot = L.circle([cell_tmp_obj.latitude,(cell_tmp_obj.longitude + 0.001)], 2, {
         color: 'none',
         fillColor: '#2686de',
         fillOpacity: 1.0
     }).addTo(cell_coverage_lg).addTo( edit_cell_map );
 
+    // add a transparent circle for coverage 
     edit_cell_circle_cov = L.circle([cell_tmp_obj.latitude,(cell_tmp_obj.longitude + 0.001)], cell_tmp_obj.radius, {
         color: 'none',
         fillColor: '#2686de',
@@ -729,7 +736,9 @@ function helper_find_gNB( gNB_id ) {
 }
 
 
-
+// iterates through the gNB list
+// and updates (if found) the gNB object provided
+//
 function helper_update_gNB( gNB_obj ) {
 
     for (i=0 ; i<gNBs.length ; i++) {
@@ -780,7 +789,9 @@ function helper_find_cell( cell_id ) {
     return null;
 }
 
-
+// iterates through the cell list
+// and updates (if found) the cell oject provided
+//
 function helper_update_cell( cell_obj ) {
 
     for (i=0 ; i<cells.length ; i++) {
