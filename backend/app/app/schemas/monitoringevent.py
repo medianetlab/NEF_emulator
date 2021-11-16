@@ -28,6 +28,7 @@ class MonitoringEventReport(BaseModel):
     externalId: Optional[str] = Field("123456789@domain.com", description="Globally unique identifier containing a Domain Identifier and a Local Identifier. \<Local Identifier\>@\<Domain Identifier\>")
     monitoringType: MonitoringType
     locationInfo: Optional[LocationInfo] = None
+    ipv4Addr: Optional[IPvAnyAddress] = Field(None, description="String identifying an Ipv4 address") 
 
 class MonitoringEventSubscriptionCreate(BaseModel):
     # mtcProviderId: Optional[str] = Field(None, description="Identifies the MTC Service Provider and/or MTC Application")

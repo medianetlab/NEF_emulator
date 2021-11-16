@@ -7,7 +7,7 @@ def location_callback(UE_model, callbackurl, subscription):
 
     payload = json.dumps({
     "externalId" : UE_model.external_identifier,
-    "ipv4" : UE_model.ip_address_v4,
+    "ipv4Addr" : UE_model.ip_address_v4,
     "subscription" : subscription,
     "monitoringType": "LOCATION_REPORTING",
     "locationInfo": {
