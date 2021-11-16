@@ -1,12 +1,11 @@
 from bson import ObjectId
 from pymongo.database import Database
-import uuid
 
 # collection
 # GET (all objects as a list)
-def index(db, collection_name):
+def read_all(db, collection_name, owner):
     collection = db[collection_name]
-    return collection.find({})
+    return list(collection.find({'owner_id' : owner}, {'_id': False, 'owner_id' : False}))
 
 # GET (specific object)
 def read(db : Database, collection_name, uuId):
@@ -23,7 +22,7 @@ def create(db: Database, collection_name, json_data):
 
 # DELETE
 def delete(db: Database, collection_name, uuId):
-    result = db[collection_name].delete_one({"_id": ObjectId(uuId)}).deleted_count
+    result = db[collection_name].delete_one({"_id": ObjectId(uuId)})
     return result
 
 #Add a new field to an existing document

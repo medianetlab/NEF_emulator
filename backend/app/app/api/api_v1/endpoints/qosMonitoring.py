@@ -15,6 +15,27 @@ from app.api.api_v1.endpoints.utils import add_notifications
 router = APIRouter()
 db_collection= 'QoSMonitoring'
 
+@router.get("/{scsAsId}/subscriptions")
+def read_active_subscriptions(
+    *,
+    scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
+    db_mongo: Database = Depends(deps.get_mongo_db),
+    current_user: models.User = Depends(deps.get_current_active_user),
+    http_request: Request
+) -> Any:
+    """
+    Get subscription by id
+    """
+    retrieved_docs = crud_mongo.read_all(db_mongo, db_collection, current_user.id)
+    logging.critical(retrieved_docs)
+    #Check if there are any active subscriptions
+    if not retrieved_docs:
+        raise HTTPException(status_code=404, detail="There are no active subscriptions")
+    
+    http_response = JSONResponse(content=retrieved_docs, status_code=200)
+    add_notifications(http_request, http_response, False)
+    return http_response
+
 @router.post("/{scsAsId}/subscriptions")
 def create_subscription(
     *,
@@ -67,24 +88,89 @@ def read_subscription(
 
     try:
         retrieved_doc = crud_mongo.read(db_mongo, db_collection, subscriptionId)
-        
-        #Check if the document exists
-        if not retrieved_doc:
-            raise HTTPException(status_code=404, detail="Subscription not found")
-        #If the document exists then validate the owner
-        if not user.is_superuser(current_user) and (retrieved_doc['owner_id'] != current_user.id):
-            raise HTTPException(status_code=400, detail="Not enough permissions")
+    except Exception as ex:
+        raise HTTPException(status_code=400, detail='Please enter a valid uuid (24-character hex string)')
+    
+    #Check if the document exists
+    if not retrieved_doc:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    #If the document exists then validate the owner
+    if not user.is_superuser(current_user) and (retrieved_doc['owner_id'] != current_user.id):
+        raise HTTPException(status_code=400, detail="Not enough permissions")
 
-        retrieved_doc.pop("owner_id")
-        http_response = JSONResponse(content=retrieved_doc, status_code=200)
-        add_notifications(http_request, http_response, False)
-        return http_response
+    retrieved_doc.pop("owner_id")
+    http_response = JSONResponse(content=retrieved_doc, status_code=200)
+    add_notifications(http_request, http_response, False)
+    return http_response
 
+@router.put("/{scsAsId}/subscriptions/{subscriptionId}")
+def update_subscription(
+    *,
+    scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
+    subscriptionId: str = Path(..., title="Identifier of the subscription resource"),
+    item_in: schemas.AsSessionWithQoSSubscriptionCreate,
+    db_mongo: Database = Depends(deps.get_mongo_db),
+    current_user: models.User = Depends(deps.get_current_active_user),
+    http_request: Request
+) -> Any:
+    """
+    Update subscription by id
+    """
+
+    try:
+        retrieved_doc = crud_mongo.read(db_mongo, db_collection, subscriptionId)
+    except Exception as ex:
+        raise HTTPException(status_code=400, detail='Please enter a valid uuid (24-character hex string)')
+    
+    #Check if the document exists
+    if not retrieved_doc:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    #If the document exists then validate the owner
+    if not user.is_superuser(current_user) and (retrieved_doc['owner_id'] != current_user.id):
+        raise HTTPException(status_code=400, detail="Not enough permissions")
+
+    #Update the document
+    json_data = jsonable_encoder(item_in)
+    crud_mongo.update_new_field(db_mongo, db_collection, subscriptionId, json_data)
+
+    #Retrieve the updated document
+    retrieved_doc = crud_mongo.read(db_mongo, db_collection, subscriptionId)
+    retrieved_doc.pop("owner_id")
+    http_response = JSONResponse(content=retrieved_doc, status_code=200)
+    add_notifications(http_request, http_response, False)
+    return http_response
+
+@router.delete("/{scsAsId}/subscriptions/{subscriptionId}")
+def delete_subscription(
+    *,
+    scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
+    subscriptionId: str = Path(..., title="Identifier of the subscription resource"),
+    db_mongo: Database = Depends(deps.get_mongo_db),
+    current_user: models.User = Depends(deps.get_current_active_user),
+    http_request: Request
+) -> Any:
+    """
+    Delete a subscription
+    """
+    try:
+        retrieved_doc = crud_mongo.read(db_mongo, db_collection, subscriptionId)
     except Exception as ex:
         raise HTTPException(status_code=400, detail='Please enter a valid uuid (24-character hex string)')
 
 
+    #Check if the document exists
+    if not retrieved_doc:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    #If the document exists then validate the owner
+    if not user.is_superuser(current_user) and (retrieved_doc['owner_id'] != current_user.id):
+        raise HTTPException(status_code=400, detail="Not enough permissions")
 
+    crud_mongo.delete(db_mongo, db_collection, subscriptionId)
+    http_response = JSONResponse(content=retrieved_doc, status_code=200)
+    add_notifications(http_request, http_response, False)
+    return http_response
+    
+    
     
 
 
