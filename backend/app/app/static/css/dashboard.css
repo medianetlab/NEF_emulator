@@ -11,5 +11,8 @@
 .dashboard-page .toast-error   { background-color: #d72d2d; }
 .dashboard-page .toast-success { background-color: #2eb85c; }
 
-.gnb-row .add-gnb-wrapper { display: inline-block; float: right; }
-.add-gnb-wrapper .btn-sm  { padding: 0rem 0.5rem; }
+.gnb-row .add-gnb-wrapper { display: inline-block; float: right; font-size: 0; }
+.add-gnb-wrapper .btn-sm  { padding: 0rem 0.5rem; height: 24px; }
+
+.cell-row .add-cell-wrapper { display: inline-block; float: right; font-size: 0; }
+.add-cell-wrapper .btn-sm  { padding: 0rem 0.5rem; height: 24px; }
