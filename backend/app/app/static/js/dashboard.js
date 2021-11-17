@@ -295,6 +295,7 @@ function api_delete_gNB( gNB_id ) {
             ui_display_toast_msg("success", "Success!", "The gNB has been permanently deleted");
             
             helper_delete_gNB( gNB_id );
+            helper_create_db_id_to_gNB_id_bindings();
             gNBs_datatable.clear().rows.add( gNBs ).draw();
         },
         error: function(err)
@@ -381,6 +382,7 @@ function api_put_gNB( gNB_obj ) {
             ui_display_toast_msg("success", "Success!", "The gNB has been updated");
             
             helper_update_gNB( gNB_obj );
+            helper_create_db_id_to_gNB_id_bindings();
             
             gNBs_datatable.clear().rows.add( gNBs ).draw();
         },
@@ -472,6 +474,7 @@ function api_post_gNB( gNB_obj ) {
             ui_display_toast_msg("success", "Success!", "The gNB has been created");
             
             gNBs.push(data);
+            helper_create_db_id_to_gNB_id_bindings();
             gNBs_datatable.clear().rows.add( gNBs ).draw();
         },
         error: function(err)
@@ -690,7 +693,7 @@ function ui_show_edit_cell_modal( cell_id ) {
     $('#cell_current_lat').val( cell_tmp_obj.latitude );
     $('#cell_current_lon').val( cell_tmp_obj.longitude );
     $('#cell_current_rad').val( cell_tmp_obj.radius );
-    $('#cell_new_lat').val( cell_tmp_obj.new_longitude );
+    $('#cell_new_lat').val( cell_tmp_obj.new_latitude );
     $('#cell_new_lon').val( cell_tmp_obj.new_longitude );
     $('#cell_new_rad').val( cell_tmp_obj.new_radius );
 
@@ -838,6 +841,10 @@ function helper_update_cell( cell_obj ) {
 
 function helper_create_db_id_to_gNB_id_bindings() {
 
+    // reset
+    db_ID_to_gNB_id = {};
+
+    // reload
     $.each(gNBs, function (i, item) {
         db_ID_to_gNB_id[ item.id.toString() ] = item.gNB_id;
     });
@@ -973,8 +980,8 @@ function ui_edit_cell_modal_add_listeners() {
         edit_cell_circle_cov.setLatLng(e.latlng);
         edit_cell_circle_cov.setRadius(cell_tmp_obj.new_radius);
 
-        cell_tmp_obj.new_latitude  = e.latlng.lat.toFixed(6);
-        cell_tmp_obj.new_longitude = e.latlng.lng.toFixed(6);
+        cell_tmp_obj.new_latitude  = parseFloat( e.latlng.lat.toFixed(6) );
+        cell_tmp_obj.new_longitude = parseFloat( e.latlng.lng.toFixed(6) );
 
         $('#cell_new_lat').val( cell_tmp_obj.new_latitude );
         $('#cell_new_lon').val( cell_tmp_obj.new_longitude );
