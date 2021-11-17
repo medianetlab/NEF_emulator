@@ -815,6 +815,11 @@ function ui_show_edit_cell_modal( cell_id ) {
 
 function ui_show_add_cell_modal(  ) {
 
+    if (gNBs.length == 0) {
+        ui_display_toast_msg("warning", "Oups! Add a gNB first.", "You cannot add new cells without first having at least one gNB.");
+        return;
+    }
+
     add_cell_coverage_lg.clearLayers(); // map layer cleanup
 
     // refresh the gNB options in the select input
