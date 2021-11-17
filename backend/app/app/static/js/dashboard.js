@@ -539,7 +539,7 @@ function api_post_cell( cell_obj ) {
         error: function(err)
         {
             console.log(err);
-            ui_display_toast_msg("error", "Error: cell could not be created", err.responseJSON.detail);
+            ui_display_toast_msg("error", "Error: cell could not be created", JSON.stringify( err.responseJSON.detail) );
         },
         complete: function()
         {
@@ -999,7 +999,7 @@ function ui_add_btn_listeners_for_cells_CUD_operations() {
     $('#add_cell_btn').on('click', function(){
 
         var data = {
-          cell_id     : parseInt( $('#add_cell_id').val() ),
+          cell_id     : $('#add_cell_id').val(),
           name        : $('#add_cell_name').val(),
           gNB_id      : parseInt ( $('#add_cell_gNB').val() ),
           description : $('#add_cell_description').val(),
@@ -1097,7 +1097,7 @@ function ui_initialize_add_cell_map() {
 
     // map initialization
     add_cell_map = L.map('add_cell_mapid', {
-        layers: [grayscale, edit_cell_coverage_lg]
+        layers: [grayscale, add_cell_coverage_lg]
     }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
 
 
