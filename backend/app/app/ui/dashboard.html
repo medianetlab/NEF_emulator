@@ -284,6 +284,38 @@
           </div>
           <!-- row -->
 
+
+
+
+
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card mb-4">
+                
+                <div class="card-header">Paths</div>
+                <div class="card-body">
+                  <div class="row">
+
+                    <table id="dt-paths" class="hover" style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th>id</th>
+                                <th>description</th>
+                                <th>actions</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- row -->
+
+
+
+
           <!-- ============================= gNB modals ============================= -->
 
           <!-- modal pop-up for confirming gNB removal -->
@@ -572,6 +604,34 @@
 
 
 
+
+
+
+
+          <!-- ============================= path modals ============================= -->
+
+          <!-- modal pop-up for confirming path removal -->
+          <div class="modal fade" id="del_path_modal" tabindex="-1" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalCenterTitle">Confirm path deletion?</h5>
+                  <button class="btn-close" type="button" data-coreui-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <p>If you proceed the path will permanently be <strong>removed</strong>. This change can't be undone.</p>
+                </div>
+                <div class="modal-footer">
+                  <button class="btn btn-light" type="button" data-coreui-dismiss="modal">Cancel</button>
+                  <button class="btn btn-danger" type="button" id="del_path_btn">
+                    <svg class="icon">
+                      <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-trash"></use>
+                    </svg> Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
 
 
 
