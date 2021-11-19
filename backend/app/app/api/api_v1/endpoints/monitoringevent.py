@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 from app import crud, models, schemas
 from app.api import deps
 from app import tools
-from app.core.config import settings
 from app.api.api_v1.endpoints.utils import add_notifications
 
 

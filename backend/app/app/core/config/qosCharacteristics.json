@@ -1,0 +1,44 @@
+{
+    "5qi": [
+        {
+            "value" : 9,
+            "type" : "NonGBR",
+            "priority": 90,
+            "PDB": 300,
+            "PER": 0.000001,
+            "service" : "TCP-based"
+        },
+        {
+            "value" : 8,
+            "type" : "NonGBR",
+            "priority": 70,
+            "PDB": 100,
+            "PER": 0.001,
+            "service" : "Live-Streaming"
+        },
+        {
+            "value" : 1,
+            "type" : "GBR",
+            "priority": 20,
+            "PDB": 100,
+            "PER": 0.01,
+            "service" : "Conversational Voice"
+        },
+        {
+            "value" : 2,
+            "type" : "GBR",
+            "priority": 40,
+            "PDB": 150,
+            "PER": 0.001,
+            "service" : "Conversational Video"
+        },
+        {
+            "value" : 82,
+            "type" : "DC-GBR",
+            "priority": 19,
+            "PDB": 10,
+            "PER": 0.0001,
+            "service" : "Discrete Automation"
+        }
+    ]
+}

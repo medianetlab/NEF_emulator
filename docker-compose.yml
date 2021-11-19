@@ -26,6 +26,8 @@ services:
 
   mongo:
     image: mongo:4.4.10
+    volumes:
+      - app-mongo-db-data:/data/db
     restart: always
     env_file:
       - .env
@@ -74,4 +76,5 @@ services:
 volumes:
   app-db-data:
   pgadmin-data:
+  app-mongo-db-data:
 
