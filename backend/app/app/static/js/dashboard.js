@@ -11,6 +11,7 @@ var db_ID_to_path_id = {};
 
 var gNBs_datatable  = null;
 var cells_datatable = null;
+var ues_datatable   = null;
 var paths_datatable = null;
 
 
@@ -47,6 +48,22 @@ var edit_cell_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="butto
   </svg>
 </button>`;
 
+
+// delete UE
+var del_UE_btn_tpl = `<button class="btn btn-sm btn-outline-secondary" type="button" onclick="ui_show_delete_UE_modal( '{{supi}}' );">
+  <svg class="icon">
+    <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-trash"></use>
+  </svg>
+</button>`;
+
+// edit UE
+var edit_UE_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="button" onclick="ui_show_edit_UE_modal( '{{supi}}' );">
+  <svg class="icon">
+    <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-pencil"></use>
+  </svg>
+</button>`;
+
+
 // delete path
 var del_path_btn_tpl = `<button class="btn btn-sm btn-outline-secondary" type="button" onclick="ui_show_delete_path_modal( '{{id}}' );">
   <svg class="icon">
@@ -75,7 +92,7 @@ var view_path_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="butto
     
 
 
-// cell modals initialization and helper variables
+// Cell modals initialization and helper variables
 // ===============================================
     var  del_cell_modal = new coreui.Modal(document.getElementById('del_cell_modal'),  {});
     var edit_cell_modal = new coreui.Modal(document.getElementById('edit_cell_modal'), {});
@@ -95,6 +112,17 @@ var view_path_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="butto
     var add_cell_coverage_lg = L.layerGroup(); // map layer group
     var add_cell_circle_dot  = null;           // small circle depicting the position of the cell (to be added)
     var add_cell_circle_cov  = null;           // large transparent circle depicting the coverage of the above cell
+
+
+
+// UE modals initialization and helper variables
+// ===============================================
+    var  del_UE_modal    = new coreui.Modal(document.getElementById('del_UE_modal'),  {});
+    // var edit_UE_modal    = new coreui.Modal(document.getElementById('edit_UE_modal'), {});
+    // var  add_UE_modal    = new coreui.Modal(document.getElementById('add_UE_modal'),  {});
+    var UE_to_be_deleted = -1;
+    var UE_to_be_edited  = -1;
+    var edit_UE_tmp_obj  = null;
 
 
 
@@ -128,8 +156,9 @@ $( document ).ready(function() {
     //   U: UPDATE (edit existing items)
     //   D: DELETE (remove items)
     // 
-    ui_add_btn_listeners_for_gNB_CUD_operations();
+    ui_add_btn_listeners_for_gNBs_CUD_operations();
     ui_add_btn_listeners_for_cells_CUD_operations();
+    ui_add_btn_listeners_for_UEs_CUD_operations();
     ui_add_btn_listeners_for_paths_CUD_operations();
 
 
@@ -385,6 +414,47 @@ function api_delete_cell( cell_id ) {
         {
             // console.log(err);
             ui_display_toast_msg("error", "Error: Cell could not be deleted", err.responseJSON.detail);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
+
+
+// Ajax request to delete UE
+// on success: remove it from datatables too
+// 
+function api_delete_UE( UE_supi ) {
+    
+    var url = app.api_url + '/UEs/' + UE_supi;
+
+    $.ajax({
+        type: 'DELETE',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            // console.log(data);
+            ui_display_toast_msg("success", "Success!", "The UE has been permanently deleted");
+            
+            helper_delete_UE( UE_supi );
+            // helper_create_db_id_to_UE_id_bindings();
+            ues_datatable.clear().rows.add( ues ).draw();
+        },
+        error: function(err)
+        {
+            // console.log(err);
+            ui_display_toast_msg("error", "Error: UE could not be deleted", err.responseJSON.detail);
         },
         complete: function()
         {
@@ -716,7 +786,7 @@ function ui_init_datatable_Cells() {
 
 
 function ui_init_datatable_UEs() {
-    $('#dt-ues').DataTable( {
+    ues_datatable = $('#dt-ues').DataTable( {
         data: ues,
         responsive: true,
         paging: false,
@@ -724,6 +794,20 @@ function ui_init_datatable_UEs() {
         info: false,
         pageLength: -1,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        columnDefs: [
+            {
+                "targets": 7,
+                "data": null,
+                "defaultContent": '',
+                "orderable" : false,
+                "searchable": false,
+                "render": function ( data, type, row ) {
+                    // return row.id;
+                    return  (  del_UE_btn_tpl.replaceAll("{{supi}}", row.supi) + " " +
+                              edit_UE_btn_tpl.replaceAll("{{supi}}", row.supi) );
+                }
+            }
+        ],
         columns: [
             { "data": "supi", className: "dt-center" },
             { "data": "name", className: "dt-center" },
@@ -732,6 +816,7 @@ function ui_init_datatable_UEs() {
             { "data": "ip_address_v4", className: "dt-center" },
             { "data": "mac_address", className: "dt-center" },
             { "data": "speed", className: "dt-center" },
+            { "data": null, className: "dt-right" },
         ]
     } );
 }
@@ -955,6 +1040,59 @@ function ui_show_add_cell_modal(  ) {
 }
 
 
+
+function ui_show_delete_UE_modal( UE_id ) {
+
+    UE_to_be_deleted = UE_id;
+    del_UE_modal.show();
+}
+
+function ui_show_add_UE_modal(  ) {
+
+    if ( (cells.length == 0) || (gNBs.length == 0) ) {
+        ui_display_toast_msg("warning", "Oups! Add a gNB & a Cell first.", "You cannot add new UEs without first having at least one gNB and one cell.");
+        return;
+    }
+
+    if (paths.length == 0) {
+        ui_display_toast_msg("warning", "Oups! Add a path first.", "You cannot add new UEs without first having at least one path.");
+        return;
+    }
+
+    add_UE_coverage_lg.clearLayers(); // map layer cleanup
+
+    // refresh the gNB options in the select input
+    $('#add_UE_gNB').empty(); // delete the old ones
+    $('#add_UE_gNB').append($('<option>', { value: -1, text: "none" })); // add a prompt
+    $.each(gNBs, function (i, item) {
+
+        var data = { 
+            value: item.id,
+            text : item.gNB_id
+        };
+
+        $('#add_UE_gNB').append($('<option>', data));
+    });
+
+    add_UE_modal.show();
+
+    add_UE_map.invalidateSize(); // this helps the map display its tiles correctly after the size of the modal is finalized
+
+    add_UE_circle_dot = L.circle([48.499998, 23.383331], 2, { // Geographical midpoint of Europe
+        color: 'none',
+        fillColor: '#2686de',
+        fillOpacity: 1.0
+    }).addTo(add_UE_coverage_lg).addTo( add_UE_map );
+
+    // add a transparent circle for coverage 
+    add_UE_circle_cov = L.circle([48.499998, 23.383331], 150, { // Geographical midpoint of Europe
+        color: 'none',
+        fillColor: '#2686de',
+        fillOpacity: 0.2
+    }).addTo(add_UE_coverage_lg).addTo( add_UE_map );
+}
+
+
 function ui_show_delete_path_modal( path_id ) {
 
     path_to_be_deleted = path_id;
@@ -1019,6 +1157,19 @@ function helper_delete_cell( cell_id ) {
     }
 }
 
+
+// iterates through the UEs list
+// and removes (if found) the supi provided
+// 
+function helper_delete_UE( UE_supi ) {
+
+    var i = ues.length;
+    while (i--) {
+        if ( ues[i].supi == UE_supi ) {
+            ues.splice(i, 1);
+        }
+    }
+}
 
 
 // iterates through the paths list
@@ -1097,7 +1248,7 @@ function helper_create_db_id_to_path_id_bindings() {
 //  - call the relevant API call
 //  - hide the modal message
 // 
-function ui_add_btn_listeners_for_gNB_CUD_operations() {
+function ui_add_btn_listeners_for_gNBs_CUD_operations() {
 
     // CREATE
     $('#add_gNB_btn').on('click', function(){
@@ -1182,6 +1333,57 @@ function ui_add_btn_listeners_for_cells_CUD_operations() {
         api_put_cell( edit_cell_tmp_obj );
         edit_cell_modal.hide();
     });
+}
+
+
+
+function ui_add_btn_listeners_for_UEs_CUD_operations() {
+
+    // CREATE
+    // $('#add_UE_btn').on('click', function(){
+
+    //     var data = {
+    //       UE_id     : $('#add_UE_id').val(),
+    //       name        : $('#add_UE_name').val(),
+    //       gNB_id      : parseInt ( $('#add_UE_gNB').val() ),
+    //       description : $('#add_UE_description').val(),
+    //       latitude    : parseFloat( $('#add_UE_new_lat').val() ),
+    //       longitude   : parseFloat( $('#add_UE_new_lon').val() ),
+    //       radius      :   parseInt( $('#add_UE_new_rad').val() ),
+    //     };
+
+    //     api_post_UE( data );
+    //     add_UE_modal.hide();
+    // });
+
+    // DELETE
+    $('#del_UE_btn').on('click', function(){
+        api_delete_UE( UE_to_be_deleted );
+        del_UE_modal.hide();
+    });
+
+    // UPDATE
+    // $('#update_UE_btn').on('click', function(){
+        
+    //     // get possible changes from form
+    //     edit_UE_tmp_obj.edit_UE_id = $('#edit_UE_id').val();
+    //     edit_UE_tmp_obj.name         = $('#edit_UE_name').val();
+    //     edit_UE_tmp_obj.description  = $('#edit_UE_description').val();
+    //     edit_UE_tmp_obj.gNB_id       = parseInt( $('#edit_UE_gNB').val() );
+
+    //     // override old values
+    //     edit_UE_tmp_obj.latitude    = parseFloat( edit_UE_tmp_obj.new_latitude );
+    //     edit_UE_tmp_obj.longitude   = parseFloat( edit_UE_tmp_obj.new_longitude );
+    //     edit_UE_tmp_obj.radius      =   parseInt( edit_UE_tmp_obj.new_radius );
+
+    //     // remove obsolete properties
+    //     delete edit_UE_tmp_obj.new_latitude;
+    //     delete edit_UE_tmp_obj.new_longitude;
+    //     delete edit_UE_tmp_obj.new_radius;
+        
+    //     api_put_UE( edit_UE_tmp_obj );
+    //     edit_UE_modal.hide();
+    // });
 }
 
 

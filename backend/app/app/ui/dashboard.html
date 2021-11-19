@@ -255,11 +255,18 @@
 
 
 
-          <div class="row">
+          <div class="row ue-row">
             <div class="col-md-12">
               <div class="card mb-4">
                 
-                <div class="card-header">UEs</div>
+                <div class="card-header">UEs
+                  <div class="add-ue-wrapper">
+                    <button  type="button" class="btn btn-sm btn-dark m-0" onclick="ui_show_add_UE_modal();">
+                      <svg class="icon m-0">
+                        <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-plus"></use>
+                      </svg></button>
+                  </div>
+                </div>
                 <div class="card-body">
                   <div class="row">
 
@@ -273,6 +280,7 @@
                                 <th>ip_address_v4</th>
                                 <th>mac_address</th>
                                 <th>speed</th>
+                                <th>actions</th>
                             </tr>
                         </thead>
                     </table>
@@ -596,6 +604,35 @@
                     <svg class="icon">
                       <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-save"></use>
                     </svg> Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+
+
+
+          <!-- ============================= UE modals ============================= -->
+
+          <!-- modal pop-up for confirming UE removal -->
+          <div class="modal fade" id="del_UE_modal" tabindex="-1" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalCenterTitle">Confirm UE deletion?</h5>
+                  <button class="btn-close" type="button" data-coreui-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <p>If you proceed the UE will permanently be <strong>removed</strong>. This change can't be undone.</p>
+                </div>
+                <div class="modal-footer">
+                  <button class="btn btn-light" type="button" data-coreui-dismiss="modal">Cancel</button>
+                  <button class="btn btn-danger" type="button" id="del_UE_btn">
+                    <svg class="icon">
+                      <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-trash"></use>
+                    </svg> Delete
                   </button>
                 </div>
               </div>

@@ -16,3 +16,6 @@
 
 .cell-row .add-cell-wrapper { display: inline-block; float: right; font-size: 0; }
 .add-cell-wrapper .btn-sm  { padding: 0rem 0.5rem; height: 24px; }
+
+.ue-row .add-ue-wrapper { display: inline-block; float: right; font-size: 0; }
+.add-ue-wrapper .btn-sm  { padding: 0rem 0.5rem; height: 24px; }
