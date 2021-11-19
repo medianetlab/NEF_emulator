@@ -4,12 +4,13 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pymongo.database import Database
-
+from sqlalchemy.orm import Session
 from app import models, schemas
 from app.api import deps
 from app import tools
-from app.core.config import settings
+from app.core.config import settings, qosSettings
 from app.crud import crud_mongo, user
+from app.crud import ue
 from app.api.api_v1.endpoints.utils import add_notifications
 
 router = APIRouter()
@@ -41,11 +42,16 @@ def create_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     db_mongo: Database = Depends(deps.get_mongo_db),
+    db: Session = Depends(deps.get_db),
     item_in: schemas.AsSessionWithQoSSubscriptionCreate,
     current_user: models.User = Depends(deps.get_current_active_user),
     http_request: Request
 ) -> Any:
     
+    #Check if UE with this ipv4 exists
+    UE = ue.get_ipv4(db = db, ipv4 = str(item_in.ipv4Addr), owner_id = current_user.id)
+    if not UE: 
+        raise HTTPException(status_code=409, detail="UE with this ipv4 doesn't exist")
 
     #Create the document in mongodb
     doc = crud_mongo.read_ipv4(db_mongo, db_collection, str(item_in.ipv4Addr))
@@ -65,12 +71,17 @@ def create_subscription(
     crud_mongo.update_new_field(db_mongo, db_collection, inserted_doc.inserted_id, {"link" : link})
     updated_doc = crud_mongo.read(db_mongo, db_collection, inserted_doc.inserted_id)
 
+    #Create and send the QoS Profile to NG-RAN
+    
+    send_qos_gnb(updated_doc, qosSettings.retrieve_settings(), db_mongo, UE)
+
     #Remove owner_id from the response
     updated_doc.pop("owner_id")
     
     http_response = JSONResponse(content=updated_doc, status_code=201, headers=response_header)
     add_notifications(http_request, http_response, False)
-        
+
+
     return http_response
 
 @router.get("/{scsAsId}/subscriptions/{subscriptionId}", response_model=schemas.AsSessionWithQoSSubscription)
@@ -169,8 +180,33 @@ def delete_subscription(
     http_response = JSONResponse(content=retrieved_doc, status_code=200)
     add_notifications(http_request, http_response, False)
     return http_response
-    
-    
-    
 
+    
+#Function that creates the QoS Profile in gNB
+#           3GPP terminology: 
+#The Session Management Function (SMF) sends the QoS Profile to NG-RAN (gNB) 
+#after the PDU Session Establishment request from the UE 
+    
+def send_qos_gnb(qos_document, qos_characteristics, db, ue):
+    
+    qos_profile = {}
 
+    #Qos reference chosen from AsSessionWithQoS API
+    qos_reference = qos_document.get('qosReference')
+
+    #Load the standardized 5qi values
+    qos_5qi = qos_characteristics.get('5qi')
+
+    #Find the matched 5qi value and create a new QoS Profile in NG_RAN
+    for q in qos_5qi:
+        if q.get('value') == qos_reference:
+            qos_profile = q.copy()
+            print(qos_profile)
+            
+    if qos_profile:
+        qos_profile.update({"gNB_id" : ue.Cell.gNB.gNB_id})
+        crud_mongo.create(db, 'QoSProfile', qos_profile)
+        return
+    else:
+        raise HTTPException(status_code=400, detail="This QoS Flow ID (qosReference) does not exist")   
+    
