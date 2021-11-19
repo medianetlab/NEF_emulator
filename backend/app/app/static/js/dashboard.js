@@ -118,11 +118,17 @@ var view_path_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="butto
 // UE modals initialization and helper variables
 // ===============================================
     var  del_UE_modal    = new coreui.Modal(document.getElementById('del_UE_modal'),  {});
-    // var edit_UE_modal    = new coreui.Modal(document.getElementById('edit_UE_modal'), {});
+    var edit_UE_modal    = new coreui.Modal(document.getElementById('edit_UE_modal'), {});
     // var  add_UE_modal    = new coreui.Modal(document.getElementById('add_UE_modal'),  {});
     var UE_to_be_deleted = -1;
     var UE_to_be_edited  = -1;
     var edit_UE_tmp_obj  = null;
+
+    // leaflet.js map for editing UE modal
+    var edit_UE_map         = null;
+    var edit_UE_position_lg = L.layerGroup(); // map layer group for UEs
+    var edit_UE_path_lg     = L.layerGroup(); // map layer group for paths
+    var edit_UE_circle_dot  = null;           // small circle depicting the position of the UE (to be edited)
 
 
 
@@ -134,6 +140,14 @@ var view_path_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="butto
     var path_to_be_deleted = -1;
     var path_to_be_viewed  = -1;
     var path_tmp_obj       = null;
+
+// ===============================================
+//             End of Global variables
+// ===============================================
+
+
+
+
 
 
 
@@ -151,30 +165,50 @@ $( document ).ready(function() {
     api_get_paths()
 
 
+    // =========================================================
+    //                  MODAL BUTTONS LISTENERS
+    //                (Create - Update - Delete)
+    // =========================================================
     // add listeners to buttons for CUD operations
+    // these buttons are on the bottom right of every modal
+    // and they trigger API calls to:
     //   C: CREATE (add new items)
     //   U: UPDATE (edit existing items)
     //   D: DELETE (remove items)
     // 
-    ui_add_btn_listeners_for_gNBs_CUD_operations();
-    ui_add_btn_listeners_for_cells_CUD_operations();
-    ui_add_btn_listeners_for_UEs_CUD_operations();
-    ui_add_btn_listeners_for_paths_CUD_operations();
+        ui_add_btn_listeners_for_gNBs_CUD_operations();
+        ui_add_btn_listeners_for_cells_CUD_operations();
+        ui_add_btn_listeners_for_UEs_CUD_operations();
+        ui_add_btn_listeners_for_paths_CUD_operations();
 
 
-    // initialize the map used inside the "edit cell" modal
-    // and add listeners to capture user changes (map & radius)
-    ui_initialize_edit_cell_map();
-    ui_edit_cell_modal_add_listeners();
 
-    // initialize the map used inside the "add cell" modal
-    // and add listeners to capture user changes (map & radius)
-    ui_initialize_add_cell_map();
-    ui_add_cell_modal_add_listeners();
+    // =========================================================
+    //                   MAP INITIALIZATION &
+    //                 MODAL-SPECIFIC LISTENERS
+    //         (clicks on maps, changes on inputs etc...)
+    // =========================================================
+    //
+        // initialize the map used inside the "edit cell" modal
+        // and add listeners to capture user changes (map & radius)
+        ui_initialize_edit_cell_map();
+        ui_edit_cell_modal_add_listeners();
 
+        // initialize the map used inside the "add cell" modal
+        // and add listeners to capture user changes (map & radius)
+        ui_initialize_add_cell_map();
+        ui_add_cell_modal_add_listeners();
+
+
+        // initialize the map used inside the "edit UE" modal
+        // and add listeners to capture user changes (map & radius)
+        ui_initialize_edit_UE_map();
+        // ui_edit_UE_modal_add_listeners();
 
 
 });
+// ===============================================
+//             End of Document ready
 // ===============================================
 
 
@@ -931,7 +965,7 @@ function ui_show_edit_cell_modal( cell_id ) {
     
     // load values to the input fields
     $('#db_cell_id').val( edit_cell_tmp_obj.id );
-    $('#edit_cell_id').val( edit_cell_tmp_obj.edit_cell_id );
+    $('#edit_cell_id').val( edit_cell_tmp_obj.cell_id );
     $('#edit_cell_name').val( edit_cell_tmp_obj.name );
     $('#edit_cell_location').val( edit_cell_tmp_obj.location );
     $('#edit_cell_description').val( edit_cell_tmp_obj.description );
@@ -1045,6 +1079,93 @@ function ui_show_delete_UE_modal( UE_id ) {
 
     UE_to_be_deleted = UE_id;
     del_UE_modal.show();
+}
+
+// shows modal for editing UEs
+// looks up for the specific UE and loads its details to the form fields
+//   - the user is allowed to modify some fields
+//   - the user can modify the latitude / longitude of the UE by clicking on the map
+//   - the user can modify the radius of the UE
+// 
+function ui_show_edit_UE_modal( UE_supi ) {
+
+    edit_UE_position_lg.clearLayers(); // map layer cleanup
+
+    UE_to_be_edited = UE_supi;
+
+    edit_UE_tmp_obj = helper_find_UE( UE_supi );
+    
+    // load values to the input fields
+    $('#db_UE_id').val( edit_UE_tmp_obj.id );
+    $('#edit_UE_supi').val( edit_UE_tmp_obj.supi );
+    $('#edit_UE_name').val( edit_UE_tmp_obj.name );
+    $('#edit_UE_ext_id').val( edit_UE_tmp_obj.external_identifier );
+
+    $('#edit_UE_description').val( edit_UE_tmp_obj.description );
+
+    $('#edit_UE_ipv4').val( edit_UE_tmp_obj.ip_address_v4 );
+    $('#edit_UE_ipv6').val( edit_UE_tmp_obj.ip_address_v6 );
+    $('#edit_UE_mac').val( edit_UE_tmp_obj.mac_address );
+    $('#edit_UE_gNB').val( db_ID_to_gNB_id[edit_UE_tmp_obj.gNB_id] );
+
+    $('#edit_UE_dnn').val( edit_UE_tmp_obj.dnn );
+    $('#edit_UE_mcc').val( edit_UE_tmp_obj.mcc );
+    $('#edit_UE_mnc').val( edit_UE_tmp_obj.mnc );
+    $('#edit_UE_cell').val( edit_UE_tmp_obj.cell_id_hex );
+
+    $('#edit_UE_current_lat').val( edit_UE_tmp_obj.latitude );
+    $('#edit_UE_current_lon').val( edit_UE_tmp_obj.longitude );
+    $('#edit_UE_speed').val( edit_UE_tmp_obj.speed );
+    
+
+    // refresh the path options in the select input
+    $('#edit_UE_path').empty(); // delete the old ones
+    $.each(paths, function (i, item) {
+
+        var data = { 
+            value: item.id,
+            text : item.description
+        };
+        
+        if (item.id === edit_UE_tmp_obj.id) {
+            data["selected"] = true;
+        }
+
+        $('#edit_UE_path').append($('<option>', data));
+    });
+    
+
+    edit_UE_modal.show();
+    edit_UE_map.invalidateSize(); // this helps the map display its tiles correctly after the size of the modal is finalized
+
+    // add a solid-color small circle (dot) at the current lat,lon
+    L.circle([edit_UE_tmp_obj.latitude,edit_UE_tmp_obj.longitude], 3, {
+        color: 'none',
+        fillColor: '#3590e2',
+        fillOpacity: 1.0
+    }).addTo(edit_UE_position_lg).addTo( edit_UE_map );
+    
+    edit_UE_map.setView(
+        {
+            lat: edit_UE_tmp_obj.latitude,
+            lon: edit_UE_tmp_obj.longitude
+        },
+        18 // zoom level
+    );
+
+    // // add a solid-color small circle (dot) some meters away
+    // edit_UE_circle_dot = L.circle([edit_UE_tmp_obj.latitude,(edit_UE_tmp_obj.new_longitude)], 2, {
+    //     color: 'none',
+    //     fillColor: '#2686de',
+    //     fillOpacity: 1.0
+    // }).addTo(edit_UE_position_lg).addTo( edit_UE_map );
+
+    // // add a transparent circle for coverage 
+    // edit_UE_circle_cov = L.circle([edit_UE_tmp_obj.latitude,(edit_UE_tmp_obj.new_longitude)], edit_UE_tmp_obj.radius, {
+    //     color: 'none',
+    //     fillColor: '#2686de',
+    //     fillOpacity: 0.2
+    // }).addTo(edit_UE_position_lg).addTo( edit_UE_map );
 }
 
 function ui_show_add_UE_modal(  ) {
@@ -1211,6 +1332,19 @@ function helper_update_cell( cell_obj ) {
 }
 
 
+// iterates through the UE list
+// and returns a copy of the UE object with the UE_id provided
+// (if not found it returns null)
+// 
+function helper_find_UE( UE_supi ) {
+    for (const item of ues) {
+        if ( item.supi == UE_supi ) {
+            return JSON.parse(JSON.stringify( item )); // return a copy of the item
+        }
+    }
+    return null;
+}
+
 
 
 function helper_create_db_id_to_gNB_id_bindings() {
@@ -1315,7 +1449,7 @@ function ui_add_btn_listeners_for_cells_CUD_operations() {
     $('#update_cell_btn').on('click', function(){
         
         // get possible changes from form
-        edit_cell_tmp_obj.edit_cell_id = $('#edit_cell_id').val();
+        edit_cell_tmp_obj.cell_id      = $('#edit_cell_id').val();
         edit_cell_tmp_obj.name         = $('#edit_cell_name').val();
         edit_cell_tmp_obj.description  = $('#edit_cell_description').val();
         edit_cell_tmp_obj.gNB_id       = parseInt( $('#edit_cell_gNB').val() );
@@ -1475,6 +1609,39 @@ function ui_initialize_edit_cell_map() {
     
 }
 
+
+function ui_initialize_edit_UE_map() {
+
+    // set map height
+    $('#edit_UE_mapid').css({ "height": 300 } );
+
+    var mbAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
+                'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        mbUrl = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+
+    var grayscale   = L.tileLayer(mbUrl, {id: 'mapbox/light-v9',    tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
+        streets     = L.tileLayer(mbUrl, {id: 'mapbox/streets-v11', tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23});
+
+
+    // map initialization
+    edit_UE_map = L.map('edit_UE_mapid', {
+        layers: [grayscale, edit_UE_position_lg]
+    }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
+
+
+    var baseLayers = {
+            "Grayscale": grayscale,
+            "Streets": streets
+        };
+
+    var overlays = {
+        "UE coverage": edit_UE_position_lg,
+    };
+
+    L.control.layers(baseLayers, overlays).addTo(edit_UE_map);
+
+    
+}
 
 
 function ui_initialize_add_cell_map() {

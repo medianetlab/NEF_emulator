@@ -638,7 +638,120 @@
               </div>
             </div>
           </div>
+          <!-- modal pop-up for editing UEs -->
+          <div class="modal" tabindex="-1" id="edit_UE_modal">
+            <div class="modal-dialog modal-xl">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Edit UE</h5>
+                  <button type="button" class="btn-close" data-coreui-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-5">
 
+                    <form action="" class="row g-3">
+                      <!-- --------------------------------- -->
+                      <div class="col-md-2">
+                        <label for="db_UE_id" class="form-label">Database ID</label>
+                        <input type="text" class="form-control" id="db_UE_id" disabled>
+                      </div>
+                      <div class="col-md-3">
+                        <label for="edit_UE_supi" class="form-label">supi</label>
+                        <input type="text" class="form-control" id="edit_UE_supi">
+                      </div>
+                      <div class="col-md-3">
+                        <label for="edit_UE_name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="edit_UE_name">
+                      </div>
+                      
+                      <div class="col-md-4">
+                        <label for="edit_UE_ext_id" class="form-label">External identifier</label>
+                        <input type="text" class="form-control" id="edit_UE_ext_id">
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-12 mb-4">
+                        <label for="edit_UE_description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="edit_UE_description" placeholder="Description text">
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-12 mt-4">
+                        <h5>Network details</h5>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-md-3">
+                        <label for="edit_UE_ipv4" class="form-label">IPv4</label>
+                        <input type="text" class="form-control" id="edit_UE_ipv4">
+                      </div>
+                      <div class="col-md-3">
+                        <label for="edit_UE_ipv6" class="form-label">IPv6</label>
+                        <input type="text" class="form-control" id="edit_UE_ipv6">
+                      </div>
+                      <div class="col-md-3">
+                        <label for="edit_UE_mac" class="form-label">MAC address</label>
+                        <input type="text" class="form-control" id="edit_UE_mac">
+                      </div>
+                      <div class="col-md-3">
+                        <label for="edit_UE_gNB" class="form-label">gNB</label>
+                        <input type="text" class="form-control" id="edit_UE_gNB" disabled>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-md-3">
+                        <label for="edit_UE_mcc" class="form-label">mcc</label>
+                        <input type="text" class="form-control" id="edit_UE_mcc" disabled>
+                      </div>
+                      <div class="col-md-3">
+                        <label for="edit_UE_mnc" class="form-label">mnc</label>
+                        <input type="text" class="form-control" id="edit_UE_mnc" disabled>
+                      </div>
+                      <div class="col-md-3">
+                        <label for="edit_UE_dnn" class="form-label">dnn</label>
+                        <input type="text" class="form-control" id="edit_UE_dnn" disabled>
+                      </div>
+                      <div class="col-md-3">
+                        <label for="edit_UE_cell" class="form-label">Cell</label>
+                        <input type="text" class="form-control" id="edit_UE_cell" disabled>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-12 mt-4">
+                        <h5>🔵 Current Location - path</h5>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-md-3">
+                        <label for="edit_UE_current_lat" class="form-label">Latitude </label>
+                        <input type="text" class="form-control" id="edit_UE_current_lat" disabled>
+                      </div>
+                      <div class="col-md-3">
+                        <label for="edit_UE_current_lon" class="form-label">Longitude</label>
+                        <input type="text" class="form-control" id="edit_UE_current_lon" disabled>
+                      </div>
+                      <div class="col-md-3">
+                        <label for="edit_UE_speed" class="form-label">Speed</label>
+                        <select class="form-control" id="edit_UE_speed">
+                          <option value="LOW">LOW</option>
+                          <option value="HIGH">HIGH</option>
+                        </select>
+                      </div>
+                      <div class="col-md-3">
+                        <label for="edit_UE_path" class="form-label">Path</label>
+                        <select class="form-control" id="edit_UE_path"></select>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-12">
+                         <div id="edit_UE_mapid"></div>
+                      </div>
+                      <!-- --------------------------------- -->
+                    </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-light" data-coreui-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-dark" id="update_UE_btn">
+                    <svg class="icon">
+                      <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-save"></use>
+                    </svg> Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
 
 
 
