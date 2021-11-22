@@ -9,8 +9,7 @@ from app import models, schemas
 from app.api import deps
 from app import tools
 from app.core.config import settings, qosSettings
-from app.crud import crud_mongo, user
-from app.crud import ue
+from app.crud import crud_mongo, user, ue
 from app.api.api_v1.endpoints.utils import add_notifications
 
 router = APIRouter()
@@ -28,7 +27,7 @@ def read_active_subscriptions(
     Get subscription by id
     """
     retrieved_docs = crud_mongo.read_all(db_mongo, db_collection, current_user.id)
-    logging.critical(retrieved_docs)
+
     #Check if there are any active subscriptions
     if not retrieved_docs:
         raise HTTPException(status_code=404, detail="There are no active subscriptions")
@@ -58,6 +57,10 @@ def create_subscription(
     if doc and (doc.get("owner_id") == current_user.id):
         raise HTTPException(status_code=409, detail=f"Subscription for UE with ipv4 ({item_in.ipv4Addr}) already exists")
     
+    ##Validate if qos reference chosen matches the 5qi values 
+    ##and create/send the QoS Profile to NG-RAN
+    send_qos_gnb(item_in.qosReference, qosSettings.retrieve_settings(), db_mongo, UE)
+
     json_data = jsonable_encoder(item_in)
     json_data.update({'owner_id' : current_user.id})
     inserted_doc = crud_mongo.create(db_mongo, db_collection, json_data)
@@ -70,10 +73,6 @@ def create_subscription(
 
     crud_mongo.update_new_field(db_mongo, db_collection, inserted_doc.inserted_id, {"link" : link})
     updated_doc = crud_mongo.read(db_mongo, db_collection, inserted_doc.inserted_id)
-
-    #Create and send the QoS Profile to NG-RAN
-    
-    send_qos_gnb(updated_doc, qosSettings.retrieve_settings(), db_mongo, UE)
 
     #Remove owner_id from the response
     updated_doc.pop("owner_id")
@@ -187,26 +186,32 @@ def delete_subscription(
 #The Session Management Function (SMF) sends the QoS Profile to NG-RAN (gNB) 
 #after the PDU Session Establishment request from the UE 
     
-def send_qos_gnb(qos_document, qos_characteristics, db, ue):
+def send_qos_gnb(qos_reference, qos_characteristics, db, ue):
     
     qos_profile = {}
-
-    #Qos reference chosen from AsSessionWithQoS API
-    qos_reference = qos_document.get('qosReference')
-
+        
     #Load the standardized 5qi values
     qos_5qi = qos_characteristics.get('5qi')
 
-    #Find the matched 5qi value and create a new QoS Profile in NG_RAN
+    #Find the matched 5qi value
     for q in qos_5qi:
         if q.get('value') == qos_reference:
             qos_profile = q.copy()
             print(qos_profile)
-            
-    if qos_profile:
-        qos_profile.update({"gNB_id" : ue.Cell.gNB.gNB_id})
-        crud_mongo.create(db, 'QoSProfile', qos_profile)
+
+    if not qos_profile:
+        raise HTTPException(status_code=400, detail=f"The 5QI (qosReference) {qos_reference} does not exist")
+    
+    #Check if the QoS profile already exists in gNB
+
+    retrieved_doc = crud_mongo.read_gNB_qosprofile(db, 'QoSProfile', ue.Cell.gNB.gNB_id, qos_reference)
+    if retrieved_doc:
+        logging.critical(f'This QoS Profile already exists for {ue.Cell.gNB.gNB_id}')
         return
-    else:
-        raise HTTPException(status_code=400, detail="This QoS Flow ID (qosReference) does not exist")   
+
+    #Create a new QoS Profile in NG_RAN
+    qos_profile.update({"gNB_id" : ue.Cell.gNB.gNB_id})
+    crud_mongo.create(db, 'QoSProfile', qos_profile)
+    return
+        
     
