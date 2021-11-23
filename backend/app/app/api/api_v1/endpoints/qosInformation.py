@@ -24,7 +24,14 @@ def read_qos_characteristics(
     Get the available QoS Characteristics
     """
     json_data = qosSettings.retrieve_settings()
-    return json_data
+
+    if not json_data:
+        raise HTTPException(status_code=404, detail="There are no available QoS Characteristics")
+    else:
+        http_response = JSONResponse(content=json_data, status_code=200)
+        add_notifications(http_request, http_response, False)
+        return http_response
+    
 
 @router.get("/qosProfiles/{gNB_id}")
 def read_qos_active_profiles(
@@ -49,7 +56,9 @@ def read_qos_active_profiles(
     if not retrieved_doc:
         raise HTTPException(status_code=404, detail=f"No QoS profiles for gNB {gNB.gNB_id}")
     else:
-        return retrieved_doc
+        http_response = JSONResponse(content=retrieved_doc, status_code=200)
+        add_notifications(http_request, http_response, False)
+        return http_response
 
 
 

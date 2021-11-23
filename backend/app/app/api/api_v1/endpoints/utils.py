@@ -154,8 +154,10 @@ def add_notifications(request: Request, response: JSONResponse, is_notification:
     endpoint = request.url.path
     if endpoint.find('monitoring') != -1:
         serviceAPI = "Monitoring Event API"
-    elif endpoint.find('qos') != -1:
+    elif endpoint.find('session-with-qos') != -1:
         serviceAPI = "AsSession With QoS API"
+    elif endpoint.find('qosInfo') != -1:
+        serviceAPI = "QoS Information"
 
     #Request body check and trim
     if(request.method == 'POST') or (request.method == 'PUT'):  

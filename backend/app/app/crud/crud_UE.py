@@ -7,8 +7,6 @@ from app.crud.base import CRUDBase
 from app.models.UE import UE
 from app.schemas.UE import UECreate, UEUpdate
 
-import logging
-
 class CRUD_UE(CRUDBase[UE, UECreate, UEUpdate]):
     def create_with_owner(
         self, db: Session, *, obj_in: UECreate, owner_id: int
@@ -40,6 +38,24 @@ class CRUD_UE(CRUDBase[UE, UECreate, UEUpdate]):
         return (
             db.query(self.model)
             .filter(UE.ip_address_v4 == ipv4, UE.owner_id == owner_id) #Check also owner id in get_by_gNB, etc...
+            .first()
+        )
+    
+    def get_ipv6(
+        self, db: Session, *, ipv6: str, owner_id: int
+    ) -> UE:
+        return (
+            db.query(self.model)
+            .filter(UE.ip_address_v6 == ipv6, UE.owner_id == owner_id) 
+            .first()
+        )
+
+    def get_mac(
+        self, db: Session, *, mac: str, owner_id: int
+    ) -> UE:
+        return (
+            db.query(self.model)
+            .filter(UE.mac_address == mac, UE.owner_id == owner_id) 
             .first()
         )
 

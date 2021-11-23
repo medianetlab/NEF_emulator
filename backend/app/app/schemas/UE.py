@@ -1,6 +1,6 @@
 from typing import Optional
 from enum import Enum
-from pydantic import BaseModel, constr, confloat
+from pydantic import BaseModel, constr, confloat, IPvAnyAddress
 from pydantic.fields import Field
 
 class Speed(str, Enum):
@@ -15,8 +15,8 @@ class UEBase(BaseModel):
     description: Optional[str] = None
     gNB_id: int
     Cell_id: int
-    ip_address_v4: Optional[str] = "169.254.46.5" #When a model attribute has a default value, it is not required. Otherwise, it is required. Use None to make it optional
-    ip_address_v6: Optional[str] = "fe80::349d:33ff:fe76:2cee"
+    ip_address_v4: Optional[IPvAnyAddress] = "169.254.46.5" #When a model attribute has a default value, it is not required. Otherwise, it is required. Use None to make it optional
+    ip_address_v6: Optional[IPvAnyAddress] = "fe80::349d:33ff:fe76:2cee"
     mac_address: Optional[str] = None
     dnn: Optional[str] = None
     mcc: Optional[int] = None

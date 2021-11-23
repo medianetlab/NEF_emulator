@@ -1,5 +1,5 @@
 import logging
-from typing import Any, List
+from typing import Any, Dict, List
 from fastapi import APIRouter, Depends, HTTPException, Path, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
@@ -47,21 +47,37 @@ def create_subscription(
     http_request: Request
 ) -> Any:
     
-    #Check if UE with this ipv4 exists
-    UE = ue.get_ipv4(db = db, ipv4 = str(item_in.ipv4Addr), owner_id = current_user.id)
-    if not UE: 
-        raise HTTPException(status_code=409, detail="UE with this ipv4 doesn't exist")
+    #Ensure that the user sends only one of the ipv4, ipv6, macAddr fields
+    validate_ids(item_in.dict(exclude_unset=True))
 
-    #Create the document in mongodb
-    doc = crud_mongo.read_ipv4(db_mongo, db_collection, str(item_in.ipv4Addr))
-    if doc and (doc.get("owner_id") == current_user.id):
-        raise HTTPException(status_code=409, detail=f"Subscription for UE with ipv4 ({item_in.ipv4Addr}) already exists")
+    #Check if UE and subscription exist
+    if 'ipv4Addr' in item_in.dict(exclude_unset=True):
+        UE = ue.get_ipv4(db = db, ipv4 = str(item_in.ipv4Addr), owner_id = current_user.id)
+        doc = crud_mongo.read(db_mongo, db_collection, 'ipv4Addr', str(item_in.ipv4Addr))
+        #display ipv4 in HTTP Exception if subscription exists
+        error_var = str(item_in.ipv4Addr) 
+    elif 'ipv6Addr' in item_in.dict(exclude_unset=True):
+        UE = ue.get_ipv6(db = db, ipv6 = str(item_in.ipv6Addr), owner_id = current_user.id)
+        doc = crud_mongo.read(db_mongo, db_collection, 'ipv6Addr', str(item_in.ipv6Addr))
+        #display ipv6 in HTTP Exception if subscription exists
+        error_var = str(item_in.ipv6Addr)
+    elif 'macAddr' in item_in.dict(exclude_unset=True):
+        UE = ue.get_mac(db = db, mac = str(item_in.macAddr), owner_id = current_user.id)
+        doc = crud_mongo.read(db_mongo, db_collection, 'macAddr', item_in.macAddr)
+        #display macAddr in HTTP Exception if subscription exists
+        error_var = item_in.macAddr
     
-    ##Validate if qos reference chosen matches the 5qi values 
-    ##and create/send the QoS Profile to NG-RAN
-    send_qos_gnb(item_in.qosReference, qosSettings.retrieve_settings(), db_mongo, UE)
+    if not UE: 
+        raise HTTPException(status_code=409, detail="UE not found")
 
-    json_data = jsonable_encoder(item_in)
+    if doc and (doc.get("owner_id") == current_user.id):
+        raise HTTPException(status_code=409, detail=f"Subscription for UE with ({error_var}) already exists")
+    
+    #Create the document in mongodb
+
+    send_qos_gnb(item_in.qosReference, qosSettings.retrieve_settings(), db_mongo, UE) ##Validate if qos reference matches any of the standardized 5qi values and create/send the QoS Profile to NG-RAN
+
+    json_data = jsonable_encoder(item_in.dict(exclude_unset=True))
     json_data.update({'owner_id' : current_user.id})
     inserted_doc = crud_mongo.create(db_mongo, db_collection, json_data)
 
@@ -72,10 +88,10 @@ def create_subscription(
     #Update the subscription with the new resource (link) and return the response (+response header)
 
     crud_mongo.update_new_field(db_mongo, db_collection, inserted_doc.inserted_id, {"link" : link})
-    updated_doc = crud_mongo.read(db_mongo, db_collection, inserted_doc.inserted_id)
+    updated_doc = crud_mongo.read_uuid(db_mongo, db_collection, inserted_doc.inserted_id)
 
-    #Remove owner_id from the response
-    updated_doc.pop("owner_id")
+    
+    updated_doc.pop("owner_id") #Remove owner_id from the response
     
     http_response = JSONResponse(content=updated_doc, status_code=201, headers=response_header)
     add_notifications(http_request, http_response, False)
@@ -97,7 +113,7 @@ def read_subscription(
     """
 
     try:
-        retrieved_doc = crud_mongo.read(db_mongo, db_collection, subscriptionId)
+        retrieved_doc = crud_mongo.read_uuid(db_mongo, db_collection, subscriptionId)
     except Exception as ex:
         raise HTTPException(status_code=400, detail='Please enter a valid uuid (24-character hex string)')
     
@@ -128,7 +144,7 @@ def update_subscription(
     """
 
     try:
-        retrieved_doc = crud_mongo.read(db_mongo, db_collection, subscriptionId)
+        retrieved_doc = crud_mongo.read_uuid(db_mongo, db_collection, subscriptionId)
     except Exception as ex:
         raise HTTPException(status_code=400, detail='Please enter a valid uuid (24-character hex string)')
     
@@ -144,7 +160,7 @@ def update_subscription(
     crud_mongo.update_new_field(db_mongo, db_collection, subscriptionId, json_data)
 
     #Retrieve the updated document
-    retrieved_doc = crud_mongo.read(db_mongo, db_collection, subscriptionId)
+    retrieved_doc = crud_mongo.read_uuid(db_mongo, db_collection, subscriptionId)
     retrieved_doc.pop("owner_id")
     http_response = JSONResponse(content=retrieved_doc, status_code=200)
     add_notifications(http_request, http_response, False)
@@ -163,7 +179,7 @@ def delete_subscription(
     Delete a subscription
     """
     try:
-        retrieved_doc = crud_mongo.read(db_mongo, db_collection, subscriptionId)
+        retrieved_doc = crud_mongo.read_uuid(db_mongo, db_collection, subscriptionId)
     except Exception as ex:
         raise HTTPException(status_code=400, detail='Please enter a valid uuid (24-character hex string)')
 
@@ -182,7 +198,7 @@ def delete_subscription(
 
     
 #Function that creates the QoS Profile in gNB
-#           3GPP terminology: 
+#3GPP terminology: 
 #The Session Management Function (SMF) sends the QoS Profile to NG-RAN (gNB) 
 #after the PDU Session Establishment request from the UE 
     
@@ -214,4 +230,15 @@ def send_qos_gnb(qos_reference, qos_characteristics, db, ue):
     crud_mongo.create(db, 'QoSProfile', qos_profile)
     return
         
+
+def validate_ids(item_request: dict):
     
+    if 'ipv4Addr' in item_request and ('ipv6Addr' in item_request or 'macAddr' in item_request):
+        raise HTTPException(status_code=400, detail='Please enter only one of the ipv4Addr, ipv6Addr, macAddr fields in the request')
+    elif 'ipv6Addr' in item_request and ('ipv4Addr' in item_request or 'macAddr' in item_request):
+        raise HTTPException(status_code=400, detail='Please enter only one of the ipv4Addr, ipv6Addr, macAddr fields in the request')
+    elif 'macAddr' in item_request and ('ipv4Addr' in item_request or 'ipv6Addr' in item_request):
+        raise HTTPException(status_code=400, detail='Please enter only one of the ipv4Addr, ipv6Addr, macAddr fields in the request')
+    else:
+        return
+        
