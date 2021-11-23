@@ -10,22 +10,23 @@ class Speed(str, Enum):
 
 # Shared properties
 class UEBase(BaseModel):
-    supi: constr(regex=r'^[0-9]{15,16}$')
+    supi: constr(regex=r'^[0-9]{15,16}$') = Field(default="202010000000000", description= """String identifying a Supi that shall contain either an IMSI, a network specific identifier, a Global Cable Identifier (GCI) or a Global Line Identifier (GLI) as specified in clause 2.2A of 3GPP TS 23.003. 
+                                                                                             In the current version (v1.1.0) only IMSI is supported""")
     name: Optional[str] = None
     description: Optional[str] = None
     gNB_id: int
     Cell_id: int
-    ip_address_v4: Optional[IPvAnyAddress] = "169.254.46.5" #When a model attribute has a default value, it is not required. Otherwise, it is required. Use None to make it optional
-    ip_address_v6: Optional[IPvAnyAddress] = "fe80::349d:33ff:fe76:2cee"
-    mac_address: Optional[str] = None
-    dnn: Optional[str] = None
-    mcc: Optional[int] = None
-    mnc: Optional[int] = None
-    external_identifier: Optional[str] = None
-    latitude: confloat(ge=-90, le=90)
-    longitude: confloat(ge=-180, le=180)
-    speed: Speed = Field("LOW", description="This value decribes UE's speed. Possible values are \"STATIONARY\" (e.g, IoT device), \"LOW(e.g, pedestrian)\" and \"HIGH (e.g., vehicle)\"")
-    path_id: Optional[int] = None
+    ip_address_v4: Optional[IPvAnyAddress] = Field(default='10.0.0.0', description="String identifying an Ipv4 address")    
+    ip_address_v6: Optional[IPvAnyAddress] = Field(default="0:0:0:0:0:0:0:0", description="String identifying an Ipv6 address. Default value ::1/128 (loopback)")
+    mac_address: constr(regex=r'^([0-9a-fA-F]{2})((-[0-9a-fA-F]{2}){5})$') = '22-00-00-00-00-00'
+    dnn: Optional[str] = Field(default='province1.mnc01.mcc202.gprs', description="String identifying the Data Network Name (i.e., Access Point Name in 4G). For more information check clause 9A of 3GPP TS 23.003")
+    mcc: Optional[int] = Field(default=202, description="Mobile Country Code (MCC) part of the Public Land Mobile Network (PLMN), comprising 3 digits, as defined in clause 9.3.3.5 of 3GPP TS 38.413")
+    mnc: Optional[int] = Field(default=1, description="Mobile Network Code (MNC) part of the Public Land Mobile Network (PLMN), comprising 2 or 3 digits, as defined in clause 9.3.3.5 of 3GPP TS 38.413")
+    external_identifier: Optional[str] = Field("123456789@domain.com", description="Globally unique identifier containing a Domain Identifier and a Local Identifier. \<Local Identifier\>@\<Domain Identifier\>")
+    latitude: Optional[confloat(ge=-90, le=90)] 
+    longitude: Optional[confloat(ge=-180, le=180)]
+    speed: Speed = Field(default="LOW", description="This value describes UE's speed. Possible values are \"STATIONARY\" (e.g, IoT device), \"LOW(e.g, pedestrian)\" and \"HIGH (e.g., vehicle)\"")
+    path_id: Optional[int] = Field(None, description="This value correlates a UE with a pre-defined path. More information can be found at /api/v1/frontend/location")
 
 # Properties to receive on item creation
 class UECreate(UEBase):

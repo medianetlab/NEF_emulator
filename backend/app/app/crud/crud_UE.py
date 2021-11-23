@@ -1,5 +1,4 @@
 from typing import List
-from pydantic import IPvAnyAddress
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 

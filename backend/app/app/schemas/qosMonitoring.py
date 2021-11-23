@@ -1,6 +1,4 @@
 from typing import List, Optional
-from datetime import datetime
-from fastapi.param_functions import File
 from pydantic import BaseModel, Field, IPvAnyAddress, AnyHttpUrl, constr
 from enum import Enum
 
@@ -43,7 +41,7 @@ class AsSessionWithQoSSubscriptionCreate(BaseModel):
     macAddr: Optional[constr(regex=r'^([0-9a-fA-F]{2})((-[0-9a-fA-F]{2}){5})$')] = '22-00-00-00-00-00'
     notificationDestination: AnyHttpUrl = "https://example.com/mynetapp"
     snssai: Optional[Snssai] = None
-    dnn: Optional[str] = Field("province1.mnc01.mcc202.gprs", description="String identifying the Data Network Name (i.e., Access Point Name in 4G)")    
+    dnn: Optional[str] = Field("province1.mnc01.mcc202.gprs", description="String identifying the Data Network Name (i.e., Access Point Name in 4G). For more information check clause 9A of 3GPP TS 23.003")    
     qosReference: int = Field(default=9, description="Identifies a pre-defined QoS Information", ge=1, le=90)
     altQoSReferences: List[int] = Field(None, description="Identifies an ordered list of pre-defined QoS information. The lower the index of the array the higher the priority.", min_items=1)
     usageThreshold: Optional[UsageThreshold] = None

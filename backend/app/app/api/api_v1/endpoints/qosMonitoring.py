@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List
+from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, Path, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
@@ -7,8 +7,7 @@ from pymongo.database import Database
 from sqlalchemy.orm import Session
 from app import models, schemas
 from app.api import deps
-from app import tools
-from app.core.config import settings, qosSettings
+from app.core.config import qosSettings
 from app.crud import crud_mongo, user, ue
 from app.api.api_v1.endpoints.utils import add_notifications
 
@@ -57,6 +56,7 @@ def create_subscription(
         #display ipv4 in HTTP Exception if subscription exists
         error_var = str(item_in.ipv4Addr) 
     elif 'ipv6Addr' in item_in.dict(exclude_unset=True):
+        item_in.ipv6Addr = item_in.ipv6Addr.exploded
         UE = ue.get_ipv6(db = db, ipv6 = str(item_in.ipv6Addr), owner_id = current_user.id)
         doc = crud_mongo.read(db_mongo, db_collection, 'ipv6Addr', str(item_in.ipv6Addr))
         #display ipv6 in HTTP Exception if subscription exists

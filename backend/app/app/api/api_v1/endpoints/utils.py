@@ -10,7 +10,6 @@ from app.db.session import SessionLocal
 from app import models, schemas, crud
 from app.api import deps
 from app.schemas import monitoringevent 
-from app.utils import send_test_email
 from app.tools.distance import check_distance
 from app.tools.send_callback import location_callback
 from app import tools
@@ -232,7 +231,7 @@ def get_last_notifications(
     
     return updated_notification
 
-@router.post("/start-loop/", status_code=200)
+@router.post("/start-loop", status_code=200)
 def initiate_movement(
     *,
     msg: schemas.Msg,
@@ -250,7 +249,7 @@ def initiate_movement(
     print(threads)
     return {"msg": "Loop started"}
 
-@router.post("/stop-loop/", status_code=200)
+@router.post("/stop-loop", status_code=200)
 def terminate_movement(
      *,
     msg: schemas.Msg,
