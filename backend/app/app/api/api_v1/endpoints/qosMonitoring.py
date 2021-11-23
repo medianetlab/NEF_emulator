@@ -49,29 +49,29 @@ def create_subscription(
     #Ensure that the user sends only one of the ipv4, ipv6, macAddr fields
     validate_ids(item_in.dict(exclude_unset=True))
 
-    #Check if UE and subscription exist
-    if 'ipv4Addr' in item_in.dict(exclude_unset=True):
+    #Check if both UE and subscription exist
+    if 'ipv4Addr' in item_in.dict(exclude_unset=True):    
         UE = ue.get_ipv4(db = db, ipv4 = str(item_in.ipv4Addr), owner_id = current_user.id)
         doc = crud_mongo.read(db_mongo, db_collection, 'ipv4Addr', str(item_in.ipv4Addr))
-        #display ipv4 in HTTP Exception if subscription exists
-        error_var = str(item_in.ipv4Addr) 
+        error_var = str(item_in.ipv4Addr) #display ipv4 in HTTP Exception if subscription exists
+        selected_id = 'ipv4Addr'
     elif 'ipv6Addr' in item_in.dict(exclude_unset=True):
         item_in.ipv6Addr = item_in.ipv6Addr.exploded
         UE = ue.get_ipv6(db = db, ipv6 = str(item_in.ipv6Addr), owner_id = current_user.id)
         doc = crud_mongo.read(db_mongo, db_collection, 'ipv6Addr', str(item_in.ipv6Addr))
-        #display ipv6 in HTTP Exception if subscription exists
-        error_var = str(item_in.ipv6Addr)
+        error_var = str(item_in.ipv6Addr) #display ipv6 in HTTP Exception if subscription exists
+        selected_id = 'ipv6Addr'
     elif 'macAddr' in item_in.dict(exclude_unset=True):
         UE = ue.get_mac(db = db, mac = str(item_in.macAddr), owner_id = current_user.id)
         doc = crud_mongo.read(db_mongo, db_collection, 'macAddr', item_in.macAddr)
-        #display macAddr in HTTP Exception if subscription exists
-        error_var = item_in.macAddr
+        error_var = item_in.macAddr #display macAddr in HTTP Exception if subscription exists
+        selected_id = 'macAddr'
     
     if not UE: 
         raise HTTPException(status_code=409, detail="UE not found")
 
     if doc and (doc.get("owner_id") == current_user.id):
-        raise HTTPException(status_code=409, detail=f"Subscription for UE with ({error_var}) already exists")
+        raise HTTPException(status_code=409, detail=f"Subscription for UE with {selected_id} ({error_var}) already exists")
     
     #Create the document in mongodb
 
@@ -79,6 +79,17 @@ def create_subscription(
 
     json_data = jsonable_encoder(item_in.dict(exclude_unset=True))
     json_data.update({'owner_id' : current_user.id})
+
+    #Add all UE ids in the subscription to help in validation, even if the user selects one id.
+    #For example, lets assume that a user makes a subscription for a UE with ipv4 10.0.0.1.
+    #Subsequently a subscription for the same UE with ipv6 ::1 should not be permitted 
+    if selected_id == 'ipv4Addr':
+        json_data.update({'ipv6Addr' : UE.ip_address_v6, 'macAddr' : UE.mac_address})
+    elif selected_id == 'ipv6Addr':
+        json_data.update({'ipv4Addr' : UE.ip_address_v4, 'macAddr' : UE.mac_address})
+    elif selected_id == 'macAddr':
+        json_data.update({'ipv4Addr' : UE.ip_address_v4, 'ipv6Addr' : UE.ip_address_v6})
+
     inserted_doc = crud_mongo.create(db_mongo, db_collection, json_data)
 
     #Create the reference resource and location header
