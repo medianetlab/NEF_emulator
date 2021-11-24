@@ -637,6 +637,54 @@ function api_put_cell( cell_obj ) {
 }
 
 
+// Ajax request to update UE
+// on success: update it inside datatables too
+// 
+function api_put_UE( UE_obj ) {
+    
+    var url = app.api_url + '/UEs/' + UE_to_be_edited; // using UE_obj.UE_id would not work if the user has provided new UE_id value
+
+    var UE_obj_copy =  JSON.parse(JSON.stringify( UE_obj )); // copy to be used with fewer object properties
+
+    // remove not required properties
+    delete UE_obj_copy.id;
+    delete UE_obj_copy.owner_id;
+
+    $.ajax({
+        type: 'PUT',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        data:         JSON.stringify(UE_obj_copy),
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            // console.log(data);
+            ui_display_toast_msg("success", "Success!", "The UE has been updated");
+            
+            helper_update_UE( UE_obj );
+            
+            ues_datatable.clear().rows.add( ues ).draw();
+        },
+        error: function(err)
+        {
+            console.log(err);
+            ui_display_toast_msg("error", "Error: UE could not be updated", err.responseJSON.detail[0].msg);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
+
+
 // Ajax request to create gNB
 // on success: add it inside datatables too
 // 
@@ -713,6 +761,42 @@ function api_post_cell( cell_obj ) {
         {
             console.log(err);
             ui_display_toast_msg("error", "Error: cell could not be created", JSON.stringify( err.responseJSON.detail) );
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
+
+
+
+// 
+// 
+function api_get_state_loop_for( UE_supi ) {
+    var url = app.api_url + '/utils/state-loop/' + UE_supi;
+
+    $.ajax({
+        type: 'GET',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            if ( data.running ) {
+                ui_display_toast_msg("warning", "Oups! The current UE is moving.", "You cannot edit it without first stopping it.");
+            }
+        },
+        error: function(err)
+        {
+            console.log(err);
         },
         complete: function()
         {
@@ -1089,6 +1173,17 @@ function ui_show_delete_UE_modal( UE_id ) {
 // 
 function ui_show_edit_UE_modal( UE_supi ) {
 
+    // check if the UE is currently moving, if:
+    //   yes: display message to first stop and return
+    //   no : display the modal
+
+
+
+
+
+
+    // display modal
+
     edit_UE_position_lg.clearLayers(); // map layer cleanup
 
     UE_to_be_edited = UE_supi;
@@ -1127,7 +1222,7 @@ function ui_show_edit_UE_modal( UE_supi ) {
             text : item.description
         };
         
-        if (item.id === edit_UE_tmp_obj.id) {
+        if (item.id === edit_UE_tmp_obj.path_id) {
             data["selected"] = true;
         }
 
@@ -1345,6 +1440,18 @@ function helper_find_UE( UE_supi ) {
     return null;
 }
 
+// iterates through the UE list
+// and updates (if found) the UE object provided
+//
+function helper_update_UE( UE_obj ) {
+
+    for (i=0 ; i<ues.length ; i++) {
+        if ( ues[i].id == UE_obj.id ) {
+            ues[i] = JSON.parse(JSON.stringify( UE_obj )); // found, updated
+        }
+    }
+}
+
 
 
 function helper_create_db_id_to_gNB_id_bindings() {
@@ -1497,27 +1604,28 @@ function ui_add_btn_listeners_for_UEs_CUD_operations() {
     });
 
     // UPDATE
-    // $('#update_UE_btn').on('click', function(){
+    $('#update_UE_btn').on('click', function(){
         
-    //     // get possible changes from form
-    //     edit_UE_tmp_obj.edit_UE_id = $('#edit_UE_id').val();
-    //     edit_UE_tmp_obj.name         = $('#edit_UE_name').val();
-    //     edit_UE_tmp_obj.description  = $('#edit_UE_description').val();
-    //     edit_UE_tmp_obj.gNB_id       = parseInt( $('#edit_UE_gNB').val() );
+        // get possible changes from form
+        // general info
+        edit_UE_tmp_obj.supi                = $('#edit_UE_supi').val();
+        edit_UE_tmp_obj.name                = $('#edit_UE_name').val();
+        edit_UE_tmp_obj.external_identifier = $('#edit_UE_ext_id').val();
+        edit_UE_tmp_obj.description         = $('#edit_UE_description').val();
 
-    //     // override old values
-    //     edit_UE_tmp_obj.latitude    = parseFloat( edit_UE_tmp_obj.new_latitude );
-    //     edit_UE_tmp_obj.longitude   = parseFloat( edit_UE_tmp_obj.new_longitude );
-    //     edit_UE_tmp_obj.radius      =   parseInt( edit_UE_tmp_obj.new_radius );
+        // network
+        edit_UE_tmp_obj.ip_address_v4 = $('#edit_UE_ipv4').val();
+        edit_UE_tmp_obj.ip_address_v6 = $('#edit_UE_ipv6').val();
+        edit_UE_tmp_obj.mac_address   = $('#edit_UE_mac').val();
 
-    //     // remove obsolete properties
-    //     delete edit_UE_tmp_obj.new_latitude;
-    //     delete edit_UE_tmp_obj.new_longitude;
-    //     delete edit_UE_tmp_obj.new_radius;
+        // location & path
+        edit_UE_tmp_obj.path_id = parseInt( $('#edit_UE_path').val() );
+        edit_UE_tmp_obj.speed   = $('#edit_UE_speed').val();
+
         
-    //     api_put_UE( edit_UE_tmp_obj );
-    //     edit_UE_modal.hide();
-    // });
+        api_put_UE( edit_UE_tmp_obj );
+        edit_UE_modal.hide();
+    });
 }
 
 
