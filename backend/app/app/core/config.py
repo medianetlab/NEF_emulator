@@ -1,4 +1,5 @@
-import secrets
+import logging
+import secrets, json
 from typing import Any, Dict, List, Optional, Union
 
 from pydantic import AnyHttpUrl, BaseSettings, EmailStr, HttpUrl, PostgresDsn, validator
@@ -87,3 +88,18 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+class QoSSettings():
+
+    def __init__(self) -> None:
+        self.import_json()
+    
+    def import_json(self):
+        with open('app/core/config/qosCharacteristics.json') as json_file:
+            data = json.load(json_file)        
+            self._qos_characteristics = data
+
+    def retrieve_settings(self):
+        return self._qos_characteristics
+
+qosSettings = QoSSettings()

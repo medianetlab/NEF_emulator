@@ -10,7 +10,6 @@ from app.db.session import SessionLocal
 from app import models, schemas, crud
 from app.api import deps
 from app.schemas import monitoringevent 
-from app.utils import send_test_email
 from app.tools.distance import check_distance
 from app.tools.send_callback import location_callback
 from app import tools
@@ -150,10 +149,14 @@ def add_notifications(request: Request, response: JSONResponse, is_notification:
 
     #Find the service API 
     #Keep in mind that whether endpoint changes format, the following if statement needs review
-    #Since new APIs are added in the emulator, the if statement will expand. e.g.,   elif endpoint.find('qos') != -1: serviceAPI = "As Session With QoS"
+    #Since new APIs are added in the emulator, the if statement will expand
     endpoint = request.url.path
     if endpoint.find('monitoring') != -1:
         serviceAPI = "Monitoring Event API"
+    elif endpoint.find('session-with-qos') != -1:
+        serviceAPI = "AsSession With QoS API"
+    elif endpoint.find('qosInfo') != -1:
+        serviceAPI = "QoS Information"
 
     #Request body check and trim
     if(request.method == 'POST') or (request.method == 'PUT'):  
@@ -228,7 +231,7 @@ def get_last_notifications(
     
     return updated_notification
 
-@router.post("/start-loop/", status_code=200)
+@router.post("/start-loop", status_code=200)
 def initiate_movement(
     *,
     msg: schemas.Msg,
@@ -246,7 +249,7 @@ def initiate_movement(
     print(threads)
     return {"msg": "Loop started"}
 
-@router.post("/stop-loop/", status_code=200)
+@router.post("/stop-loop", status_code=200)
 def terminate_movement(
      *,
     msg: schemas.Msg,

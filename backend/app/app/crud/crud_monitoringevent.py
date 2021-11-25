@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session # this will allow you to declare the type of 
 from app.crud.base import CRUDBase
 from app.models.monitoringevent import Monitoring
 from app.schemas.monitoringevent import MonitoringEventSubscription
-from app.schemas.UE import UECreate, UEUpdate
 
 
 class CRUD_Monitoring(CRUDBase[Monitoring, MonitoringEventSubscription, MonitoringEventSubscription]):

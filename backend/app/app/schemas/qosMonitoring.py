@@ -1,12 +1,10 @@
 from typing import List, Optional
-from datetime import datetime
-from fastapi.param_functions import File
 from pydantic import BaseModel, Field, IPvAnyAddress, AnyHttpUrl, constr
 from enum import Enum
 
 class Snssai(BaseModel):
-    sst: int = Field(None, description="Unsigned integer representing the Slice/Service Type. Value 0 to 127 correspond to the standardized SST range. Value 128 to 255 correspond to the Operator-specific range.", ge=0, le=255)
-    sd: Optional[constr(regex=r'^[0-9a-fA-F]{6}$')] = Field(None, description="This value respresents the Slice Differentiator, in hexadecimal representation.")
+    sst: int = Field(default=1, description="Unsigned integer representing the Slice/Service Type. Value 0 to 127 correspond to the standardized SST range. Value 128 to 255 correspond to the Operator-specific range.", ge=0, le=255)
+    sd: Optional[constr(regex=r'^[0-9a-fA-F]{6}$')] = Field(default='000001', description="This value respresents the Slice Differentiator, in hexadecimal representation.")
 
 class UsageThreshold(BaseModel):
     duration: int = Field(None, description="A period of time in units of seconds", ge=0)
@@ -38,16 +36,17 @@ class SponsorInfo(BaseModel):
 
 class AsSessionWithQoSSubscriptionCreate(BaseModel):
     #Remember, when you actually trying to access the database through CRUD methods you need to typecast the pydantic types to strings, int etc.
-    ipv4Addr: Optional[IPvAnyAddress] = Field(None, description="String identifying an Ipv4 address")    
-    ipv6Addr: Optional[IPvAnyAddress] = Field("0:0:0:0:0:0:0:1", description="String identifying an Ipv6 address. Default value ::1/128 (loopback)")
-    macAddr: Optional[constr(regex=r'^([0-9a-fA-F]{2})((-[0-9a-fA-F]{2}){5})$')]
+    ipv4Addr: Optional[IPvAnyAddress] = Field(default='10.0.0.0', description="String identifying an Ipv4 address")    
+    ipv6Addr: Optional[IPvAnyAddress] = Field(default="0:0:0:0:0:0:0:0", description="String identifying an Ipv6 address. Default value ::1/128 (loopback)")
+    macAddr: Optional[constr(regex=r'^([0-9a-fA-F]{2})((-[0-9a-fA-F]{2}){5})$')] = '22-00-00-00-00-00'
     notificationDestination: AnyHttpUrl = "https://example.com/mynetapp"
     snssai: Optional[Snssai] = None
-    dnn: Optional[str] = Field("province1.mnc01.mcc202.gprs", description="String identifying the Data Network Name (i.e., Access Point Name in 4G)")    
-    qosReference: int = Field(None, description="Identifies a pre-defined QoS Information", ge=1, le=90)
+    dnn: Optional[str] = Field("province1.mnc01.mcc202.gprs", description="String identifying the Data Network Name (i.e., Access Point Name in 4G). For more information check clause 9A of 3GPP TS 23.003")    
+    qosReference: int = Field(default=9, description="Identifies a pre-defined QoS Information", ge=1, le=90)
     altQoSReferences: List[int] = Field(None, description="Identifies an ordered list of pre-defined QoS information. The lower the index of the array the higher the priority.", min_items=1)
     usageThreshold: Optional[UsageThreshold] = None
     qosMonInfo: Optional[QosMonitoringInformation] = None
+
     
 class AsSessionWithQoSSubscription(AsSessionWithQoSSubscriptionCreate):
     link: Optional[AnyHttpUrl] = Field("https://myresource.com", description="String identifying a referenced resource. This is also returned as a location header in 201 Created Response")

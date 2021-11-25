@@ -3,16 +3,14 @@ from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.param_functions import Path
 from sqlalchemy.orm import Session
-from sqlalchemy import exc
 
 from app import crud, models, schemas
 from app.api import deps
 
-import json 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[schemas.gNB])
+@router.get("", response_model=List[schemas.gNB])
 def read_gNBs(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
@@ -31,7 +29,7 @@ def read_gNBs(
     return gNBs
 
 
-@router.post("/", response_model=schemas.gNB)
+@router.post("", response_model=schemas.gNB)
 def create_gNB(
     *,
     db: Session = Depends(deps.get_db),
