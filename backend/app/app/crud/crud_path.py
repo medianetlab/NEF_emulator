@@ -4,8 +4,8 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session # this will allow you to declare the type of the db parameters and have better type checks and completion in your functions.
 from sqlalchemy import asc
 from app.crud.base import CRUDBase
-from app.models.location_frontend import Path, Points
-from app.schemas.location_frontend import PathCreate, PathUpdate
+from app.models.path import Path, Points
+from app.schemas.path import PathCreate, PathUpdate
 
 
 class CRUD_Path(CRUDBase[Path, PathCreate, PathUpdate]):

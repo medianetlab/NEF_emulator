@@ -460,7 +460,7 @@ function ui_map_paint_Cells() {
 // 
 function api_get_specific_path( id ) {
     
-    var url = app.api_url + '/frontend/location/' + id;
+    var url = app.api_url + '/paths/' + id;
 
     $.ajax({
         type: 'GET',

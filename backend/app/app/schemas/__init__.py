@@ -1,4 +1,4 @@
-from .location_frontend import Path, PathCreate, PathUpdate, PathInDB, PathInDBBase
+from .path import Path, PathCreate, PathUpdate, PathInDB, PathInDBBase, Paths
 from .msg import Msg
 from .token import Token, TokenPayload
 from .user import User, UserCreate, UserInDB, UserUpdate

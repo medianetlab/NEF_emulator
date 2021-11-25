@@ -1,3 +1,4 @@
+from os import path
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, Path
@@ -10,19 +11,19 @@ from app.api import deps
 
 router = APIRouter()
 
-def exists(db, gNB, cell, path):
-    gnb = crud.gnb.get(db=db, id=gNB)
-    Cell = crud.cell.get(db=db, id=cell)
-    Path = crud.path.get(db=db, id=path)
+def exists(db, gNB_id, cell_id, path_id):
+    gnb = crud.gnb.get(db=db, id=gNB_id)
+    cell = crud.cell.get(db=db, id=cell_id)
+    path = crud.path.get(db=db, id=path_id)
 
     if not gnb:
         raise HTTPException(status_code=409, detail="ERROR: This gNB_id you specified doesn't exist. Please create a new gNB with this gNB_id or use an existing gNB")
-    elif not Cell:
+    elif not cell:
         raise HTTPException(status_code=409, detail="ERROR: This Cell_id you specified doesn't exist. Please create a new Cell with this Cell_id or use an existing Cell")
-    elif not Path:
+    elif not path:
         raise HTTPException(status_code=409, detail="ERROR: This path_id you specified doesn't exist. Please create a new path with this path_id or use an existing path")
     else:
-        return True
+        return path
 
 
 @router.get("", response_model=List[schemas.UEs])
@@ -65,10 +66,17 @@ def create_UE(
     if UE:
         raise HTTPException(status_code=409, detail="ERROR: UE with this id already exists")
 
-    if exists(db=db, gNB=item_in.gNB_id, cell=item_in.Cell_id, path= item_in.path_id):
-        item_in.ip_address_v6 = item_in.ip_address_v6.exploded
-        UE = crud.ue.create_with_owner(db=db, obj_in=item_in, owner_id=current_user.id)
-        return UE
+    path = exists(db=db, gNB_id = item_in.gNB_id, cell_id = item_in.Cell_id, path_id = item_in.path_id)
+    
+    json_data = jsonable_encoder(item_in)
+    json_data['ip_address_v6'] = item_in.ip_address_v6.exploded 
+    
+    #Assign the initial coordinates (retrieved from path) to the UE
+    json_data['latitude'] = path.start_lat 
+    json_data['longitude'] = path.start_long 
+
+    UE = crud.ue.create_with_owner(db=db, obj_in=json_data, owner_id=current_user.id)
+    return UE
 
 
 @router.put("/{supi}", response_model=schemas.UE)
@@ -88,9 +96,18 @@ def update_UE(
     if not crud.user.is_superuser(current_user) and (UE.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
 
-    if exists(db=db, gNB=item_in.gNB_id, cell=item_in.Cell_id, path= item_in.path_id):
-        UE = crud.ue.update(db=db, db_obj=UE, obj_in=item_in)
-        return UE
+    path = exists(db=db, gNB_id = item_in.gNB_id, cell_id = item_in.Cell_id, path_id = item_in.path_id)
+    
+    json_data = jsonable_encoder(item_in)
+    json_data['ip_address_v4'] = str(item_in.ip_address_v4)
+    json_data['ip_address_v6'] = str(item_in.ip_address_v6.exploded) 
+    
+    #Assign the initial coordinates (retrieved from path) to the UE
+    json_data['latitude'] = path.start_lat 
+    json_data['longitude'] = path.start_long 
+
+    UE = crud.ue.update(db=db, db_obj=UE, obj_in=json_data)
+    return UE
 
 
 @router.get("/{supi}", response_model=schemas.UE)
