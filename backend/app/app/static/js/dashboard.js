@@ -344,7 +344,7 @@ function api_get_UEs() {
 // 
 function api_get_paths() {
     
-    var url = app.api_url + '/frontend/location/?skip=0&limit=100';
+    var url = app.api_url + '/paths/?skip=0&limit=100';
 
     $.ajax({
         type: 'GET',
@@ -504,7 +504,7 @@ function api_delete_UE( UE_supi ) {
 // 
 function api_delete_path( path_id ) {
     
-    var url = app.api_url + '/frontend/location/' + path_id;
+    var url = app.api_url + '/paths/' + path_id;
 
     $.ajax({
         type: 'DELETE',

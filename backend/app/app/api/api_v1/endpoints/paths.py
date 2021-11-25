@@ -1,5 +1,6 @@
 from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
@@ -9,7 +10,7 @@ from app.api import deps
 router = APIRouter()
 
 
-@router.get("", response_model=List[schemas.Path])
+@router.get("", response_model=List[schemas.Paths])
 def read_paths(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
@@ -25,7 +26,20 @@ def read_paths(
         paths = crud.path.get_multi_by_owner(
             db=db, owner_id=current_user.id, skip=skip, limit=limit
         )
-    return paths
+
+    item_json = jsonable_encoder(paths)
+    
+    for json_path in item_json:
+        for path in paths:
+            if path.id == json_path.get('id'):
+                json_path["start_point"] = {}
+                json_path["end_point"] = {}
+                json_path["start_point"]["latitude"] = path.start_lat
+                json_path["start_point"]["longitude"] = path.start_long
+                json_path["end_point"]["latitude"] = path.end_lat
+                json_path["end_point"]["longitude"] = path.end_long
+
+    return item_json
 
 
 @router.post("", response_model=schemas.Path)

@@ -10,8 +10,6 @@ class Speed(str, Enum):
 
 # Shared properties
 class UEBase(BaseModel):
-    supi: constr(regex=r'^[0-9]{15,16}$') = Field(default="202010000000000", description= """String identifying a Supi that shall contain either an IMSI, a network specific identifier, a Global Cable Identifier (GCI) or a Global Line Identifier (GLI) as specified in clause 2.2A of 3GPP TS 23.003. 
-                                                                                             In the current version (v1.1.0) only IMSI is supported""")
     name: Optional[str] = None
     description: Optional[str] = None
     gNB_id: int
@@ -23,15 +21,13 @@ class UEBase(BaseModel):
     mcc: Optional[int] = Field(default=202, description="Mobile Country Code (MCC) part of the Public Land Mobile Network (PLMN), comprising 3 digits, as defined in clause 9.3.3.5 of 3GPP TS 38.413")
     mnc: Optional[int] = Field(default=1, description="Mobile Network Code (MNC) part of the Public Land Mobile Network (PLMN), comprising 2 or 3 digits, as defined in clause 9.3.3.5 of 3GPP TS 38.413")
     external_identifier: Optional[str] = Field("123456789@domain.com", description="Globally unique identifier containing a Domain Identifier and a Local Identifier. \<Local Identifier\>@\<Domain Identifier\>")
-    latitude: Optional[confloat(ge=-90, le=90)] 
-    longitude: Optional[confloat(ge=-180, le=180)]
     speed: Speed = Field(default="LOW", description="This value describes UE's speed. Possible values are \"STATIONARY\" (e.g, IoT device), \"LOW(e.g, pedestrian)\" and \"HIGH (e.g., vehicle)\"")
     path_id: Optional[int] = Field(None, description="This value correlates a UE with a pre-defined path. More information can be found at /api/v1/frontend/location")
 
 # Properties to receive on item creation
 class UECreate(UEBase):
-#    name: str
-    pass
+    supi: constr(regex=r'^[0-9]{15,16}$') = Field(default="202010000000000", description= """String identifying a Supi that shall contain either an IMSI, a network specific identifier, a Global Cable Identifier (GCI) or a Global Line Identifier (GLI) as specified in clause 2.2A of 3GPP TS 23.003. 
+                                                                                             In the current version (v1.1.0) only IMSI is supported""")
 
 
 # Properties to receive on item update
@@ -41,8 +37,6 @@ class UEUpdate(UEBase):
 
 # Properties shared by models stored in DB
 class UEInDBBase(UEBase):
-    name: str
-    owner_id: int
 
     class Config:
         orm_mode = True
@@ -51,6 +45,10 @@ class UEInDBBase(UEBase):
 # Properties to return to client
 class UE(UEInDBBase):
     id: Optional[int]
+    supi: constr(regex=r'^[0-9]{15,16}$') = Field(default="202010000000000", description= """String identifying a Supi that shall contain either an IMSI, a network specific identifier, a Global Cable Identifier (GCI) or a Global Line Identifier (GLI) as specified in clause 2.2A of 3GPP TS 23.003.                                                                                          In the current version (v1.1.0) only IMSI is supported""")
+    latitude: Optional[confloat(ge=-90, le=90)] 
+    longitude: Optional[confloat(ge=-180, le=180)]                                                                                       
+
 
 
 # Properties to return to client for all UEs
