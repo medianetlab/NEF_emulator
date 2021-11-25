@@ -188,5 +188,9 @@ def delete_UE(
         raise HTTPException(status_code=404, detail="UE not found")
     if not crud.user.is_superuser(current_user) and (UE.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
-    UE = crud.ue.remove_supi(db=db, supi=supi) 
-    return UE
+
+    if retrieve_ue_state(supi, current_user.id):
+        raise HTTPException(status_code=400, detail=f"UE with SUPI {supi} is currently moving. You are not allowed to remove a UE while it's moving")
+    else:
+        UE = crud.ue.remove_supi(db=db, supi=supi) 
+        return UE

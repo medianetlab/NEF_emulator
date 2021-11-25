@@ -674,7 +674,7 @@ function api_put_UE( UE_obj ) {
         error: function(err)
         {
             console.log(err);
-            ui_display_toast_msg("error", "Error: UE could not be updated", err.responseJSON.detail[0].msg);
+            ui_display_toast_msg("error", "Error: UE could not be updated", err.responseJSON.detail);
         },
         complete: function()
         {
