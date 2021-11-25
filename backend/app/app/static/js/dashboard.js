@@ -814,7 +814,7 @@ function api_get_state_loop_for( UE_supi ) {
 // 
 function api_get_specific_path_callback( id, callback  ) {
     
-    var url = app.api_url + '/frontend/location/' + id;
+    var url = app.api_url + '/paths/' + id;
 
     $.ajax({
         type: 'GET',
