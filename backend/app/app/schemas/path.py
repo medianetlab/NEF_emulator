@@ -17,12 +17,12 @@ class PathBase(BaseModel):
 
 # Properties to receive on item creation
 class PathCreate(PathBase):
-    pass
+    points: Optional[List[Point]] = None 
 
 
 # Properties to receive on item update
 class PathUpdate(PathBase):
-    pass
+    points: Optional[List[Point]] = None 
 
 
 # Properties shared by models stored in DB
