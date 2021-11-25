@@ -8,6 +8,7 @@ authors = ["Admin <admin@example.com>"]
 python = "^3.7"
 uvicorn = "^0.15.0"
 fastapi = "^0.54.1"
+pymongo = "^3.12.1"
 python-multipart = "^0.0.5"
 email-validator = "^1.0.5"
 requests = "^2.23.0"

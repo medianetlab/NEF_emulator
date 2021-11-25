@@ -24,6 +24,26 @@ services:
     logging:
       driver: none
 
+  mongo:
+    image: mongo:4.4.10
+    volumes:
+      - app-mongo-db-data:/data/db
+    restart: always
+    env_file:
+      - .env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_USER}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_PASSWORD}"
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: "${MONGO_USER}"
+      ME_CONFIG_MONGODB_ADMINPASSWORD: "${MONGO_PASSWORD}"
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo:27017/
 
   
   backend:
@@ -56,4 +76,5 @@ services:
 volumes:
   app-db-data:
   pgadmin-data:
+  app-mongo-db-data:
 

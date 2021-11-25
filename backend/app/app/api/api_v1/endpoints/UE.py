@@ -1,4 +1,3 @@
-from os import path
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, Path
@@ -26,7 +25,7 @@ def exists(db, gNB, cell, path):
         return True
 
 
-@router.get("/", response_model=List[schemas.UEs])
+@router.get("", response_model=List[schemas.UEs])
 def read_UEs(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
@@ -52,7 +51,7 @@ def read_UEs(
     return JSONResponse(content=json_UEs, status_code=200)
 
 
-@router.post("/", response_model=schemas.UE)
+@router.post("", response_model=schemas.UE)
 def create_UE(
     *,
     db: Session = Depends(deps.get_db),
@@ -67,6 +66,7 @@ def create_UE(
         raise HTTPException(status_code=409, detail="ERROR: UE with this id already exists")
 
     if exists(db=db, gNB=item_in.gNB_id, cell=item_in.Cell_id, path= item_in.path_id):
+        item_in.ip_address_v6 = item_in.ip_address_v6.exploded
         UE = crud.ue.create_with_owner(db=db, obj_in=item_in, owner_id=current_user.id)
         return UE
 

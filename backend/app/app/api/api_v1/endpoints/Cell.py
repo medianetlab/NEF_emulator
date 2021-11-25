@@ -1,17 +1,13 @@
 from typing import Any, List
-
 from fastapi import APIRouter, Depends, HTTPException, Path
-from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
-
 from app import crud, models, schemas
 from app.api import deps
-from app.tools.distance import check_distance
 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[schemas.Cell])
+@router.get("", response_model=List[schemas.Cell])
 def read_Cells(
     db: Session = Depends(deps.get_db),
     skip: int = 0 ,
@@ -33,7 +29,7 @@ def read_Cells(
     return Cells
 
 
-@router.post("/", response_model=schemas.Cell)
+@router.post("", response_model=schemas.Cell)
 def create_Cell(
     *,
     db: Session = Depends(deps.get_db),

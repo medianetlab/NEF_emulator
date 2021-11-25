@@ -6,12 +6,10 @@ from sqlalchemy.orm import Session
 from app import crud, models, schemas
 from app.api import deps
 
-from app.core.config import settings
-
 router = APIRouter()
 
 
-@router.get("/", response_model=List[schemas.Path])
+@router.get("", response_model=List[schemas.Path])
 def read_paths(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
@@ -30,7 +28,7 @@ def read_paths(
     return paths
 
 
-@router.post("/", response_model=schemas.Path)
+@router.post("", response_model=schemas.Path)
 def create_path(
     *,
     db: Session = Depends(deps.get_db),
