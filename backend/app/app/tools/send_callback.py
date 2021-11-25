@@ -1,6 +1,5 @@
 import requests
 import json
-import logging
 
 def location_callback(UE_model, callbackurl, subscription):
     url = callbackurl

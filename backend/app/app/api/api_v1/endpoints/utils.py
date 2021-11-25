@@ -276,11 +276,11 @@ def state_movement(
     """
     Get the state
     """
+    return {"running": retrieve_ue_state(supi, current_user.id)}
+
+def retrieve_ue_state(supi: str, user_id: int) -> bool: 
     try:
-        return {"running": threads[f"{supi}"][f"{current_user.id}"].is_alive()}
+        return threads[f"{supi}"][f"{user_id}"].is_alive()
     except KeyError as ke:
         print('Key Not Found in Threads Dictionary:', ke)
-        # raise HTTPException(status_code=200, detail="There is no thread running for this UE! Please initiate a new thread")
-        return {"running" : False}
-
-    
+        return False

@@ -1,4 +1,3 @@
-from os import path
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, Path
@@ -8,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.api import deps
+from app.api.api_v1.endpoints.utils import retrieve_ue_state 
 
 router = APIRouter()
 
@@ -97,17 +97,24 @@ def update_UE(
         raise HTTPException(status_code=400, detail="Not enough permissions")
 
     path = exists(db=db, gNB_id = item_in.gNB_id, cell_id = item_in.Cell_id, path_id = item_in.path_id)
-    
-    json_data = jsonable_encoder(item_in)
-    json_data['ip_address_v4'] = str(item_in.ip_address_v4)
-    json_data['ip_address_v6'] = str(item_in.ip_address_v6.exploded) 
-    
-    #Assign the initial coordinates (retrieved from path) to the UE
-    json_data['latitude'] = path.start_lat 
-    json_data['longitude'] = path.start_long 
 
-    UE = crud.ue.update(db=db, db_obj=UE, obj_in=json_data)
-    return UE
+    #Check if UE is moving and the path is changed
+    if retrieve_ue_state(supi, current_user.id) and (UE.path_id != item_in.path_id):
+        raise HTTPException(status_code=400, detail=f"UE with SUPI {supi} is currently moving. You are not allowed to edit UE's path while it's moving")
+    else:
+        json_data = jsonable_encoder(item_in)
+        json_data['ip_address_v4'] = str(item_in.ip_address_v4)
+        json_data['ip_address_v6'] = str(item_in.ip_address_v6.exploded) 
+        
+        #Assign the initial coordinates (retrieved from path) to the UE
+        json_data['latitude'] = path.start_lat 
+        json_data['longitude'] = path.start_long
+        UE = crud.ue.update(db=db, db_obj=UE, obj_in=json_data)
+        return UE
+        
+
+
+    
 
 
 @router.get("/{supi}", response_model=schemas.UE)
