@@ -809,6 +809,43 @@ function api_get_state_loop_for( UE_supi ) {
 
 
 
+// Ajax request to get specific Path data
+// on success: callback()
+// 
+function api_get_specific_path_callback( id, callback  ) {
+    
+    var url = app.api_url + '/frontend/location/' + id;
+
+    $.ajax({
+        type: 'GET',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            // console.log(data);
+            // paths = data;
+            callback(data);
+        },
+        error: function(err)
+        {
+            console.log(err);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
+
+
 
 
 
@@ -1184,7 +1221,8 @@ function ui_show_edit_UE_modal( UE_supi ) {
 
     // display modal
 
-    edit_UE_position_lg.clearLayers(); // map layer cleanup
+    edit_UE_position_lg.clearLayers(); // map UE   layer cleanup
+    edit_UE_path_lg.clearLayers();     // map path layer cleanup
 
     UE_to_be_edited = UE_supi;
 
@@ -1239,6 +1277,12 @@ function ui_show_edit_UE_modal( UE_supi ) {
         fillColor: '#3590e2',
         fillOpacity: 1.0
     }).addTo(edit_UE_position_lg).addTo( edit_UE_map );
+
+    // paint the current path of the UE
+     api_get_specific_path_callback( edit_UE_tmp_obj.path_id, function(data){
+        // console.log(data);
+        ui_map_paint_path(data, edit_UE_map, edit_UE_path_lg);
+     });
     
     edit_UE_map.setView(
         {
@@ -1733,7 +1777,7 @@ function ui_initialize_edit_UE_map() {
 
     // map initialization
     edit_UE_map = L.map('edit_UE_mapid', {
-        layers: [grayscale, edit_UE_position_lg]
+        layers: [grayscale, edit_UE_position_lg, edit_UE_path_lg]
     }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
 
 
@@ -1743,7 +1787,8 @@ function ui_initialize_edit_UE_map() {
         };
 
     var overlays = {
-        "UE coverage": edit_UE_position_lg,
+        "UE position": edit_UE_position_lg,
+        "path": edit_UE_path_lg,
     };
 
     L.control.layers(baseLayers, overlays).addTo(edit_UE_map);
@@ -1828,4 +1873,40 @@ function ui_add_cell_modal_add_listeners() {
     }
 
     add_cell_map.on('click', add_cell_onMapClick);
+}
+
+
+
+
+// Adds a path polyline to the leaflet js map
+// to the specified layer.
+// Calls a helper function "fix_points_format()"
+// to prepare the data for leaflet.js format
+// 
+function ui_map_paint_path( data, map, layer ) {
+
+    var latlng   = helper_fix_points_format( data.points );
+    var polyline = L.polyline(latlng, {
+        color: '#00a3cc',
+        opacity: 0.2
+    }).addTo( layer ).addTo(map);
+}
+
+
+// Helper function
+// Takes the data fetched from the API
+// and returns them with a format appropriate
+// leaflet.js
+// 
+function helper_fix_points_format( datapoints ) {
+
+    // from (array of objects): [{latitude: 37.996095, longitude: 23.818562},{...}]
+    // to   (array of arrays) : [[37.996095,23.818562],[...]
+
+    var fixed = new Array(datapoints.length);
+    
+    for (i=0 ; i<datapoints.length ; i++) {
+        fixed[i] = [datapoints[i].latitude , datapoints[i].longitude];
+    }
+    return fixed;
 }
