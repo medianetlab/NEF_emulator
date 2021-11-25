@@ -752,6 +752,108 @@
               </div>
             </div>
           </div>
+          <!-- modal pop-up for adding UEs -->
+          <div class="modal" tabindex="-1" id="add_UE_modal">
+            <div class="modal-dialog modal-xl">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Add UE</h5>
+                  <button type="button" class="btn-close" data-coreui-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-5">
+
+                    <form action="" class="row g-3">
+                      <!-- --------------------------------- -->
+                      <div class="col-md-4">
+                        <label for="add_UE_supi" class="form-label">supi</label>
+                        <input type="text" class="form-control" id="add_UE_supi">
+                      </div>
+                      <div class="col-md-4">
+                        <label for="add_UE_name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="add_UE_name">
+                      </div>
+                      
+                      <div class="col-md-4">
+                        <label for="add_UE_ext_id" class="form-label">External identifier</label>
+                        <input type="text" class="form-control" id="add_UE_ext_id">
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-12 mb-4">
+                        <label for="add_UE_description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="add_UE_description" placeholder="Description text">
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-12 mt-4">
+                        <h5>Network details</h5>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-md-4">
+                        <label for="add_UE_ipv4" class="form-label">IPv4</label>
+                        <input type="text" class="form-control" id="add_UE_ipv4">
+                      </div>
+                      <div class="col-md-4">
+                        <label for="add_UE_ipv6" class="form-label">IPv6</label>
+                        <input type="text" class="form-control" id="add_UE_ipv6">
+                      </div>
+                      <div class="col-md-4">
+                        <label for="add_UE_mac" class="form-label">MAC address</label>
+                        <input type="text" class="form-control" id="add_UE_mac">
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-md-4">
+                        <label for="add_UE_mcc" class="form-label">mcc</label>
+                        <input type="text" class="form-control" id="add_UE_mcc" value="202" disabled>
+                      </div>
+                      <div class="col-md-4">
+                        <label for="add_UE_mnc" class="form-label">mnc</label>
+                        <input type="text" class="form-control" id="add_UE_mnc" value="1" disabled>
+                      </div>
+                      <div class="col-md-4">
+                        <label for="add_UE_dnn" class="form-label">dnn</label>
+                        <input type="text" class="form-control" id="add_UE_dnn" value="province1.mnc01.mcc202.gprs" disabled>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-12 mt-4">
+                        <h5>Path / speed</h5>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-md-3">
+                        <label for="add_UE_current_lat" class="form-label">Latitude </label>
+                        <input type="text" class="form-control" id="add_UE_current_lat" disabled>
+                      </div>
+                      <div class="col-md-3">
+                        <label for="add_UE_current_lon" class="form-label">Longitude</label>
+                        <input type="text" class="form-control" id="add_UE_current_lon" disabled>
+                      </div>
+                      <div class="col-md-3">
+                        <label for="add_UE_speed" class="form-label">Speed</label>
+                        <select class="form-control" id="add_UE_speed">
+                          <option value="LOW" selected>LOW</option>
+                          <option value="HIGH">HIGH</option>
+                        </select>
+                      </div>
+                      <div class="col-md-3">
+                        <label for="add_UE_path" class="form-label">Path</label>
+                        <select class="form-control" id="add_UE_path"></select>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-12">
+                         <div id="add_UE_mapid"></div>
+                      </div>
+                      <!-- --------------------------------- -->
+                    </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-light" data-coreui-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-dark" id="add_UE_btn">
+                    <svg class="icon">
+                      <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-save"></use>
+                    </svg> Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
 
 
 
