@@ -776,6 +776,51 @@ function api_post_cell( cell_obj ) {
 
 
 
+// Ajax request to create UE
+// on success: add it inside datatables too
+// 
+function api_post_UE( UE_obj ) {
+
+    // console.log(cell_obj);
+    
+    var url = app.api_url + '/UEs/';
+
+    $.ajax({
+        type: 'POST',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        data:         JSON.stringify(UE_obj),
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            // console.log(data);
+            ui_display_toast_msg("success", "Success!", "The UE has been created");
+            
+            ues.push(data);
+            // helper_create_db_id_to_gNB_id_bindings();
+            ues_datatable.clear().rows.add( ues ).draw();
+        },
+        error: function(err)
+        {
+            console.log(err);
+            ui_display_toast_msg("error", "Error: UE could not be created", JSON.stringify( err.responseJSON.detail) );
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
+
+
+
 // 
 // 
 function api_get_state_loop_for( UE_supi ) {
@@ -1517,6 +1562,21 @@ function helper_create_db_id_to_path_id_bindings() {
 
 
 
+// helper function to return an array of latitude,longitude pairs
+// that will be later used by leaflet to set bounds to a map
+// 
+function helper_calculate_map_bounds_from_cells(  ) {
+    
+    var map_bounds = [];
+
+    for (const item of cells) {
+        map_bounds.push( [ item.latitude, item.longitude ] );
+    }
+    return map_bounds;
+}
+
+
+
 // adds listeners for CUD operations regarding gNBs
 //   C: CREATE (add)
 //   U: UPDATE (edit)
@@ -1618,21 +1678,31 @@ function ui_add_btn_listeners_for_cells_CUD_operations() {
 function ui_add_btn_listeners_for_UEs_CUD_operations() {
 
     // CREATE
-    // $('#add_UE_btn').on('click', function(){
+    $('#add_UE_btn').on('click', function(){
 
-    //     var data = {
-    //       UE_id     : $('#add_UE_id').val(),
-    //       name        : $('#add_UE_name').val(),
-    //       gNB_id      : parseInt ( $('#add_UE_gNB').val() ),
-    //       description : $('#add_UE_description').val(),
-    //       latitude    : parseFloat( $('#add_UE_new_lat').val() ),
-    //       longitude   : parseFloat( $('#add_UE_new_lon').val() ),
-    //       radius      :   parseInt( $('#add_UE_new_rad').val() ),
-    //     };
+        var data = {
+          // general info
+          supi                : $('#add_UE_supi').val(),
+          name                : $('#add_UE_name').val(),
+          external_identifier : $('#add_UE_ext_id').val(),
+          description         : $('#add_UE_description').val(),
+          // network
+          ip_address_v4       : $('#add_UE_ipv4').val(),
+          ip_address_v6       : $('#add_UE_ipv6').val(),
+          mac_address         : $('#add_UE_mac').val(),
+          mcc                 : $('#add_UE_mcc').val(),
+          mnc                 : $('#add_UE_mnc').val(),
+          dnn                 : $('#add_UE_dnn').val(),
+          // location & path
+          path_id             : parseInt( $('#add_UE_path').val() ),
+          speed               : $('#add_UE_speed').val(),
+          gNB_id              : 1,
+          Cell_id             : 1,
+        };
 
-    //     api_post_UE( data );
-    //     add_UE_modal.hide();
-    // });
+        api_post_UE( data );
+        add_UE_modal.hide();
+    });
 
     // DELETE
     $('#del_UE_btn').on('click', function(){
@@ -1917,14 +1987,12 @@ function ui_add_UE_modal_add_listeners() {
             add_UE_path_lg.clearLayers();
             ui_map_paint_path(data, add_UE_map, add_UE_path_lg);
 
-            // set bounds for view + zoom
-            var map_bounds = [];
-            map_bounds.push( [ data.start_point.latitude, data.start_point.longitude ] );
-            map_bounds.push( [   data.end_point.latitude,   data.end_point.longitude ] );
-            
+            // set bounds for view + zoom depending on the position of cells
+            var map_bounds     = helper_calculate_map_bounds_from_cells();            
             var leaflet_bounds = new L.LatLngBounds(map_bounds);
+
             add_UE_map.fitBounds( leaflet_bounds );
-            add_UE_map.setZoom(17);
+            // add_UE_map.setZoom(17);
         });
     });
 }
