@@ -884,6 +884,64 @@
               </div>
             </div>
           </div>
+          <!-- modal pop-up for editing paths -->
+          <div class="modal" tabindex="-1" id="edit_path_modal">
+            <div class="modal-dialog modal-xl">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Edit Path</h5>
+                  <button type="button" class="btn-close" data-coreui-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-5">
+
+                    <form action="" class="row g-3">
+                      <!-- --------------------------------- -->
+                      <div class="col-md-2">
+                        <label for="db_path_id" class="form-label">Database ID</label>
+                        <input type="text" class="form-control" id="db_path_id" disabled>
+                      </div>
+                      <div class="col-md-4">
+                        <label for="edit_path_description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="edit_path_description" placeholder="Description text">
+                      </div>
+                      <div class="col-md-3">
+                        <label for="edit_path_color" class="form-label">Color</label>
+                        <input type="text" class="form-control" id="edit_path_color">
+                      </div>
+                      
+                      <div class="col-md-3">
+                        <label for="edit_path_color_preview" class="form-label">Preview</label>
+                        <div id="edit_path_color_preview"></div>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-12 mt-4">
+                        <h5>Start / End points</h5>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-md-6">
+                        <p>🔵 Start: Latitude <code id="edit_path_start_lat"></code> , Longitude: <code id="edit_path_start_lon"></code></p>
+                      </div>
+                      <div class="col-md-6">
+                        <p>🔴 End:   Latitude <code id="edit_path_end_lat"></code> ,   Longitude: <code id="edit_path_end_lon"></code></p>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-12">
+                         <div id="edit_path_mapid"></div>
+                      </div>
+                      <!-- --------------------------------- -->
+                    </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-light" data-coreui-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-dark" id="update_path_btn">
+                    <svg class="icon">
+                      <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-save"></use>
+                    </svg> Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
 
 
 

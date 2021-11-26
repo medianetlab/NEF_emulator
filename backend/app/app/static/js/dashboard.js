@@ -71,10 +71,10 @@ var del_path_btn_tpl = `<button class="btn btn-sm btn-outline-secondary" type="b
   </svg>
 </button>`;
 
-// view path
-var view_path_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="button" onclick="ui_show_view_path_modal( '{{id}}' );" title="View path">
+// edit path
+var edit_path_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="button" onclick="ui_show_edit_path_modal( {{id}} );">
   <svg class="icon">
-    <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-map"></use>
+    <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-pencil"></use>
   </svg>
 </button>`;
 
@@ -83,9 +83,9 @@ var view_path_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="butto
 
 // gNB modals initialization and helper variables
 // ==============================================
-    var  del_gNB_modal = new coreui.Modal(document.getElementById('del_gNB_modal'),  {});
+    var  del_gNB_modal = new coreui.Modal(document.getElementById( 'del_gNB_modal'), {});
     var edit_gNB_modal = new coreui.Modal(document.getElementById('edit_gNB_modal'), {});
-    var  add_gNB_modal = new coreui.Modal(document.getElementById('add_gNB_modal'),  {});
+    var  add_gNB_modal = new coreui.Modal(document.getElementById( 'add_gNB_modal'), {});
     var gNB_to_be_deleted = -1;
     var gNB_to_be_edited  = -1;
     var gNB_tmp_obj       = null;
@@ -116,9 +116,9 @@ var view_path_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="butto
 
 // UE modals initialization and helper variables
 // ===============================================
-    var  del_UE_modal    = new coreui.Modal(document.getElementById('del_UE_modal'),  {});
+    var  del_UE_modal    = new coreui.Modal(document.getElementById( 'del_UE_modal'), {});
     var edit_UE_modal    = new coreui.Modal(document.getElementById('edit_UE_modal'), {});
-    var  add_UE_modal    = new coreui.Modal(document.getElementById('add_UE_modal'),  {});
+    var  add_UE_modal    = new coreui.Modal(document.getElementById( 'add_UE_modal'), {});
     var UE_to_be_deleted = -1;
     var UE_to_be_edited  = -1;
     var edit_UE_tmp_obj  = null;
@@ -138,12 +138,20 @@ var view_path_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="butto
 
 // path modals initialization and helper variables
 // ===============================================
-    var  del_path_modal = new coreui.Modal(document.getElementById('del_path_modal'),  {});
-    // var view_path_modal = new coreui.Modal(document.getElementById('view_path_modal'), {});
+    var  del_path_modal = new coreui.Modal(document.getElementById( 'del_path_modal'), {});
+    var edit_path_modal = new coreui.Modal(document.getElementById('edit_path_modal'), {});
     // var  add_path_modal = new coreui.Modal(document.getElementById('add_path_modal'),  {});
-    var path_to_be_deleted = -1;
-    var path_to_be_viewed  = -1;
-    var path_tmp_obj       = null;
+    var path_to_be_deleted   = -1;
+    var path_to_be_edited    = -1;
+    var edit_path_tmp_obj    = null;
+    var edit_path_tmp_points = null;
+
+    // leaflet.js map for editing UE modal
+    var edit_path_map         = null;
+    var edit_path_path_lg     = L.layerGroup(); // map layer group for path
+    var edit_path_points_lg   = L.layerGroup(); // map layer group for UEs
+    var edit_path_start_dot   = null;           // small circle depicting the starting point of the path (to be edited)
+    var edit_path_end_dot     = null;           // small circle depicting the   ending point of the path (to be edited)
 
 // ===============================================
 //             End of Global variables
@@ -208,6 +216,12 @@ $( document ).ready(function() {
         ui_initialize_edit_UE_map();
         ui_initialize_add_UE_map();
         ui_add_UE_modal_add_listeners();
+
+
+        // initialize the map used inside the "edit path" / "add path" modals
+        ui_initialize_edit_path_map();
+        // ui_initialize_add_path_map();
+        ui_edit_path_modal_add_listeners();
 
 
 });
@@ -689,6 +703,55 @@ function api_put_UE( UE_obj ) {
 }
 
 
+
+// Ajax request to update path
+// on success: update it inside datatables too
+// 
+function api_put_path( path_obj ) {
+    
+    var url = app.api_url + '/paths/' + path_to_be_edited;
+
+    var path_obj_copy =  JSON.parse(JSON.stringify( path_obj )); // copy to be used with fewer object properties
+
+    // remove not required properties
+    delete path_obj_copy.id;
+    delete path_obj_copy.start_point;
+    delete path_obj_copy.end_point;
+
+    $.ajax({
+        type: 'PUT',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        data:         JSON.stringify(path_obj_copy),
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            // console.log(data);
+            ui_display_toast_msg("success", "Success!", "The Path has been updated");
+            
+            helper_update_path( data );
+            
+            paths_datatable.clear().rows.add( paths ).draw();
+        },
+        error: function(err)
+        {
+            console.log(err);
+            ui_display_toast_msg("error", "Error: Path could not be updated", err.responseJSON.detail);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
+
 // Ajax request to create gNB
 // on success: add it inside datatables too
 // 
@@ -1028,7 +1091,7 @@ function ui_init_datatable_UEs() {
 
 
 function ui_init_datatable_paths() {
-    $('#dt-paths').DataTable( {
+    paths_datatable = $('#dt-paths').DataTable( {
         data: paths,
         responsive: true,
         paging: false,
@@ -1046,7 +1109,7 @@ function ui_init_datatable_paths() {
                 "render": function ( data, type, row ) {
                     // return row.id;
                     return  (  del_path_btn_tpl.replaceAll("{{id}}", row.id) + " " +
-                              view_path_btn_tpl.replaceAll("{{id}}", row.id) );
+                              edit_path_btn_tpl.replaceAll("{{id}}", row.id) );
                 }
             }
         ],
@@ -1253,22 +1316,9 @@ function ui_show_delete_UE_modal( UE_id ) {
 
 // shows modal for editing UEs
 // looks up for the specific UE and loads its details to the form fields
-//   - the user is allowed to modify some fields
-//   - the user can modify the latitude / longitude of the UE by clicking on the map
-//   - the user can modify the radius of the UE
+//   - the user is allowed to modify only some fields
 // 
 function ui_show_edit_UE_modal( UE_supi ) {
-
-    // check if the UE is currently moving, if:
-    //   yes: display message to first stop and return
-    //   no : display the modal
-
-
-
-
-
-
-    // display modal
 
     edit_UE_position_lg.clearLayers(); // map UE   layer cleanup
     edit_UE_path_lg.clearLayers();     // map path layer cleanup
@@ -1340,21 +1390,8 @@ function ui_show_edit_UE_modal( UE_supi ) {
         },
         18 // zoom level
     );
-
-    // // add a solid-color small circle (dot) some meters away
-    // edit_UE_circle_dot = L.circle([edit_UE_tmp_obj.latitude,(edit_UE_tmp_obj.new_longitude)], 2, {
-    //     color: 'none',
-    //     fillColor: '#2686de',
-    //     fillOpacity: 1.0
-    // }).addTo(edit_UE_position_lg).addTo( edit_UE_map );
-
-    // // add a transparent circle for coverage 
-    // edit_UE_circle_cov = L.circle([edit_UE_tmp_obj.latitude,(edit_UE_tmp_obj.new_longitude)], edit_UE_tmp_obj.radius, {
-    //     color: 'none',
-    //     fillColor: '#2686de',
-    //     fillOpacity: 0.2
-    // }).addTo(edit_UE_position_lg).addTo( edit_UE_map );
 }
+
 
 function ui_show_add_UE_modal(  ) {
 
@@ -1396,6 +1433,61 @@ function ui_show_delete_path_modal( path_id ) {
     path_to_be_deleted = path_id;
     del_path_modal.show();
 
+}
+
+// shows modal for editing paths
+// looks up for the specific path and loads its details to the form fields
+//   - the user is allowed to modify only Description and color
+// 
+function ui_show_edit_path_modal( path_id ) {
+
+    edit_path_path_lg.clearLayers();     // map path layer cleanup
+
+    path_to_be_edited = path_id;
+
+    edit_path_tmp_obj = helper_find_path( path_id );
+    
+    // load values to the input fields
+    $('#db_path_id').val( edit_path_tmp_obj.id );
+    $('#edit_path_description').val( edit_path_tmp_obj.description );
+    $('#edit_path_color').val( edit_path_tmp_obj.color );
+    $('#edit_path_color_preview').css('background-color', edit_path_tmp_obj.color);
+    
+    $('#edit_path_start_lat').html( edit_path_tmp_obj.start_point.latitude  );
+    $('#edit_path_start_lon').html( edit_path_tmp_obj.start_point.longitude );
+    $('#edit_path_end_lat'  ).html( edit_path_tmp_obj.end_point.latitude    );
+    $('#edit_path_end_lon'  ).html( edit_path_tmp_obj.end_point.longitude   );
+    
+    
+
+    edit_path_modal.show();
+    edit_path_map.invalidateSize(); // this helps the map display its tiles correctly after the size of the modal is finalized
+
+    // paint the current path of the path
+    api_get_specific_path_callback( edit_path_tmp_obj.id, function(data){
+        // console.log(data);
+        edit_path_tmp_points = data;
+        ui_map_paint_path(data, edit_path_map, edit_path_path_lg);
+    });
+
+    // add a solid-color small circle (dot) at the start lat,lon
+    L.circle([edit_path_tmp_obj.start_point.latitude,edit_path_tmp_obj.start_point.longitude], 1, {
+        color: 'none',
+        fillColor: '#3590e2',
+        fillOpacity: 1.0
+    }).addTo(edit_path_points_lg ).addTo( edit_path_map );
+    // add a solid-color small circle (dot) at the end lat,lon
+    L.circle([edit_path_tmp_obj.end_point.latitude,edit_path_tmp_obj.end_point.longitude], 1, {
+        color: 'none',
+        fillColor: '#c7362c',
+        fillOpacity: 1.0
+    }).addTo(edit_path_points_lg).addTo( edit_path_map );
+    
+    // set bounds for view + zoom depending on the position of cells
+    var map_bounds     = helper_calculate_map_bounds_from_cells();            
+    var leaflet_bounds = new L.LatLngBounds(map_bounds);
+    edit_path_map.fitBounds( leaflet_bounds );
+    edit_path_map.setZoom(17);
 }
 // ===============================================
 
@@ -1532,6 +1624,20 @@ function helper_update_UE( UE_obj ) {
             ues[i] = JSON.parse(JSON.stringify( UE_obj )); // found, updated
         }
     }
+}
+
+
+// iterates through the path list
+// and returns a copy of the path object with the path_id provided
+// (if not found it returns null)
+// 
+function helper_find_path( path_id ) {
+    for (const item of paths) {
+        if ( item.id == path_id ) {
+            return JSON.parse(JSON.stringify( item )); // return a copy of the item
+        }
+    }
+    return null;
 }
 
 
@@ -1766,27 +1872,18 @@ function ui_add_btn_listeners_for_paths_CUD_operations() {
     });
 
     // UPDATE
-    // $('#update_cell_btn').on('click', function(){
+    $('#update_path_btn').on('click', function(){
         
-    //     // get possible changes from form
-    //     edit_cell_tmp_obj.edit_cell_id = $('#edit_cell_id').val();
-    //     edit_cell_tmp_obj.name         = $('#edit_cell_name').val();
-    //     edit_cell_tmp_obj.description  = $('#edit_cell_description').val();
-    //     edit_cell_tmp_obj.gNB_id       = parseInt( $('#edit_cell_gNB').val() );
+        // get possible changes from form
+        edit_path_tmp_obj.description  = $('#edit_path_description').val();
+        edit_path_tmp_obj.color        = $('#edit_path_color').val();
 
-    //     // override old values
-    //     edit_cell_tmp_obj.latitude    = parseFloat( edit_cell_tmp_obj.new_latitude );
-    //     edit_cell_tmp_obj.longitude   = parseFloat( edit_cell_tmp_obj.new_longitude );
-    //     edit_cell_tmp_obj.radius      =   parseInt( edit_cell_tmp_obj.new_radius );
-
-    //     // remove obsolete properties
-    //     delete edit_cell_tmp_obj.new_latitude;
-    //     delete edit_cell_tmp_obj.new_longitude;
-    //     delete edit_cell_tmp_obj.new_radius;
+        // remove obsolete properties
+        // delete edit_path_tmp_obj.
         
-    //     api_put_cell( edit_cell_tmp_obj );
-    //     edit_cell_modal.hide();
-    // });
+        api_put_path( edit_path_tmp_obj );
+        edit_path_modal.hide();
+    });
 
 
     
@@ -1934,6 +2031,41 @@ function ui_initialize_add_cell_map() {
 
 
 
+function ui_initialize_edit_path_map() {
+
+    // set map height
+    $('#edit_path_mapid').css({ "height": 600 } );
+
+    var mbAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
+                'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        mbUrl = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+
+    var grayscale   = L.tileLayer(mbUrl, {id: 'mapbox/light-v9',    tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
+        streets     = L.tileLayer(mbUrl, {id: 'mapbox/streets-v11', tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23});
+
+
+    // map initialization
+    edit_path_map = L.map('edit_path_mapid', {
+        layers: [grayscale, edit_path_points_lg, edit_path_path_lg ]
+    }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
+
+
+    var baseLayers = {
+            "Grayscale": grayscale,
+            "Streets": streets
+        };
+
+    var overlays = {
+        "path":   edit_path_path_lg,
+        "points": edit_path_points_lg
+    };
+
+    L.control.layers(baseLayers, overlays).addTo(edit_path_map);
+
+}
+
+
+
 
 function ui_edit_cell_modal_add_listeners() {
 
@@ -2002,6 +2134,25 @@ function ui_add_UE_modal_add_listeners() {
 
 
 
+function ui_edit_path_modal_add_listeners() {
+
+    $('#edit_path_color').on('change', function(){
+        // TODO: check if color is valid
+
+        var new_color = $(this).val();
+        $('#edit_path_color_preview').css('background-color', new_color);
+
+        // redraw the path
+        edit_path_path_lg.clearLayers();
+        edit_path_tmp_points.color = new_color;
+
+        ui_map_paint_path(edit_path_tmp_points, edit_path_map, edit_path_path_lg);
+    });
+
+}
+
+
+
 
 // Adds a path polyline to the leaflet js map
 // to the specified layer.
@@ -2012,7 +2163,7 @@ function ui_map_paint_path( data, map, layer ) {
 
     var latlng   = helper_fix_points_format( data.points );
     var polyline = L.polyline(latlng, {
-        color: '#00a3cc',
+        color: data.color,
         opacity: 0.2
     }).addTo( layer ).addTo(map);
 }

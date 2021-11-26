@@ -19,3 +19,5 @@
 
 .ue-row .add-ue-wrapper { display: inline-block; float: right; font-size: 0; }
 .add-ue-wrapper .btn-sm  { padding: 0rem 0.5rem; height: 24px; }
+
+#edit_path_color_preview { background-color: #ccc; display: block; height: 37px; border-radius: 5px;}
