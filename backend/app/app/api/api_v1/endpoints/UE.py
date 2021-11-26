@@ -1,5 +1,4 @@
 from typing import Any, List
-
 from fastapi import APIRouter, Depends, HTTPException, Path
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
@@ -62,10 +61,18 @@ def create_UE(
     """
     Create new UE.
     """
-    UE = crud.ue.get_supi(db=db, supi=item_in.supi)
-    if UE:
-        raise HTTPException(status_code=409, detail="ERROR: UE with this id already exists")
-
+    #Validate Unique ids
+    if crud.ue.get_supi(db=db, supi=item_in.supi):
+        raise HTTPException(status_code=409, detail=f"UE with supi {item_in.supi} already exists")
+    elif crud.ue.get_ipv4(db=db, ipv4=str(item_in.ip_address_v4), owner_id=current_user.id):
+        raise HTTPException(status_code=409, detail=f"UE with ipv4 {str(item_in.ip_address_v4)} already exists")
+    elif crud.ue.get_ipv6(db=db, ipv4=str(item_in.ip_address_v6.exploded), owner_id=current_user.id):
+        raise HTTPException(status_code=409, detail=f"UE with ipv6 {str(item_in.ip_address_v6)} already exists")
+    elif crud.ue.get_mac(db=db, ipv4=str(item_in.mac_address), owner_id=current_user.id):
+        raise HTTPException(status_code=409, detail=f"UE with mac {str(item_in.mac_address)} already exists")
+    elif crud.ue.get_externalId(db=db, externalId=item_in.external_identifier, owner_id=current_user.id):
+        raise HTTPException(status_code=409, detail=f"UE with external id {str(item_in.mac_address)} already exists")
+    
     path = exists(db=db, gNB_id = item_in.gNB_id, cell_id = item_in.Cell_id, path_id = item_in.path_id)
     
     json_data = jsonable_encoder(item_in)
@@ -95,6 +102,18 @@ def update_UE(
         raise HTTPException(status_code=404, detail="UE not found")
     if not crud.user.is_superuser(current_user) and (UE.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
+
+    ipv4_str = str(item_in.ip_address_v4)
+    ipv6_str = item_in.ip_address_v6.exploded
+
+    if (UE.ip_address_v4 != ipv4_str) and crud.ue.get_ipv4(db=db, ipv4=ipv4_str, owner_id=current_user.id):
+        raise HTTPException(status_code=409, detail=f"This ipv4 {ipv4_str} already exists")
+    elif (UE.ip_address_v6 != ipv6_str) and crud.ue.get_ipv6(db=db, ipv6=ipv6_str, owner_id=current_user.id):
+        raise HTTPException(status_code=409, detail=f"This ipv6 {ipv6_str} already exists")
+    elif (UE.mac_address != item_in.mac_address) and crud.ue.get_mac(db=db, mac=str(item_in.mac_address), owner_id=current_user.id):
+        raise HTTPException(status_code=409, detail=f"This mac {item_in.mac_address} already exists")
+    elif (UE.external_identifier != item_in.external_identifier) and crud.ue.get_externalId(db=db, externalId=item_in.external_identifier, owner_id=current_user.id):
+        raise HTTPException(status_code=409, detail=f"This external id {item_in.mac_address} already exists")
 
     path = exists(db=db, gNB_id = item_in.gNB_id, cell_id = item_in.Cell_id, path_id = item_in.path_id)
 

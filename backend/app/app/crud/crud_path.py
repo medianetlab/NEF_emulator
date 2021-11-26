@@ -20,7 +20,6 @@ class CRUD_Path(CRUDBase[Path, PathCreate, PathUpdate]):
         obj_in_data.pop("start_point")
         obj_in_data.pop("end_point")
 
-        print(obj_in_data)
         db_obj = self.model(**obj_in_data, owner_id=owner_id)
         db.add(db_obj)
         db.commit()
@@ -37,6 +36,9 @@ class CRUD_Path(CRUDBase[Path, PathCreate, PathUpdate]):
             .limit(limit)
             .all()
         )
+
+    def get_description(self, db: Session, description: str) -> Path:
+        return db.query(self.model).filter(Path.description == description).first()
 
 class CRUD_Points(CRUDBase[Points, PathCreate, PathUpdate]):
     def create(

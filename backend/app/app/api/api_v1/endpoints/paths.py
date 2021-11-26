@@ -1,6 +1,5 @@
 from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
@@ -52,6 +51,11 @@ def create_path(
     """
     Create new path.
     """
+    path = crud.path.get_description(db=db, description= path_in.description)
+    
+    if path:
+        raise HTTPException(status_code=400, detail=f"Path with description \'{path_in.description}\' already exists")
+    
     path = crud.path.create_with_owner(db=db, obj_in=path_in, owner_id=current_user.id)
     crud.points.create(db=db, obj_in=path_in, path_id=path.id) 
     return path

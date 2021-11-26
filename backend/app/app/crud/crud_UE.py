@@ -28,7 +28,7 @@ class CRUD_UE(CRUDBase[UE, UECreate, UEUpdate]):
             .all()
         )
 
-    def get_supi(self, db: Session, supi: str) -> UE: #Optionally, transfer this function in CRUDUE, since CRUDBase is for generic use, inherited from all the CRUD modules
+    def get_supi(self, db: Session, supi: str) -> UE: 
         return db.query(self.model).filter(self.model.supi == supi).first()
 
     def get_ipv4(
@@ -36,7 +36,7 @@ class CRUD_UE(CRUDBase[UE, UECreate, UEUpdate]):
     ) -> UE:
         return (
             db.query(self.model)
-            .filter(UE.ip_address_v4 == ipv4, UE.owner_id == owner_id) #Check also owner id in get_by_gNB, etc...
+            .filter(UE.ip_address_v4 == ipv4, UE.owner_id == owner_id)
             .first()
         )
     

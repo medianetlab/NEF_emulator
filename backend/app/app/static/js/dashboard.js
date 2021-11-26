@@ -1645,7 +1645,6 @@ function ui_add_btn_listeners_for_UEs_CUD_operations() {
         
         // get possible changes from form
         // general info
-        edit_UE_tmp_obj.supi                = $('#edit_UE_supi').val();
         edit_UE_tmp_obj.name                = $('#edit_UE_name').val();
         edit_UE_tmp_obj.external_identifier = $('#edit_UE_ext_id').val();
         edit_UE_tmp_obj.description         = $('#edit_UE_description').val();
@@ -1659,7 +1658,11 @@ function ui_add_btn_listeners_for_UEs_CUD_operations() {
         edit_UE_tmp_obj.path_id = parseInt( $('#edit_UE_path').val() );
         edit_UE_tmp_obj.speed   = $('#edit_UE_speed').val();
 
-        
+        delete edit_UE_tmp_obj.supi;
+        delete edit_UE_tmp_obj.latitude;
+        delete edit_UE_tmp_obj.longitude;
+        delete edit_UE_tmp_obj.cell_id_hex;
+
         api_put_UE( edit_UE_tmp_obj );
         edit_UE_modal.hide();
     });
