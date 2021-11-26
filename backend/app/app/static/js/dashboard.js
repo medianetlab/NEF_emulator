@@ -2137,16 +2137,22 @@ function ui_add_UE_modal_add_listeners() {
 function ui_edit_path_modal_add_listeners() {
 
     $('#edit_path_color').on('change', function(){
-        // TODO: check if color is valid
 
         var new_color = $(this).val();
-        $('#edit_path_color_preview').css('background-color', new_color);
 
-        // redraw the path
-        edit_path_path_lg.clearLayers();
-        edit_path_tmp_points.color = new_color;
+        // test color string added by user
+        if ( /^#([0-9A-F]{3}){1,2}$/i.test( new_color ) ) {
 
-        ui_map_paint_path(edit_path_tmp_points, edit_path_map, edit_path_path_lg);
+            $('#edit_path_color_preview').css('background-color', new_color);
+
+            // redraw the path
+            edit_path_path_lg.clearLayers();
+            edit_path_tmp_points.color = new_color;
+
+            ui_map_paint_path(edit_path_tmp_points, edit_path_map, edit_path_path_lg);
+        } else {
+            ui_display_toast_msg("error", "Error: not a valid color", "A valid hex color value must be used.");
+        }
     });
 
 }
