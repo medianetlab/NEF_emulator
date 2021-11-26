@@ -140,5 +140,7 @@ def delete_path(
         raise HTTPException(status_code=404, detail="Path not found")
     if not crud.user.is_superuser(current_user) and (path.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
+
+    crud.points.delete_points(db=db, path_id=id)    
     path = crud.path.remove(db=db, id=id)
     return path

@@ -65,5 +65,12 @@ class CRUD_Points(CRUDBase[Points, PathCreate, PathUpdate]):
             .all()
         )
 
+    def delete_points(self, db: Session, path_id: int):
+        objs = db.query(self.model).filter(self.model.path_id == path_id).all()
+        for obj in objs:
+            db.delete(obj)
+        db.commit()
+        return f"Model {self.model.__name__} deleted from db!"
+
 points = CRUD_Points(Points)
 path = CRUD_Path(Path)
