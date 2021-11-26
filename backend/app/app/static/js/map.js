@@ -501,7 +501,7 @@ function ui_map_paint_path( data ) {
 
     var latlng   = fix_points_format( data.points );
     var polyline = L.polyline(latlng, {
-        color: '#00a3cc',
+        color: data.color,
         opacity: 0.2
     }).addTo(paths_lg).addTo(mymap);
 }

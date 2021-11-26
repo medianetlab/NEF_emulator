@@ -41,7 +41,7 @@ curl -X 'POST' \
     "latitude": 37.998098,
     "longitude": 23.819440
   },
-  "color": "red"
+  "color": "#00a3cc"
 }'
 
 curl -X 'POST' \
@@ -60,7 +60,7 @@ curl -X 'POST' \
     "latitude": 37.996110,
     "longitude": 23.818563
   },
-  "color": "blue"
+  "color": "#00a3cc"
 }'
 
 
