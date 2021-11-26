@@ -66,9 +66,9 @@ def create_UE(
         raise HTTPException(status_code=409, detail=f"UE with supi {item_in.supi} already exists")
     elif crud.ue.get_ipv4(db=db, ipv4=str(item_in.ip_address_v4), owner_id=current_user.id):
         raise HTTPException(status_code=409, detail=f"UE with ipv4 {str(item_in.ip_address_v4)} already exists")
-    elif crud.ue.get_ipv6(db=db, ipv4=str(item_in.ip_address_v6.exploded), owner_id=current_user.id):
+    elif crud.ue.get_ipv6(db=db, ipv6=str(item_in.ip_address_v6.exploded), owner_id=current_user.id):
         raise HTTPException(status_code=409, detail=f"UE with ipv6 {str(item_in.ip_address_v6)} already exists")
-    elif crud.ue.get_mac(db=db, ipv4=str(item_in.mac_address), owner_id=current_user.id):
+    elif crud.ue.get_mac(db=db, mac=str(item_in.mac_address), owner_id=current_user.id):
         raise HTTPException(status_code=409, detail=f"UE with mac {str(item_in.mac_address)} already exists")
     elif crud.ue.get_externalId(db=db, externalId=item_in.external_identifier, owner_id=current_user.id):
         raise HTTPException(status_code=409, detail=f"UE with external id {str(item_in.mac_address)} already exists")
