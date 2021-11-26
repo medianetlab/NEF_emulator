@@ -72,7 +72,7 @@ var del_path_btn_tpl = `<button class="btn btn-sm btn-outline-secondary" type="b
 </button>`;
 
 // view path
-var view_path_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="button" onclick="ui_show_view_path_modal( '{{id}}' );">
+var view_path_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="button" onclick="ui_show_view_path_modal( '{{id}}' );" title="View path">
   <svg class="icon">
     <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-map"></use>
   </svg>
@@ -573,7 +573,7 @@ function api_put_gNB( gNB_obj ) {
             // console.log(data);
             ui_display_toast_msg("success", "Success!", "The gNB has been updated");
             
-            helper_update_gNB( gNB_obj );
+            helper_update_gNB( data );
             helper_create_db_id_to_gNB_id_bindings();
             
             gNBs_datatable.clear().rows.add( gNBs ).draw();
@@ -623,7 +623,7 @@ function api_put_cell( cell_obj ) {
             // console.log(data);
             ui_display_toast_msg("success", "Success!", "The Cell has been updated");
             
-            helper_update_cell( cell_obj );
+            helper_update_cell( data );
             
             cells_datatable.clear().rows.add( cells ).draw();
         },
