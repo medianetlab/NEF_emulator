@@ -1,3 +1,4 @@
+import random
 from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.encoders import jsonable_encoder
@@ -8,6 +9,15 @@ from app.api import deps
 
 router = APIRouter()
 
+def get_random_point(db: Session, path_id: int):
+
+    points = crud.points.get_points(db=db, path_id=path_id)
+    points_json = jsonable_encoder(points)
+
+    #Get the random index (this index should be within the range of points' list)
+    random_index = random.randrange(0, len(points_json))
+
+    return points_json[random_index]
 
 @router.get("", response_model=List[schemas.Paths])
 def read_paths(
@@ -130,5 +140,7 @@ def delete_path(
         raise HTTPException(status_code=404, detail="Path not found")
     if not crud.user.is_superuser(current_user) and (path.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
+
+    crud.points.delete_points(db=db, path_id=id)    
     path = crud.path.remove(db=db, id=id)
     return path
