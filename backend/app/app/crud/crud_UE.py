@@ -68,24 +68,20 @@ class CRUD_UE(CRUDBase[UE, UECreate, UEUpdate]):
         )
 
     def get_by_gNB(
-        self, db: Session, *, gNB_id: int, skip: int = 0, limit: int = 100
+        self, db: Session, *, gNB_id: int
     ) -> List[UE]:
         return (
             db.query(self.model)
             .filter(UE.gNB_id == gNB_id)
-            .offset(skip)
-            .limit(limit)
             .all()
         )
 
     def get_by_Cell(
-        self, db: Session, *, Cell_id: int, skip: int = 0, limit: int = 100
+        self, db: Session, *, cell_id: int
     ) -> List[UE]:
         return (
             db.query(self.model)
-            .filter(UE.Cell_id == Cell_id)
-            .offset(skip)
-            .limit(limit)
+            .filter(UE.Cell_id == cell_id)
             .all()
         )
 

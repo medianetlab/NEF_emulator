@@ -132,10 +132,6 @@ def update_UE(
         return UE
         
 
-
-    
-
-
 @router.get("/{supi}", response_model=schemas.UE)
 def read_UE(
     *,
@@ -159,15 +155,21 @@ def read_UE(
 def read_gNB_id(
     *,
     db: Session = Depends(deps.get_db),
-    gNB_id: int,
+    gNB_id: str = Path(..., description="The gNB id of the gNB in hexadecimal format", example='AAAAA1'),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
     Get gNB of specific UE.
     """
-    UE = crud.ue.get_by_gNB(db=db, gNB_id=gNB_id)
+    gNB = crud.gnb.get_gNB_id(db=db, id=gNB_id)
+    if not gNB:
+        raise HTTPException(status_code=404, detail=f"gNB with id {gNB_id} not found")
+    if not crud.user.is_superuser(current_user) and (gNB.owner_id != current_user.id):
+        raise HTTPException(status_code=400, detail="Not enough permissions")
+
+    UE = crud.ue.get_by_gNB(db=db, gNB_id=gNB.id)
     if not UE:
-        raise HTTPException(status_code=404, detail="gNB for specific UE not found")
+        raise HTTPException(status_code=404, detail="There are no UEs associated with this gNB")
     if not crud.user.is_superuser(current_user) and (UE.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
     return UE
@@ -175,22 +177,28 @@ def read_gNB_id(
 
 ### Get list of UEs of Specific Cells
 
-@router.get("/by_Cell/{Cell_id}", response_model=List[schemas.UE])
+@router.get("/by_Cell/{cell_id}", response_model=List[schemas.UE])
 def read_UE_Cell(
     *,
     db: Session = Depends(deps.get_db),
-    Cell_id: int,
+    cell_id: str = Path(..., description="The cell id of the cell in hexadecimal format", example='AAAAA1001'),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
     Get Cell of specifc UE.
     """
-    UE = crud.ue.get_by_Cell(db=db, Cell_id=Cell_id)
-    if not UE:
-        raise HTTPException(status_code=404, detail="Cell for specific UE not found")
-    if not crud.user.is_superuser(current_user) and (UE.owner_id != current_user.id):
+    cell = crud.cell.get_Cell_id(db=db, id=cell_id)
+    if not cell:
+        raise HTTPException(status_code=404, detail=f"Cell with id {cell_id} not found")
+    if not crud.user.is_superuser(current_user) and (cell.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
-    return UE
+
+    UEs = crud.ue.get_by_Cell(db=db, cell_id=cell.id)
+    if not UEs:
+        raise HTTPException(status_code=404, detail="There are no UEs associated with this cell")
+    if not crud.user.is_superuser(current_user) and (UEs.owner_id != current_user.id):
+        raise HTTPException(status_code=400, detail="Not enough permissions")
+    return UEs
 
 @router.delete("/{supi}", response_model=schemas.UE)
 def delete_UE(

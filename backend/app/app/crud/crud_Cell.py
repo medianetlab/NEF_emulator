@@ -35,14 +35,11 @@ class CRUD_Cell(CRUDBase[Cell, CellCreate, CellUpdate]):
         return db.query(self.model).filter(self.model.cell_id == id).first()
 
     def get_by_gNB_id(
-        self, db: Session, *, gNB_id: int, skip: int = 0, limit: int = 100
+        self, db: Session, *, gNB_id: int
     ) -> List[Cell]:
-        print(gNB_id)
         return (
             db.query(Cell)
             .filter(Cell.gNB_id == gNB_id)
-            .offset(skip)
-            .limit(limit)
             .all()
         )
     
