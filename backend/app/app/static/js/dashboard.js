@@ -671,7 +671,7 @@ function api_put_UE( UE_obj ) {
             // console.log(data);
             ui_display_toast_msg("success", "Success!", "The UE has been updated");
             
-            helper_update_UE( UE_obj );
+            helper_update_UE( data );
             
             ues_datatable.clear().rows.add( ues ).draw();
         },
