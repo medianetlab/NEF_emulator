@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app import crud, models, schemas
 from app.api import deps
 from app.api.api_v1.endpoints.utils import retrieve_ue_state 
+from app.api.api_v1.endpoints.paths import get_random_point
 
 router = APIRouter()
 
@@ -75,12 +76,14 @@ def create_UE(
     
     path = exists(db=db, gNB_id = item_in.gNB_id, cell_id = item_in.Cell_id, path_id = item_in.path_id)
     
+    random_point = get_random_point(db, path.id)
+
     json_data = jsonable_encoder(item_in)
     json_data['ip_address_v6'] = item_in.ip_address_v6.exploded 
     
     #Assign the initial coordinates (retrieved from path) to the UE
-    json_data['latitude'] = path.start_lat 
-    json_data['longitude'] = path.start_long 
+    json_data['latitude'] = random_point.get('latitude') 
+    json_data['longitude'] = random_point.get('longitude') 
 
     UE = crud.ue.create_with_owner(db=db, obj_in=json_data, owner_id=current_user.id)
     return UE
@@ -117,6 +120,7 @@ def update_UE(
 
     path = exists(db=db, gNB_id = item_in.gNB_id, cell_id = item_in.Cell_id, path_id = item_in.path_id)
 
+    
     #Check if UE is moving and the path is changed
     if retrieve_ue_state(supi, current_user.id) and (UE.path_id != item_in.path_id):
         raise HTTPException(status_code=400, detail=f"UE with SUPI {supi} is currently moving. You are not allowed to edit UE's path while it's moving")
@@ -125,9 +129,12 @@ def update_UE(
         json_data['ip_address_v4'] = str(item_in.ip_address_v4)
         json_data['ip_address_v6'] = str(item_in.ip_address_v6.exploded) 
         
-        #Assign the initial coordinates (retrieved from path) to the UE
-        json_data['latitude'] = path.start_lat 
-        json_data['longitude'] = path.start_long
+        #Assign the random coordinates (retrieved from path) to the UE, if user chooses another path
+        if UE.path_id != item_in.path_id:
+            random_point = get_random_point(db, path.id)
+            json_data['latitude'] = random_point.get('latitude')
+            json_data['longitude'] = random_point.get('longitude') 
+        
         UE = crud.ue.update(db=db, db_obj=UE, obj_in=json_data)
         return UE
         

@@ -1,3 +1,4 @@
+import random
 from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.encoders import jsonable_encoder
@@ -8,6 +9,15 @@ from app.api import deps
 
 router = APIRouter()
 
+def get_random_point(db: Session, path_id: int):
+
+    points = crud.points.get_points(db=db, path_id=path_id)
+    points_json = jsonable_encoder(points)
+
+    #Get the random index (this index should be within the range of points' list)
+    random_index = random.randrange(0, len(points_json))
+
+    return points_json[random_index]
 
 @router.get("", response_model=List[schemas.Paths])
 def read_paths(
