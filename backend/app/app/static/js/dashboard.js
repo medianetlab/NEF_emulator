@@ -144,6 +144,7 @@ var edit_path_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="butto
     var path_to_be_edited    = -1;
     var edit_path_tmp_obj    = null;
     var edit_path_tmp_points = null;
+    var add_path_tmp_obj     = null;
 
     // leaflet.js map for editing UE modal
     var edit_path_map         = null;
@@ -157,6 +158,9 @@ var edit_path_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="butto
     var add_path_points_lg   = L.layerGroup(); // map layer group for start/end points
     var add_path_start_dot   = null;           // small circle depicting the starting point of the path (to be added)
     var add_path_end_dot     = null;           // small circle depicting the   ending point of the path (to be added)
+    var add_path_polyline    = null;
+    var pointA = null;
+    var pointB = null;
 
 // ===============================================
 //             End of Global variables
@@ -221,6 +225,7 @@ $( document ).ready(function() {
         // and add listeners to capture user changes (path selection)
         ui_initialize_edit_UE_map();
         ui_initialize_add_UE_map();
+        ui_edit_UE_modal_add_listeners();
         ui_add_UE_modal_add_listeners();
 
 
@@ -890,6 +895,46 @@ function api_post_UE( UE_obj ) {
 }
 
 
+// Ajax request to create path
+// on success: add it inside datatables too
+// 
+function api_post_path( path_obj ) {
+    
+    var url = app.api_url + '/paths/';
+
+    $.ajax({
+        type: 'POST',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        data:         JSON.stringify(path_obj),
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            // console.log(data);
+            ui_display_toast_msg("success", "Success!", "The path has been created");
+            
+            paths.push(data);
+            paths_datatable.clear().rows.add( paths ).draw();
+        },
+        error: function(err)
+        {
+            console.log(err);
+            ui_display_toast_msg("error", "Error: path could not be created", err.responseJSON.detail[0].msg);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
+
 
 // 
 // 
@@ -1505,12 +1550,24 @@ function ui_show_edit_path_modal( path_id ) {
 // 
 function ui_show_add_path_modal() {
 
-    // add_path_path_lg.clearLayers();     // map path layer cleanup
+    add_path_path_lg.clearLayers();     // map path layer cleanup
+
+    add_path_tmp_obj = {
+            description: "",
+            start_point: {
+                latitude  : null,
+                longitude : null
+            },
+            end_point: {
+                latitude  : null,
+                longitude : null
+            },
+            color: "#3399ff",
+            points: [],
+    };
 
 
     add_path_modal.show();
-    add_path_map.invalidateSize(); // this helps the map display its tiles correctly after the size of the modal is finalized
-
     
     // set bounds for view + zoom depending on the position of cells (if any)
     if (cells.length > 0) {
@@ -1519,6 +1576,8 @@ function ui_show_add_path_modal() {
         add_path_map.fitBounds( leaflet_bounds );
         add_path_map.setZoom(17);    
     }
+
+    add_path_map.invalidateSize(); // this helps the map display its tiles correctly after the size of the modal is finalized
     
 
     // paint the current path of the path
@@ -1899,21 +1958,19 @@ function ui_add_btn_listeners_for_UEs_CUD_operations() {
 function ui_add_btn_listeners_for_paths_CUD_operations() {
 
     // CREATE
-    // $('#add_path_btn').on('click', function(){
+    $('#add_path_btn').on('click', function(){
 
-    //     var data = {
-    //       cell_id     : $('#add_cell_id').val(),
-    //       name        : $('#add_cell_name').val(),
-    //       gNB_id      : parseInt ( $('#add_cell_gNB').val() ),
-    //       description : $('#add_cell_description').val(),
-    //       latitude    : parseFloat( $('#add_cell_new_lat').val() ),
-    //       longitude   : parseFloat( $('#add_cell_new_lon').val() ),
-    //       radius      :   parseInt( $('#add_cell_new_rad').val() ),
-    //     };
+        add_path_tmp_obj.description  = $('#add_path_description').val();
+        add_path_tmp_obj.color        = $('#add_path_color').val();
 
-    //     api_post_cell( data );
-    //     add_cell_modal.hide();
-    // });
+        // test color string added by user
+        if ( /^#([0-9A-F]{3}){1,2}$/i.test( $('#add_path_color').val() ) ) {
+            api_post_path( add_path_tmp_obj );
+            add_path_modal.hide();
+        } else {
+            ui_display_toast_msg("error", "Error: not a valid color", "A valid hex color value must be used.");
+        }
+    });
 
     // DELETE
     $('#del_path_btn').on('click', function(){
@@ -2151,23 +2208,43 @@ function ui_initialize_add_path_map() {
 
     L.control.layers(baseLayers, overlays).addTo(add_path_map);
 
-    var pointA = null;
-    var pointB = null;
-
     function onAddPathMapClick(e) {
         if (pointA == null) {
             pointA = e.latlng;
-            L.circle(e.latlng, 0.5, {
+            // L.circle(e.latlng, 0.5, {
+            //     color: 'none',
+            //     fillColor: '#f03',
+            //     fillOpacity: 0.4
+            // }).addTo(add_path_map);
+            console.log(e.latlng);
+
+            
+            add_path_tmp_obj.start_point.latitude  = e.latlng.lat;
+            add_path_tmp_obj.start_point.longitude = e.latlng.lng;
+
+            // add a solid-color small circle (dot) at the start lat,lon
+            add_path_start_dot = L.circle([add_path_tmp_obj.start_point.latitude,add_path_tmp_obj.start_point.longitude], 1, {
                 color: 'none',
-                fillColor: '#f03',
-                fillOpacity: 0.4
-            }).addTo(add_path_map);
+                fillColor: '#3590e2',
+                fillOpacity: 1.0
+            }).addTo(add_path_points_lg ).addTo( add_path_map );
+            
             return;
         }
         if (pointB == null) {
             pointB = e.latlng;
-            // console.log(pointA);
-            // console.log(pointB);
+
+            add_path_tmp_obj.end_point.latitude  = e.latlng.lat;
+            add_path_tmp_obj.end_point.longitude = e.latlng.lng;
+            
+            // add a solid-color small circle (dot) at the end lat,lon
+            if (add_path_end_dot != null) { add_path_end_dot.remove(); }
+            add_path_end_dot = L.circle([add_path_tmp_obj.end_point.latitude,add_path_tmp_obj.end_point.longitude], 1, {
+                color: 'none',
+                fillColor: '#c7362c',
+                fillOpacity: 1.0
+            }).addTo(add_path_points_lg).addTo( add_path_map );
+
             generate_coords_between_points(pointA.lat, pointA.lng, pointB.lat, pointB.lng);
             pointA = pointB;
             pointB = null;
@@ -2224,6 +2301,26 @@ function ui_add_cell_modal_add_listeners() {
 }
 
 
+
+function ui_edit_UE_modal_add_listeners() {
+
+    $('#edit_UE_path').on('change', function(){
+        selected_path_id = $(this).val();
+
+        // add path to map
+        // and set view + zoom level
+        api_get_specific_path_callback( selected_path_id, function(data){
+            edit_UE_path_lg.clearLayers();
+            ui_map_paint_path(data, edit_UE_map, edit_UE_path_lg);
+
+            // set bounds for view + zoom depending on the position of cells
+            var map_bounds     = helper_calculate_map_bounds_from_cells();            
+            var leaflet_bounds = new L.LatLngBounds(map_bounds);
+
+            edit_UE_map.fitBounds( leaflet_bounds );
+        });
+    });
+}
 
 function ui_add_UE_modal_add_listeners() {
 
@@ -2303,6 +2400,8 @@ function ui_add_path_modal_add_listeners() {
         $('#add_path_color').val( $(this).html() );
         $('#add_path_color').trigger('change');
     });
+
+
 
 }
 
@@ -2391,16 +2490,20 @@ function generate_coords_between_points(φ1, λ1, φ2, λ2){
         lat  = to_deg(point.φ2);
         long = to_deg(point.λ2);
 
-        L.circle([lat,long], 0.5, {
-            color: 'none',
-            fillColor: '#f03',
-            fillOpacity: 0.4
-        }).addTo( add_path_map );
 
         lat  = lat.toFixed(6);  // keep only 6 decimal points
         long = long.toFixed(6); // keep only 6 decimal points
 
         // text_area.value += lat + "," + long + "\n";
-        // points.push({"latitude": lat, "longitude": long});
+        add_path_tmp_obj.points.push({"latitude": lat, "longitude": long});
     }
+
+    if ( add_path_polyline != null) { add_path_polyline.remove(); }
+
+    var latlng   = helper_fix_points_format( add_path_tmp_obj.points );
+    
+    add_path_polyline = L.polyline(latlng, {
+        color: add_path_tmp_obj.color,
+        opacity: 0.2
+    }).addTo( add_path_path_lg ).addTo( add_path_map );
 }
