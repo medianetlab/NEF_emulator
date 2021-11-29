@@ -139,7 +139,7 @@ var edit_path_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="butto
 // ===============================================
     var  del_path_modal = new coreui.Modal(document.getElementById( 'del_path_modal'), {});
     var edit_path_modal = new coreui.Modal(document.getElementById('edit_path_modal'), {});
-    // var  add_path_modal = new coreui.Modal(document.getElementById('add_path_modal'),  {});
+    var  add_path_modal = new coreui.Modal(document.getElementById('add_path_modal'),  {});
     var path_to_be_deleted   = -1;
     var path_to_be_edited    = -1;
     var edit_path_tmp_obj    = null;
@@ -148,9 +148,15 @@ var edit_path_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="butto
     // leaflet.js map for editing UE modal
     var edit_path_map         = null;
     var edit_path_path_lg     = L.layerGroup(); // map layer group for path
-    var edit_path_points_lg   = L.layerGroup(); // map layer group for UEs
+    var edit_path_points_lg   = L.layerGroup(); // map layer group for start/end points
     var edit_path_start_dot   = null;           // small circle depicting the starting point of the path (to be edited)
     var edit_path_end_dot     = null;           // small circle depicting the   ending point of the path (to be edited)
+    // leaflet.js map for adding UE modal
+    var add_path_map         = null;
+    var add_path_path_lg     = L.layerGroup(); // map layer group for path
+    var add_path_points_lg   = L.layerGroup(); // map layer group for start/end points
+    var add_path_start_dot   = null;           // small circle depicting the starting point of the path (to be added)
+    var add_path_end_dot     = null;           // small circle depicting the   ending point of the path (to be added)
 
 // ===============================================
 //             End of Global variables
@@ -212,15 +218,18 @@ $( document ).ready(function() {
 
 
         // initialize the map used inside the "edit UE" / "add UE" modals
+        // and add listeners to capture user changes (path selection)
         ui_initialize_edit_UE_map();
         ui_initialize_add_UE_map();
         ui_add_UE_modal_add_listeners();
 
 
         // initialize the map used inside the "edit path" / "add path" modals
+        // and add listeners to capture user changes (colors, click on map etc...)
         ui_initialize_edit_path_map();
-        // ui_initialize_add_path_map();
+        ui_initialize_add_path_map();
         ui_edit_path_modal_add_listeners();
+        ui_add_path_modal_add_listeners();
 
 
 });
@@ -1488,6 +1497,45 @@ function ui_show_edit_path_modal( path_id ) {
     edit_path_map.fitBounds( leaflet_bounds );
     edit_path_map.setZoom(17);
 }
+
+
+
+// shows modal for adding paths
+// 
+// 
+function ui_show_add_path_modal() {
+
+    // add_path_path_lg.clearLayers();     // map path layer cleanup
+
+
+    add_path_modal.show();
+    add_path_map.invalidateSize(); // this helps the map display its tiles correctly after the size of the modal is finalized
+
+    
+    // set bounds for view + zoom depending on the position of cells (if any)
+    if (cells.length > 0) {
+        var map_bounds     = helper_calculate_map_bounds_from_cells();            
+        var leaflet_bounds = new L.LatLngBounds(map_bounds);
+        add_path_map.fitBounds( leaflet_bounds );
+        add_path_map.setZoom(17);    
+    }
+    
+
+    // paint the current path of the path
+    // api_get_specific_path_callback( add_path_tmp_obj.id, function(data){
+    //     // console.log(data);
+    //     add_path_tmp_points = data;
+    //     ui_map_paint_path(data, add_path_map, add_path_path_lg);
+    // });
+
+    // add a solid-color small circle (dot) at the start lat,lon
+    // L.circle([add_path_tmp_obj.start_point.latitude,add_path_tmp_obj.start_point.longitude], 1, {
+    //     color: 'none',
+    //     fillColor: '#3590e2',
+    //     fillOpacity: 1.0
+    // }).addTo(add_path_points_lg ).addTo( add_path_map );
+    // add a solid-color small circle (dot) at the end lat,lon
+}
 // ===============================================
 
 
@@ -2072,6 +2120,67 @@ function ui_initialize_edit_path_map() {
 
 
 
+function ui_initialize_add_path_map() {
+
+    // set map height
+    $('#add_path_mapid').css({ "height": 600 } );
+
+    var mbAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
+                'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        mbUrl = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+
+    var grayscale   = L.tileLayer(mbUrl, {id: 'mapbox/light-v9',    tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
+        streets     = L.tileLayer(mbUrl, {id: 'mapbox/streets-v11', tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23});
+
+
+    // map initialization
+    add_path_map = L.map('add_path_mapid', {
+        layers: [grayscale, add_path_points_lg, add_path_path_lg ]
+    }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
+
+
+    var baseLayers = {
+            "Grayscale": grayscale,
+            "Streets": streets
+        };
+
+    var overlays = {
+        "path":   add_path_path_lg,
+        "points": add_path_points_lg
+    };
+
+    L.control.layers(baseLayers, overlays).addTo(add_path_map);
+
+    var pointA = null;
+    var pointB = null;
+
+    function onAddPathMapClick(e) {
+        if (pointA == null) {
+            pointA = e.latlng;
+            L.circle(e.latlng, 0.5, {
+                color: 'none',
+                fillColor: '#f03',
+                fillOpacity: 0.4
+            }).addTo(add_path_map);
+            return;
+        }
+        if (pointB == null) {
+            pointB = e.latlng;
+            // console.log(pointA);
+            // console.log(pointB);
+            generate_coords_between_points(pointA.lat, pointA.lng, pointB.lat, pointB.lng);
+            pointA = pointB;
+            pointB = null;
+        }
+    }
+
+    add_path_map.on('click', onAddPathMapClick);
+
+}
+
+
+
+
 function ui_edit_cell_modal_add_listeners() {
 
     $('#edit_cell_new_rad').on('change', function(){
@@ -2169,6 +2278,36 @@ function ui_edit_path_modal_add_listeners() {
 
 
 
+function ui_add_path_modal_add_listeners() {
+
+    $('#add_path_color').on('change', function(){
+
+        var new_color = $(this).val();
+
+        // test color string added by user
+        if ( /^#([0-9A-F]{3}){1,2}$/i.test( new_color ) ) {
+
+            $('#add_path_color_preview').css('background-color', new_color);
+
+            // redraw the path
+            add_path_path_lg.clearLayers();
+            add_path_tmp_points.color = new_color;
+
+            ui_map_paint_path(add_path_tmp_points, add_path_map, add_path_path_lg);
+        } else {
+            ui_display_toast_msg("error", "Error: not a valid color", "A valid hex color value must be used.");
+        }
+    });
+
+    $('#add_path_modal kbd').on('click', function(){
+        $('#add_path_color').val( $(this).html() );
+        $('#add_path_color').trigger('change');
+    });
+
+}
+
+
+
 
 // Adds a path polyline to the leaflet js map
 // to the specified layer.
@@ -2201,4 +2340,67 @@ function helper_fix_points_format( datapoints ) {
         fixed[i] = [datapoints[i].latitude , datapoints[i].longitude];
     }
     return fixed;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// ======================================================================
+
+
+// How to generate coordinates in between two known points
+// https://stackoverflow.com/questions/22063201/how-to-generate-coordinates-in-between-two-known-points
+function to_rad(num) {
+    return num * Math.PI / 180;
+}
+
+function to_deg(num) {
+    return num * 180 / Math.PI;
+}
+
+var R = 6371.0;
+
+function waypoint(φ1, λ1, θ, d) {
+    φ2 = Math.asin( Math.sin(φ1) * Math.cos(d/R) + Math.cos(φ1) * Math.sin(d/R) * Math.cos(θ) );
+    λ2 = λ1 + Math.atan2( Math.sin(θ) * Math.sin(d/R) * Math.cos(φ1), Math.cos(d/R) - Math.sin(φ1) * Math.sin(φ2) );
+    λ2 = (λ2 + 3 * Math.PI) % (2 * Math.PI) - Math.PI; // normalise to -180..+180°
+    return {'φ2': φ2, 'λ2': λ2};
+}
+
+function generate_coords_between_points(φ1, λ1, φ2, λ2){
+    var φ1 = to_rad(φ1);
+    var λ1 = to_rad(λ1);
+    var φ2 = to_rad(φ2);
+    var λ2 = to_rad(λ2);
+
+    // var text_area = document.querySelector("#console");
+
+    var d = R * Math.acos( Math.sin(φ1) * Math.sin(φ2) + Math.cos(φ1) * Math.cos(φ2) * Math.cos(λ2 - λ1) );
+    var θ = Math.atan2( Math.sin(λ2 - λ1) * Math.cos(φ2), Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(λ2 - λ1) );
+
+    for (step=0.001 ; step<d ; step=step+0.001) {  // 0.001km = 1m
+        point = waypoint(φ1, λ1, θ, step);
+        lat  = to_deg(point.φ2);
+        long = to_deg(point.λ2);
+
+        L.circle([lat,long], 0.5, {
+            color: 'none',
+            fillColor: '#f03',
+            fillOpacity: 0.4
+        }).addTo( add_path_map );
+
+        lat  = lat.toFixed(6);  // keep only 6 decimal points
+        long = long.toFixed(6); // keep only 6 decimal points
+
+        // text_area.value += lat + "," + long + "\n";
+        // points.push({"latitude": lat, "longitude": long});
+    }
 }

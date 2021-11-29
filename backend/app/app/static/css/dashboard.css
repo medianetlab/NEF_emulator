@@ -15,10 +15,15 @@
 .add-gnb-wrapper .btn-sm  { padding: 0rem 0.5rem; height: 24px; }
 
 .cell-row .add-cell-wrapper { display: inline-block; float: right; font-size: 0; }
-.add-cell-wrapper .btn-sm  { padding: 0rem 0.5rem; height: 24px; }
+.add-cell-wrapper .btn-sm   { padding: 0rem 0.5rem; height: 24px; }
 
 .ue-row .add-ue-wrapper { display: inline-block; float: right; font-size: 0; }
-.add-ue-wrapper .btn-sm  { padding: 0rem 0.5rem; height: 24px; }
+.add-ue-wrapper .btn-sm { padding: 0rem 0.5rem; height: 24px; }
+
+.path-row .add-path-wrapper { display: inline-block; float: right; font-size: 0; }
+.add-path-wrapper .btn-sm   { padding: 0rem 0.5rem; height: 24px; }
 
 #edit_path_color_preview { background-color: #ccc; display: block; height: 37px; border-radius: 5px;}
 #edit_path_modal kbd     { cursor: pointer; }
+
+#add_path_color_preview { background-color: #3399ff; display: block; height: 37px; border-radius: 5px;}

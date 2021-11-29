@@ -296,11 +296,18 @@
 
 
 
-          <div class="row">
+          <div class="row path-row">
             <div class="col-md-12">
               <div class="card mb-4">
                 
-                <div class="card-header">Paths</div>
+                <div class="card-header">Paths
+                  <div class="add-path-wrapper">
+                    <button  type="button" class="btn btn-sm btn-dark m-0" onclick="ui_show_add_path_modal();">
+                      <svg class="icon m-0">
+                        <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-plus"></use>
+                      </svg></button>
+                  </div>
+                </div>
                 <div class="card-body">
                   <div class="row">
 
@@ -940,6 +947,72 @@
                       <!-- --------------------------------- -->
                       <div class="col-12">
                          <div id="edit_path_mapid"></div>
+                      </div>
+                      <!-- --------------------------------- -->
+                    </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-light" data-coreui-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-dark" id="update_path_btn">
+                    <svg class="icon">
+                      <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-save"></use>
+                    </svg> Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- modal pop-up for adding paths -->
+          <div class="modal" tabindex="-1" id="add_path_modal">
+            <div class="modal-dialog modal-xl">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Add Path</h5>
+                  <button type="button" class="btn-close" data-coreui-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-5">
+
+                    <form action="" class="row g-3">
+                      <!-- --------------------------------- -->
+                      <div class="col-md-6">
+                        <label for="add_path_description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="add_path_description" placeholder="Description text">
+                      </div>
+                      <div class="col-md-3">
+                        <label for="add_path_color" class="form-label">Color</label>
+                        <input type="text" class="form-control" id="add_path_color" value="#3399ff">
+                      </div>
+                      
+                      <div class="col-md-3">
+                        <label for="add_path_color_preview" class="form-label">Preview</label>
+                        <div id="add_path_color_preview"></div>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-12 mt-4">
+                        <p>Click for quick color selection: 
+                          <kbd style="background-color: #321fdb;">#321fdb</kbd> 
+                          <kbd style="background-color: #9da5b1;">#9da5b1</kbd> 
+                          <kbd style="background-color: #2eb85c;">#2eb85c</kbd> 
+                          <kbd style="background-color: #e55353;">#e55353</kbd> 
+                          <kbd style="background-color: #f9b115;">#f9b115</kbd> 
+                          <kbd style="background-color: #4f5d73;">#4f5d73</kbd> 
+                          <kbd style="background-color: #3399ff;">#3399ff</kbd> (default) 
+                        </p>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-12 mt-4">
+                        <h5>Start / End points</h5>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-md-6">
+                        <p>🔵 Start: Latitude <code id="add_path_start_lat"></code> , Longitude: <code id="add_path_start_lon"></code></p>
+                      </div>
+                      <div class="col-md-6">
+                        <p>🔴 End:   Latitude <code id="add_path_end_lat"></code> ,   Longitude: <code id="add_path_end_lon"></code></p>
+                      </div>
+                      <!-- --------------------------------- -->
+                      <div class="col-12">
+                         <div id="add_path_mapid"></div>
                       </div>
                       <!-- --------------------------------- -->
                     </form>
