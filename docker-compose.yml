@@ -36,7 +36,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: "${MONGO_PASSWORD}"
 
   mongo-express:
-    image: mongo-express
+    image: mongo-express:1.0.0-alpha.4
     restart: always
     ports:
       - 8081:8081
