@@ -1099,7 +1099,7 @@ function ui_init_datatable_paths() {
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
         columnDefs: [
             {
-                "targets": 2,
+                "targets": 3,
                 "data": null,
                 "defaultContent": '',
                 "orderable" : false,
@@ -1114,6 +1114,7 @@ function ui_init_datatable_paths() {
         columns: [
             { "data": "id", className: "dt-center" },
             { "data": "description" },
+            { "data": "color" },
             { "data": null, className: "dt-right" },
         ]
     } );
@@ -2157,6 +2158,11 @@ function ui_edit_path_modal_add_listeners() {
         } else {
             ui_display_toast_msg("error", "Error: not a valid color", "A valid hex color value must be used.");
         }
+    });
+
+    $('#edit_path_modal kbd').on('click', function(){
+        $('#edit_path_color').val( $(this).html() );
+        $('#edit_path_color').trigger('change');
     });
 
 }
