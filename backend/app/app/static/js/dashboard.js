@@ -7,7 +7,6 @@ var ues   = null;
 var paths = null;
 
 var db_ID_to_gNB_id  = {};
-var db_ID_to_path_id = {};
 
 var gNBs_datatable  = null;
 var cells_datatable = null;
@@ -541,7 +540,6 @@ function api_delete_path( path_id ) {
             ui_display_toast_msg("success", "Success!", "The path has been permanently deleted");
             
             helper_delete_path( path_id );
-            helper_create_db_id_to_path_id_bindings();
             paths_datatable.clear().rows.add( paths ).draw();
         },
         error: function(err)
@@ -1640,6 +1638,21 @@ function helper_find_path( path_id ) {
     return null;
 }
 
+// iterates through the path list
+// and updates (if found) the path object provided
+//
+function helper_update_path( path_obj ) {
+
+    console.log(path_obj);
+
+    for (i=0 ; i<paths.length ; i++) {
+        if ( paths[i].id == path_obj.id ) {
+            console.log(paths[i]);
+            paths[i] = JSON.parse(JSON.stringify( path_obj )); // found, updated
+        }
+    }
+}
+
 
 
 function helper_create_db_id_to_gNB_id_bindings() {
@@ -1653,18 +1666,6 @@ function helper_create_db_id_to_gNB_id_bindings() {
     });
 }
 
-
-
-function helper_create_db_id_to_path_id_bindings() {
-
-    // reset
-    db_ID_to_path_id = {};
-
-    // reload
-    $.each(paths, function (i, item) {
-        db_ID_to_path_id[ item.id.toString() ] = item.id;
-    });
-}
 
 
 
@@ -1878,11 +1879,14 @@ function ui_add_btn_listeners_for_paths_CUD_operations() {
         edit_path_tmp_obj.description  = $('#edit_path_description').val();
         edit_path_tmp_obj.color        = $('#edit_path_color').val();
 
-        // remove obsolete properties
-        // delete edit_path_tmp_obj.
-        
-        api_put_path( edit_path_tmp_obj );
-        edit_path_modal.hide();
+
+        // test color string added by user
+        if ( /^#([0-9A-F]{3}){1,2}$/i.test( $('#edit_path_color').val() ) ) {
+            api_put_path( edit_path_tmp_obj );
+            edit_path_modal.hide();
+        } else {
+            ui_display_toast_msg("error", "Error: not a valid color", "A valid hex color value must be used.");
+        }
     });
 
 
