@@ -88,7 +88,16 @@ def update_path(
     if not crud.user.is_superuser(current_user) and (path.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
     path = crud.path.update(db=db, db_obj=path, obj_in=path_in)
-    return path
+
+    item_json = jsonable_encoder(path)
+    item_json["start_point"] = {}
+    item_json["end_point"] = {}
+    item_json["start_point"]["latitude"] = path.start_lat
+    item_json["start_point"]["longitude"] = path.start_long
+    item_json["end_point"]["latitude"] = path.end_lat
+    item_json["end_point"]["longitude"] = path.end_long
+
+    return item_json
 
 
 @router.get("/{id}", response_model=schemas.Path)
