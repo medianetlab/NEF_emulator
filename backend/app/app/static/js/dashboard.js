@@ -1751,8 +1751,6 @@ function helper_find_path( path_id ) {
 //
 function helper_update_path( path_obj ) {
 
-    console.log(path_obj);
-
     for (i=0 ; i<paths.length ; i++) {
         if ( paths[i].id == path_obj.id ) {
             console.log(paths[i]);
@@ -2211,16 +2209,12 @@ function ui_initialize_add_path_map() {
     function onAddPathMapClick(e) {
         if (pointA == null) {
             pointA = e.latlng;
-            // L.circle(e.latlng, 0.5, {
-            //     color: 'none',
-            //     fillColor: '#f03',
-            //     fillOpacity: 0.4
-            // }).addTo(add_path_map);
-            console.log(e.latlng);
-
             
-            add_path_tmp_obj.start_point.latitude  = e.latlng.lat;
-            add_path_tmp_obj.start_point.longitude = e.latlng.lng;
+            
+            add_path_tmp_obj.start_point.latitude  = e.latlng.lat.toFixed(6);
+            add_path_tmp_obj.start_point.longitude = e.latlng.lng.toFixed(6);
+            $('#add_path_start_lat').html( add_path_tmp_obj.start_point.latitude  );
+            $('#add_path_start_lon').html( add_path_tmp_obj.start_point.longitude );
 
             // add a solid-color small circle (dot) at the start lat,lon
             add_path_start_dot = L.circle([add_path_tmp_obj.start_point.latitude,add_path_tmp_obj.start_point.longitude], 1, {
@@ -2228,14 +2222,16 @@ function ui_initialize_add_path_map() {
                 fillColor: '#3590e2',
                 fillOpacity: 1.0
             }).addTo(add_path_points_lg ).addTo( add_path_map );
-            
+
             return;
         }
         if (pointB == null) {
             pointB = e.latlng;
 
-            add_path_tmp_obj.end_point.latitude  = e.latlng.lat;
-            add_path_tmp_obj.end_point.longitude = e.latlng.lng;
+            add_path_tmp_obj.end_point.latitude  = e.latlng.lat.toFixed(6);
+            add_path_tmp_obj.end_point.longitude = e.latlng.lng.toFixed(6);
+            $('#add_path_end_lat').html( add_path_tmp_obj.end_point.latitude  );
+            $('#add_path_end_lon').html( add_path_tmp_obj.end_point.longitude );
             
             // add a solid-color small circle (dot) at the end lat,lon
             if (add_path_end_dot != null) { add_path_end_dot.remove(); }
@@ -2388,9 +2384,17 @@ function ui_add_path_modal_add_listeners() {
 
             // redraw the path
             add_path_path_lg.clearLayers();
-            add_path_tmp_points.color = new_color;
+            add_path_tmp_obj.color = new_color;
 
-            ui_map_paint_path(add_path_tmp_points, add_path_map, add_path_path_lg);
+            if ( add_path_polyline != null) { add_path_polyline.remove(); }
+
+            var latlng   = helper_fix_points_format( add_path_tmp_obj.points );
+            
+            add_path_polyline = L.polyline(latlng, {
+                color: add_path_tmp_obj.color,
+                opacity: 0.2
+            }).addTo( add_path_path_lg ).addTo( add_path_map );
+            
         } else {
             ui_display_toast_msg("error", "Error: not a valid color", "A valid hex color value must be used.");
         }
