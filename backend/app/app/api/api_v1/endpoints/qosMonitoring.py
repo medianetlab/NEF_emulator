@@ -1,6 +1,6 @@
 import logging
 from typing import Any, List
-from fastapi import APIRouter, Depends, HTTPException, Path, Request
+from fastapi import APIRouter, Depends, HTTPException, Path, Request, Response
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pymongo.database import Database
@@ -35,7 +35,15 @@ def read_active_subscriptions(
     add_notifications(http_request, http_response, False)
     return http_response
 
-@router.post("/{scsAsId}/subscriptions", responses={201: {"model" : schemas.AsSessionWithQoSSubscription}})
+#Callback 
+
+qos_callback_router = APIRouter()
+
+@qos_callback_router.post("{$request.body.notificationDestination}", response_class=Response)
+def monitoring_notification(body: schemas.UserPlaneNotificationData):
+    pass
+
+@router.post("/{scsAsId}/subscriptions", responses={201: {"model" : schemas.AsSessionWithQoSSubscription}}, callbacks=qos_callback_router.routes)
 def create_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),

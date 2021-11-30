@@ -38,6 +38,7 @@
             "priority": 19,
             "PDB": 10,
             "PER": 0.0001,
+            "MDBV": 255,
             "service" : "Discrete Automation"
         }
     ]

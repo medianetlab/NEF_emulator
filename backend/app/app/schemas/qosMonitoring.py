@@ -1,3 +1,4 @@
+from threading import Event
 from typing import List, Optional
 from pydantic import BaseModel, Field, IPvAnyAddress, AnyHttpUrl, constr
 from enum import Enum
@@ -39,7 +40,7 @@ class AsSessionWithQoSSubscriptionCreate(BaseModel):
     ipv4Addr: Optional[IPvAnyAddress] = Field(default='10.0.0.0', description="String identifying an Ipv4 address")    
     ipv6Addr: Optional[IPvAnyAddress] = Field(default="0:0:0:0:0:0:0:0", description="String identifying an Ipv6 address. Default value ::1/128 (loopback)")
     macAddr: Optional[constr(regex=r'^([0-9a-fA-F]{2})((-[0-9a-fA-F]{2}){5})$')] = '22-00-00-00-00-00'
-    notificationDestination: AnyHttpUrl = "https://example.com/mynetapp"
+    notificationDestination: AnyHttpUrl = Field(..., description="Reference resource (URL) identifying service consumer's endpoint, in order to receive the asynchronous notification. For testing use 'http://localhost:80/api/v1/utils/qos/callback'") #Default value for development testing
     snssai: Optional[Snssai] = None
     dnn: Optional[str] = Field("province1.mnc01.mcc202.gprs", description="String identifying the Data Network Name (i.e., Access Point Name in 4G). For more information check clause 9A of 3GPP TS 23.003")    
     qosReference: int = Field(default=9, description="Identifies a pre-defined QoS Information", ge=1, le=90)
@@ -52,4 +53,30 @@ class AsSessionWithQoSSubscription(AsSessionWithQoSSubscriptionCreate):
     link: Optional[AnyHttpUrl] = Field("https://myresource.com", description="String identifying a referenced resource. This is also returned as a location header in 201 Created Response")
     
     class Config:
-            orm_mode = True
+        orm_mode = True
+
+#Schemas for QoS callback
+
+class AccumulatedUsage(UsageThreshold):
+    pass
+
+class QoSMonitoringReport(BaseModel):
+    dlDelays: List[int] = Field(None, description="Downlink packet delay", ge=0, min_items=1)
+    ulDelays: List[int] = Field(None, description="Uplink packet delay", ge=0, min_items=1)
+    rtDelays: List[int] = Field(None, description="Round trip packet delay", ge=0, min_items=1)
+
+class UserPlaneEvent(str, Enum):
+    gqos = "QOS_GUARANTEED"
+    gqos_false = "QOS_NOT_GUARANTEED" 
+    qosMon = "QOS_MONITORING"
+    
+class UserPlaneEventReport(BaseModel):
+    event: UserPlaneEvent
+    accumulatedUsage: Optional[AccumulatedUsage]
+    appliedQosRef: str = Field(None, description="The current applied QoS reference. Applicable for event QoS_NOT_GUARANTEED")
+    qosMonReports: List[QoSMonitoringReport] = Field(None, description="Contains the QoS Monitoring Reporting information")
+
+
+class UserPlaneNotificationData(BaseModel):
+    transaction: AnyHttpUrl = Field("https://myresource.com", description="String identifying the referenced resource created in POST request")
+    eventReports: List[UserPlaneEventReport] = Field(..., description="Contains the reported event and applicable information", min_items=1)
