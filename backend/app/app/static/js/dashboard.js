@@ -249,7 +249,7 @@ $( document ).ready(function() {
 // 
 function api_get_gNBs() {
     
-    var url = app.api_url + '/gNBs/?skip=0&limit=100';
+    var url = app.api_url + '/gNBs?skip=0&limit=100';
 
     $.ajax({
         type: 'GET',
@@ -289,7 +289,7 @@ function api_get_gNBs() {
 // 
 function api_get_Cells() {
     
-    var url = app.api_url + '/Cells/?skip=0&limit=100';
+    var url = app.api_url + '/Cells?skip=0&limit=100';
 
     $.ajax({
         type: 'GET',
@@ -328,7 +328,7 @@ function api_get_Cells() {
 // 
 function api_get_UEs() {
     
-    var url = app.api_url + '/UEs/?skip=0&limit=100';
+    var url = app.api_url + '/UEs?skip=0&limit=100';
 
     $.ajax({
         type: 'GET',
@@ -367,7 +367,7 @@ function api_get_UEs() {
 // 
 function api_get_paths() {
     
-    var url = app.api_url + '/paths/?skip=0&limit=100';
+    var url = app.api_url + '/paths?skip=0&limit=100';
 
     $.ajax({
         type: 'GET',
@@ -762,7 +762,7 @@ function api_put_path( path_obj ) {
 // 
 function api_post_gNB( gNB_obj ) {
     
-    var url = app.api_url + '/gNBs/';
+    var url = app.api_url + '/gNBs';
 
     $.ajax({
         type: 'POST',
@@ -807,7 +807,7 @@ function api_post_cell( cell_obj ) {
 
     // console.log(cell_obj);
     
-    var url = app.api_url + '/Cells/';
+    var url = app.api_url + '/Cells';
 
     $.ajax({
         type: 'POST',
@@ -851,7 +851,7 @@ function api_post_UE( UE_obj ) {
 
     // console.log(cell_obj);
     
-    var url = app.api_url + '/UEs/';
+    var url = app.api_url + '/UEs';
 
     $.ajax({
         type: 'POST',
@@ -893,7 +893,7 @@ function api_post_UE( UE_obj ) {
 // 
 function api_post_path( path_obj ) {
     
-    var url = app.api_url + '/paths/';
+    var url = app.api_url + '/paths';
 
     $.ajax({
         type: 'POST',
