@@ -110,6 +110,10 @@ $( document ).ready(function() {
     start_events_refresh_interval();
     ui_add_select_listener_events_reload();
 
+
+    // in case the header-toggle button is pressed,
+    // the map container resizes and the map has to invalidateSize()
+    $('#mapid').resize(function(){mymap.invalidateSize()});
 });
 
 $( window ).resize(function() {

@@ -1353,7 +1353,7 @@ function ui_show_add_cell_modal(  ) {
 
     // refresh the gNB options in the select input
     $('#add_cell_gNB').empty(); // delete the old ones
-    $('#add_cell_gNB').append($('<option>', { value: -1, text: "none" })); // add a prompt
+    // $('#add_cell_gNB').append($('<option>', { value: -1, text: "none" })); // add a prompt
     $.each(gNBs, function (i, item) {
 
         var data = { 
