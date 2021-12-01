@@ -290,7 +290,7 @@ function ui_initialize_map() {
 // 
 function api_get_UEs() {
     
-    var url = app.api_url + '/UEs/?skip=0&limit=100';
+    var url = app.api_url + '/UEs?skip=0&limit=100';
 
     $.ajax({
         type: 'GET',
@@ -535,7 +535,7 @@ function fix_points_format( datapoints ) {
 // 
 function api_start_loop( ue ) {
 
-    var url = app.api_url + '/utils/start-loop/';
+    var url = app.api_url + '/utils/start-loop';
     var data = {
         "supi": ue.supi
     };
@@ -584,7 +584,7 @@ function api_start_loop( ue ) {
 // 
 function api_stop_loop( ue ) {
 
-    var url = app.api_url + '/utils/stop-loop/';
+    var url = app.api_url + '/utils/stop-loop';
     var data = {
         "supi": ue.supi
     };
