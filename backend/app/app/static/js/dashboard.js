@@ -1326,7 +1326,7 @@ function ui_show_edit_cell_modal( cell_id ) {
         17 // zoom level
     );
 
-    // add a solid-color small circle (dot) some meters away
+    // add a solid-color small circle (dot)
     edit_cell_circle_dot = L.circle([edit_cell_tmp_obj.latitude,(edit_cell_tmp_obj.new_longitude)], 2, {
         color: 'none',
         fillColor: '#2686de',
@@ -1381,12 +1381,38 @@ function ui_show_add_cell_modal(  ) {
         fillOpacity: 0.2
     }).addTo(add_cell_coverage_lg).addTo( add_cell_map );
 
-    // set bounds for view + zoom depending on the position of cells (if any)
-    if ( cells.length > 0 ){
+    // if cells have been added
+    // display them and
+    // set bounds for view + zoom depending on their position
+    if ( cells.length > 0 ) {
+
+        // iterate and add cells to map
+        for (const item of cells) {
+
+            // add a solid-color small circle (dot)
+            L.circle([item.latitude,(item.longitude)], 2, {
+                color: 'none',
+                fillColor: '#2686de',
+                fillOpacity: 1.0
+            }).addTo(add_cell_coverage_lg).addTo( add_cell_map );
+        
+            // add a transparent circle for coverage 
+            L.circle([item.latitude,(item.longitude)], item.radius, {
+                color: 'none',
+                fillColor: '#2686de',
+                fillOpacity: 0.2
+            }).addTo(add_cell_coverage_lg).addTo( add_cell_map );
+        }
+        
+
+        // set map bounds
         var map_bounds     = helper_calculate_map_bounds_from_cells();            
         var leaflet_bounds = new L.LatLngBounds(map_bounds);
 
         add_cell_map.fitBounds( leaflet_bounds );
+
+        // fix high zoom level edge-case
+        if (add_cell_map.getZoom() > 17) { add_cell_map.setZoom(17); } 
     }
 }
 
