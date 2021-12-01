@@ -74,7 +74,7 @@ def read_qos_active_profiles(
 
 
 
-@router.get("/qosRules/{supi}")
+@router.get("/qosRules/{supi}", deprecated=True)
 def read_qos_active_rules(
     *,
     supi: str = Path(..., title="The subscription unique permanent identifier (SUPI) of the UE", example="202010000000001"),
