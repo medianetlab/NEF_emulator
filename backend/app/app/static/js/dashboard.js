@@ -2448,6 +2448,10 @@ function ui_add_path_modal_add_listeners() {
     $('#add_path_reset').on('click', function(){
         ui_add_path_modal_reset_form();
     });
+
+    $('#add_path_modal').on('hide.coreui.modal', function (event) {
+        ui_add_path_modal_reset_form();
+    });
 }
 
 
@@ -2552,3 +2556,6 @@ function generate_coords_between_points(φ1, λ1, φ2, λ2){
         opacity: 0.2
     }).addTo( add_path_path_lg ).addTo( add_path_map );
 }
+
+
+
