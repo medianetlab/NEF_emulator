@@ -1380,6 +1380,14 @@ function ui_show_add_cell_modal(  ) {
         fillColor: '#2686de',
         fillOpacity: 0.2
     }).addTo(add_cell_coverage_lg).addTo( add_cell_map );
+
+    // set bounds for view + zoom depending on the position of cells (if any)
+    if ( cells.length > 0 ){
+        var map_bounds     = helper_calculate_map_bounds_from_cells();            
+        var leaflet_bounds = new L.LatLngBounds(map_bounds);
+
+        add_cell_map.fitBounds( leaflet_bounds );
+    }
 }
 
 
