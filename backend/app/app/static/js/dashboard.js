@@ -426,6 +426,7 @@ function api_delete_gNB( gNB_id ) {
             helper_delete_gNB( gNB_id );
             helper_create_db_id_to_gNB_id_bindings();
             gNBs_datatable.clear().rows.add( gNBs ).draw();
+            ui_update_card( '#num-gnbs-card' , gNBs.length );
         },
         error: function(err)
         {
@@ -466,6 +467,7 @@ function api_delete_cell( cell_id ) {
             
             helper_delete_cell( cell_id );
             cells_datatable.clear().rows.add( cells ).draw();
+            ui_update_card( '#num-cells-card' , cells.length );
         },
         error: function(err)
         {
@@ -505,8 +507,8 @@ function api_delete_UE( UE_supi ) {
             ui_display_toast_msg("success", "Success!", "The UE has been permanently deleted");
             
             helper_delete_UE( UE_supi );
-            // helper_create_db_id_to_UE_id_bindings();
             ues_datatable.clear().rows.add( ues ).draw();
+            ui_update_card( '#num-UEs-card' , ues.length );
         },
         error: function(err)
         {
@@ -547,6 +549,7 @@ function api_delete_path( path_id ) {
             
             helper_delete_path( path_id );
             paths_datatable.clear().rows.add( paths ).draw();
+            ui_update_card( '#num-paths-card' , paths.length );
         },
         error: function(err)
         {
@@ -781,6 +784,7 @@ function api_post_gNB( gNB_obj ) {
             gNBs.push(data);
             helper_create_db_id_to_gNB_id_bindings();
             gNBs_datatable.clear().rows.add( gNBs ).draw();
+            ui_update_card( '#num-gnbs-card' , gNBs.length );
         },
         error: function(err)
         {
@@ -823,8 +827,8 @@ function api_post_cell( cell_obj ) {
             ui_display_toast_msg("success", "Success!", "The Cell has been created");
             
             cells.push(data);
-            // helper_create_db_id_to_gNB_id_bindings();
             cells_datatable.clear().rows.add( cells ).draw();
+            ui_update_card( '#num-cells-card' , cells.length );
         },
         error: function(err)
         {
@@ -867,8 +871,8 @@ function api_post_UE( UE_obj ) {
             ui_display_toast_msg("success", "Success!", "The UE has been created");
             
             ues.push(data);
-            // helper_create_db_id_to_gNB_id_bindings();
             ues_datatable.clear().rows.add( ues ).draw();
+            ui_update_card( '#num-UEs-card' , ues.length );
         },
         error: function(err)
         {
@@ -911,6 +915,7 @@ function api_post_path( path_obj ) {
             paths.push(data);
             paths_datatable.clear().rows.add( paths ).draw();
             ui_add_path_modal_reset_form();
+            ui_update_card( '#num-paths-card' , paths.length );
         },
         error: function(err)
         {
