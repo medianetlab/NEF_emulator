@@ -1268,7 +1268,7 @@ function ui_show_edit_cell_modal( cell_id ) {
 
     // prepare new location values
     edit_cell_tmp_obj["new_latitude"]  = edit_cell_tmp_obj.latitude;
-    edit_cell_tmp_obj["new_longitude"] = edit_cell_tmp_obj.longitude + 0.001; // shift it a little bit right
+    edit_cell_tmp_obj["new_longitude"] = edit_cell_tmp_obj.longitude; // use  + 0.001 to shift it a little bit right
     edit_cell_tmp_obj["new_radius"]    = edit_cell_tmp_obj.radius;
     
     // load values to the input fields
