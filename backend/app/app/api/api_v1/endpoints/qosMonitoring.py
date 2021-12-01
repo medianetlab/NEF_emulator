@@ -7,9 +7,9 @@ from pymongo.database import Database
 from sqlalchemy.orm import Session
 from app import models, schemas
 from app.api import deps
-from app.core.config import qosSettings
 from app.crud import crud_mongo, user, ue
-from app.api.api_v1.endpoints.utils import add_notifications
+from .utils import add_notifications
+from .qosInformation import qos_reference_match
 
 router = APIRouter()
 db_collection= 'QoSMonitoring'
@@ -83,7 +83,7 @@ def create_subscription(
     
     #Create the document in mongodb
 
-    send_qos_gnb(item_in.qosReference, qosSettings.retrieve_settings(), db_mongo, UE) ##Validate if qos reference matches any of the standardized 5qi values and create/send the QoS Profile to NG-RAN
+    send_qos_gnb(item_in.qosReference, db_mongo, UE) ##Validate if qos reference matches any of the standardized 5qi values and create/send the QoS Profile to NG-RAN
 
     json_data = jsonable_encoder(item_in.dict(exclude_unset=True))
     json_data.update({'owner_id' : current_user.id})
@@ -220,23 +220,11 @@ def delete_subscription(
 #3GPP terminology: 
 #The Session Management Function (SMF) sends the QoS Profile to NG-RAN (gNB) 
 #after the PDU Session Establishment request from the UE 
-    
-def send_qos_gnb(qos_reference, qos_characteristics, db, ue):
-    
-    qos_profile = {}
-        
-    #Load the standardized 5qi values
-    qos_5qi = qos_characteristics.get('5qi')
 
-    #Find the matched 5qi value
-    for q in qos_5qi:
-        if q.get('value') == qos_reference:
-            qos_profile = q.copy()
-            print(qos_profile)
-
-    if not qos_profile:
-        raise HTTPException(status_code=400, detail=f"The 5QI (qosReference) {qos_reference} does not exist")
+def send_qos_gnb(qos_reference, db, ue):
     
+    qos_profile = qos_reference_match(qos_reference)
+
     #Check if the QoS profile already exists in gNB
 
     retrieved_doc = crud_mongo.read_gNB_qosprofile(db, 'QoSProfile', ue.Cell.gNB.gNB_id, qos_reference)

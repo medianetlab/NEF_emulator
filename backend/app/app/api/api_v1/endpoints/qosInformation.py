@@ -1,16 +1,32 @@
-import logging
-from typing import Any, List
+from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Path, Request
-from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pymongo.database import Database
 from sqlalchemy.orm.session import Session
 
-from app import models, schemas
+from app import models
 from app.api import deps
 from app.core.config import qosSettings
 from app.crud import crud_mongo, user, gnb
-from app.api.api_v1.endpoints.utils import add_notifications
+
+def qos_reference_match(qos_reference):
+    
+    qos_standardized = qosSettings.retrieve_settings()
+    qos_characteristics = {}
+        
+    #Load the standardized 5qi values
+    qos_5qi = qos_standardized.get('5qi')
+
+    #Find the matched 5qi value
+    for q in qos_5qi:
+        if q.get('value') == qos_reference:
+            qos_characteristics = q.copy()
+            print(qos_characteristics)
+    
+    if not qos_characteristics:
+        raise HTTPException(status_code=400, detail=f"The 5QI (qosReference) {qos_reference} does not exist")
+    else:
+        return qos_characteristics
 
 router = APIRouter()
 
@@ -28,9 +44,7 @@ def read_qos_characteristics(
     if not json_data:
         raise HTTPException(status_code=404, detail="There are no available QoS Characteristics")
     else:
-        http_response = JSONResponse(content=json_data, status_code=200)
-        add_notifications(http_request, http_response, False)
-        return http_response
+        return json_data
     
 
 @router.get("/qosProfiles/{gNB_id}")
@@ -56,9 +70,7 @@ def read_qos_active_profiles(
     if not retrieved_doc:
         raise HTTPException(status_code=404, detail=f"No QoS profiles for gNB {gNB.gNB_id}")
     else:
-        http_response = JSONResponse(content=retrieved_doc, status_code=200)
-        add_notifications(http_request, http_response, False)
-        return http_response
+        return retrieved_doc
 
 
 

@@ -69,9 +69,10 @@ class UserPlaneEvent(str, Enum):
     gqos = "QOS_GUARANTEED"
     gqos_false = "QOS_NOT_GUARANTEED" 
     qosMon = "QOS_MONITORING"
+    usage_rep = "USAGE_REPORT"
     
 class UserPlaneEventReport(BaseModel):
-    event: UserPlaneEvent
+    event: UserPlaneEvent = Field(..., description="""- QOS_GUARANTEED: The QoS targets of one or more SDFs are guaranteed again. - QOS_NOT_GUARANTEED: The QoS targets of one or more SDFs are not being guaranteed. - USAGE_REPORT: Indicates the usage report event. - QOS_MONITORING: Indicates a QoS monitoring event""")
     accumulatedUsage: Optional[AccumulatedUsage]
     appliedQosRef: str = Field(None, description="The current applied QoS reference. Applicable for event QoS_NOT_GUARANTEED")
     qosMonReports: List[QoSMonitoringReport] = Field(None, description="Contains the QoS Monitoring Reporting information")

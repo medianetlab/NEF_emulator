@@ -1,5 +1,6 @@
 from datetime import datetime
 import threading, logging, time, requests
+from pymongo import MongoClient
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from fastapi.responses import JSONResponse
@@ -13,6 +14,8 @@ from app.schemas import monitoringevent
 from app.tools.distance import check_distance
 from app.tools.send_callback import location_callback
 from app import tools
+from app.crud import crud_mongo
+from .qosInformation import qos_reference_match
 
 #Dictionary holding threads that are running per user id.
 threads = {}
@@ -115,6 +118,9 @@ class BackgroundTasks(threading.Thread):
                                 crud.monitoring.remove(db=db, id=sub.id)
                                 logging.warning("Subscription has expired (expiration date)")
 
+                        #QoS Monitoring Event (handover)
+                        qos_notification_control(current_user, UE.ip_address_v4)
+                    
                     # logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
                     
                     if UE.speed == 'LOW':
@@ -182,6 +188,31 @@ def add_notifications(request: Request, response: JSONResponse, is_notification:
     return json_data
 
 
+def qos_notification_control(current_user, ipv4):
+    client = MongoClient("mongodb://mongo:27017", username='root', password='pass')
+    db = client.fastapi
+
+    doc = crud_mongo.read(db, 'QoSMonitoring', 'ipv4Addr', ipv4)
+
+    #Check if the document exists
+    if not doc:
+        logging.info("Subscription not found")
+        return
+    #If the document exists then validate the owner
+    if not crud.user.is_superuser(current_user) and (doc['owner_id'] != current_user.id):
+        logging.info("Not enough permissions")
+        return
+    
+    qos_standardized = qos_reference_match(doc.get('qosReference'))
+
+    if qos_standardized.get('type') == 'GBR' or qos_standardized.get('type') == 'DC-GBR':
+        logging.critical('GBR subscription')
+    else:
+        logging.critical('Non-GBR subscription')
+
+    return
+
+    
 router = APIRouter()
 
 
