@@ -54,6 +54,12 @@ def create_subscription(
     http_request: Request
 ) -> Any:
     
+    #Currently only EVENT_TRIGGERED is supported
+
+    if 'EVENT_TRIGGERED' not in jsonable_encoder(item_in)['qosMonInfo']['repFreqs']:
+        raise HTTPException(status_code=400, detail="Only 'EVENT_TRIGGERED' reporting frequency is supported at the current version. Please enter 'EVENT_TRIGGERED' in repFreqs field")
+        
+    
     #Ensure that the user sends only one of the ipv4, ipv6, macAddr fields
     validate_ids(item_in.dict(exclude_unset=True))
 
