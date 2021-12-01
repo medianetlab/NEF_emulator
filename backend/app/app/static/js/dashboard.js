@@ -14,9 +14,6 @@ var ues_datatable   = null;
 var paths_datatable = null;
 
 
-
-
-
 // templates for buttons added to datatbles rows (DELETE / EDIT)
 // =============================================================
 // delete gNB
@@ -78,8 +75,6 @@ var edit_path_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="butto
 </button>`;
 
 
-
-
 // gNB modals initialization and helper variables
 // ==============================================
     var  del_gNB_modal = new coreui.Modal(document.getElementById( 'del_gNB_modal'), {});
@@ -112,7 +107,6 @@ var edit_path_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="butto
     var add_cell_circle_cov  = null;           // large transparent circle depicting the coverage of the above cell
 
 
-
 // UE modals initialization and helper variables
 // ===============================================
     var  del_UE_modal    = new coreui.Modal(document.getElementById( 'del_UE_modal'), {});
@@ -132,7 +126,6 @@ var edit_path_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="butto
     var add_UE_position_lg  = L.layerGroup(); // map layer group for UEs
     var add_UE_path_lg      = L.layerGroup(); // map layer group for paths
     var add_UE_circle_dot   = null;           // small circle depicting the position of the UE (to be edited)
-
 
 
 // path modals initialization and helper variables
@@ -167,15 +160,6 @@ var edit_path_btn_tpl = `<button class="btn btn-sm btn-outline-dark" type="butto
 // ===============================================
 
 
-
-
-
-
-
-
-
-
-
 // ===============================================
 //                 Document ready
 // ===============================================
@@ -201,7 +185,6 @@ $( document ).ready(function() {
         ui_add_btn_listeners_for_cells_CUD_operations();
         ui_add_btn_listeners_for_UEs_CUD_operations();
         ui_add_btn_listeners_for_paths_CUD_operations();
-
 
 
     // =========================================================
@@ -249,6 +232,17 @@ $( document ).ready(function() {
 
 
 
+
+
+
+
+
+
+
+// ===============================================
+//                 API functions
+// ===============================================
+
 // Ajax request to get gNBs data
 // on success: update the card at the top of the page
 // and fill the datatable with values
@@ -287,7 +281,6 @@ function api_get_gNBs() {
         timeout: 5000
     });
 }
-
 
 
 // Ajax request to get Cells data
@@ -366,7 +359,6 @@ function api_get_UEs() {
         timeout: 5000
     });
 }
-
 
 
 // Ajax request to get Paths data
@@ -618,7 +610,6 @@ function api_put_gNB( gNB_obj ) {
 }
 
 
-
 // Ajax request to update gNB
 // on success: update it inside datatables too
 // 
@@ -713,7 +704,6 @@ function api_put_UE( UE_obj ) {
         timeout: 5000
     });
 }
-
 
 
 // Ajax request to update path
@@ -850,7 +840,6 @@ function api_post_cell( cell_obj ) {
 }
 
 
-
 // Ajax request to create UE
 // on success: add it inside datatables too
 // 
@@ -972,8 +961,6 @@ function api_get_state_loop_for( UE_supi ) {
 }
 
 
-
-
 // Ajax request to get specific Path data
 // on success: callback()
 // 
@@ -1009,16 +996,21 @@ function api_get_specific_path_callback( id, callback  ) {
         timeout: 5000
     });
 }
+// ===============================================
+//            End of API functions
+// ===============================================
 
 
 
 
 
-// Helper function to update the numbers displayed on every card
-// 
-function ui_update_card( element_id, number ) {
-    $( element_id ).html(number);
-}
+
+
+
+
+
+
+
 
 
 
@@ -1142,7 +1134,6 @@ function ui_init_datatable_UEs() {
 }
 
 
-
 function ui_init_datatable_paths() {
     paths_datatable = $('#dt-paths').DataTable( {
         data: paths,
@@ -1174,7 +1165,33 @@ function ui_init_datatable_paths() {
         ]
     } );
 }
+// ===============================================
+//           End of Datatable functions
+// ===============================================
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ===============================================
+//                  UI functions
+// ===============================================
+
+// updates the numbers displayed on every card
+// 
+function ui_update_card( element_id, number ) {
+    $( element_id ).html(number);
+}
 
 function ui_display_toast_msg( type, title, text ) {
     toastr_options = {
@@ -1185,8 +1202,6 @@ function ui_display_toast_msg( type, title, text ) {
     };
     toastr[type](text, title, toastr_options);
 }
-
-
 
 
 function ui_show_delete_gNB_modal( gNB_id ) {
@@ -1230,6 +1245,7 @@ function ui_show_delete_cell_modal( cell_id ) {
     del_cell_modal.show();
 
 }
+
 
 // shows modal for editing cells
 // looks up for the specific cell and loads its details to the form fields
@@ -1320,6 +1336,7 @@ function ui_show_edit_cell_modal( cell_id ) {
     }).addTo(edit_cell_coverage_lg).addTo( edit_cell_map );
 }
 
+
 function ui_show_add_cell_modal(  ) {
 
     if (gNBs.length == 0) {
@@ -1361,12 +1378,12 @@ function ui_show_add_cell_modal(  ) {
 }
 
 
-
 function ui_show_delete_UE_modal( UE_id ) {
 
     UE_to_be_deleted = UE_id;
     del_UE_modal.show();
 }
+
 
 // shows modal for editing UEs
 // looks up for the specific UE and loads its details to the form fields
@@ -1489,6 +1506,7 @@ function ui_show_delete_path_modal( path_id ) {
 
 }
 
+
 // shows modal for editing paths
 // looks up for the specific path and loads its details to the form fields
 //   - the user is allowed to modify only Description and color
@@ -1545,7 +1563,6 @@ function ui_show_edit_path_modal( path_id ) {
 }
 
 
-
 // shows modal for adding paths
 // 
 // 
@@ -1579,218 +1596,7 @@ function ui_show_add_path_modal() {
     }
 
     add_path_map.invalidateSize(); // this helps the map display its tiles correctly after the size of the modal is finalized
-    
-
-    // paint the current path of the path
-    // api_get_specific_path_callback( add_path_tmp_obj.id, function(data){
-    //     // console.log(data);
-    //     add_path_tmp_points = data;
-    //     ui_map_paint_path(data, add_path_map, add_path_path_lg);
-    // });
-
-    // add a solid-color small circle (dot) at the start lat,lon
-    // L.circle([add_path_tmp_obj.start_point.latitude,add_path_tmp_obj.start_point.longitude], 1, {
-    //     color: 'none',
-    //     fillColor: '#3590e2',
-    //     fillOpacity: 1.0
-    // }).addTo(add_path_points_lg ).addTo( add_path_map );
-    // add a solid-color small circle (dot) at the end lat,lon
 }
-// ===============================================
-
-
-
-// iterates through the gNB list
-// and returns a copy of the gNB object with the gNB_id provided
-// (if not found it returns null)
-// 
-function helper_find_gNB( gNB_id ) {
-    for (const item of gNBs) {
-        if ( item.gNB_id == gNB_id ) {
-            return JSON.parse(JSON.stringify( item )); // return a copy of the item
-        }
-    }
-    return null;
-}
-
-
-// iterates through the gNB list
-// and updates (if found) the gNB object provided
-//
-function helper_update_gNB( gNB_obj ) {
-
-    for (i=0 ; i<gNBs.length ; i++) {
-        if ( gNBs[i].id == gNB_obj.id ) {
-            gNBs[i] = JSON.parse(JSON.stringify( gNB_obj )); // found, updated
-        }
-    }
-}
-
-// iterates through the gNB list
-// and removes (if found) the gNB_id provided
-// 
-function helper_delete_gNB( gNB_id ) {
-
-    var i = gNBs.length;
-    while (i--) {
-        if ( gNBs[i].gNB_id == gNB_id ) {
-            gNBs.splice(i, 1);
-        }
-    }
-}
-
-
-
-// iterates through the cells list
-// and removes (if found) the cell_id provided
-// 
-function helper_delete_cell( cell_id ) {
-
-    var i = cells.length;
-    while (i--) {
-        if ( cells[i].cell_id == cell_id ) {
-            cells.splice(i, 1);
-        }
-    }
-}
-
-
-// iterates through the UEs list
-// and removes (if found) the supi provided
-// 
-function helper_delete_UE( UE_supi ) {
-
-    var i = ues.length;
-    while (i--) {
-        if ( ues[i].supi == UE_supi ) {
-            ues.splice(i, 1);
-        }
-    }
-}
-
-
-// iterates through the paths list
-// and removes (if found) the path_id provided
-// 
-function helper_delete_path( path_id ) {
-
-    var i = paths.length;
-    while (i--) {
-        if ( paths[i].id == path_id ) {
-            paths.splice(i, 1);
-        }
-    }
-}
-
-// iterates through the cells list
-// and returns a copy of the cell object with the cell_id provided
-// (if not found it returns null)
-// 
-function helper_find_cell( cell_id ) {
-    for (const item of cells) {
-        if ( item.cell_id == cell_id ) {
-            return JSON.parse(JSON.stringify( item )); // return a copy of the item
-        }
-    }
-    return null;
-}
-
-// iterates through the cell list
-// and updates (if found) the cell oject provided
-//
-function helper_update_cell( cell_obj ) {
-
-    for (i=0 ; i<cells.length ; i++) {
-        if ( cells[i].id == cell_obj.id ) {
-            cells[i] = JSON.parse(JSON.stringify( cell_obj )); // found, updated
-        }
-    }
-}
-
-
-// iterates through the UE list
-// and returns a copy of the UE object with the UE_id provided
-// (if not found it returns null)
-// 
-function helper_find_UE( UE_supi ) {
-    for (const item of ues) {
-        if ( item.supi == UE_supi ) {
-            return JSON.parse(JSON.stringify( item )); // return a copy of the item
-        }
-    }
-    return null;
-}
-
-// iterates through the UE list
-// and updates (if found) the UE object provided
-//
-function helper_update_UE( UE_obj ) {
-
-    for (i=0 ; i<ues.length ; i++) {
-        if ( ues[i].id == UE_obj.id ) {
-            ues[i] = JSON.parse(JSON.stringify( UE_obj )); // found, updated
-        }
-    }
-}
-
-
-// iterates through the path list
-// and returns a copy of the path object with the path_id provided
-// (if not found it returns null)
-// 
-function helper_find_path( path_id ) {
-    console.log(path_id);
-    for (const item of paths) {
-        if ( item.id == path_id ) {
-            console.log(item);
-            return JSON.parse(JSON.stringify( item )); // return a copy of the item
-        }
-    }
-    return null;
-}
-
-// iterates through the path list
-// and updates (if found) the path object provided
-//
-function helper_update_path( path_obj ) {
-
-    for (i=0 ; i<paths.length ; i++) {
-        if ( paths[i].id == path_obj.id ) {
-            console.log(paths[i]);
-            paths[i] = JSON.parse(JSON.stringify( path_obj )); // found, updated
-        }
-    }
-}
-
-
-
-function helper_create_db_id_to_gNB_id_bindings() {
-
-    // reset
-    db_ID_to_gNB_id = {};
-
-    // reload
-    $.each(gNBs, function (i, item) {
-        db_ID_to_gNB_id[ item.id.toString() ] = item.gNB_id;
-    });
-}
-
-
-
-
-// helper function to return an array of latitude,longitude pairs
-// that will be later used by leaflet to set bounds to a map
-// 
-function helper_calculate_map_bounds_from_cells(  ) {
-    
-    var map_bounds = [];
-
-    for (const item of cells) {
-        map_bounds.push( [ item.latitude, item.longitude ] );
-    }
-    return map_bounds;
-}
-
 
 
 // adds listeners for CUD operations regarding gNBs
@@ -1837,7 +1643,6 @@ function ui_add_btn_listeners_for_gNBs_CUD_operations() {
         del_gNB_modal.hide();
     }); 
 }
-
 
 
 function ui_add_btn_listeners_for_cells_CUD_operations() {
@@ -1888,7 +1693,6 @@ function ui_add_btn_listeners_for_cells_CUD_operations() {
         edit_cell_modal.hide();
     });
 }
-
 
 
 function ui_add_btn_listeners_for_UEs_CUD_operations() {
@@ -1955,7 +1759,6 @@ function ui_add_btn_listeners_for_UEs_CUD_operations() {
 }
 
 
-
 function ui_add_btn_listeners_for_paths_CUD_operations() {
 
     // CREATE
@@ -1999,7 +1802,6 @@ function ui_add_btn_listeners_for_paths_CUD_operations() {
 
     
 }
-
 
 
 function ui_initialize_edit_cell_map() {
@@ -2070,7 +1872,6 @@ function ui_initialize_edit_UE_map() {
 }
 
 
-
 function ui_initialize_add_UE_map() {
 
     // set map height
@@ -2104,7 +1905,6 @@ function ui_initialize_add_UE_map() {
 
     
 }
-
 
 
 function ui_initialize_add_cell_map() {
@@ -2141,7 +1941,6 @@ function ui_initialize_add_cell_map() {
 }
 
 
-
 function ui_initialize_edit_path_map() {
 
     // set map height
@@ -2174,8 +1973,6 @@ function ui_initialize_edit_path_map() {
     L.control.layers(baseLayers, overlays).addTo(edit_path_map);
 
 }
-
-
 
 
 function ui_initialize_add_path_map() {
@@ -2336,7 +2133,6 @@ function ui_add_cell_modal_add_listeners() {
 }
 
 
-
 function ui_edit_UE_modal_add_listeners() {
 
     $('#edit_UE_path').on('change', function(){
@@ -2356,6 +2152,7 @@ function ui_edit_UE_modal_add_listeners() {
         });
     });
 }
+
 
 function ui_add_UE_modal_add_listeners() {
 
@@ -2377,7 +2174,6 @@ function ui_add_UE_modal_add_listeners() {
         });
     });
 }
-
 
 
 function ui_edit_path_modal_add_listeners() {
@@ -2407,7 +2203,6 @@ function ui_edit_path_modal_add_listeners() {
     });
 
 }
-
 
 
 function ui_add_path_modal_add_listeners() {
@@ -2455,8 +2250,6 @@ function ui_add_path_modal_add_listeners() {
 }
 
 
-
-
 // Adds a path polyline to the leaflet js map
 // to the specified layer.
 // Calls a helper function "fix_points_format()"
@@ -2469,6 +2262,206 @@ function ui_map_paint_path( data, map, layer ) {
         color: data.color,
         opacity: 0.2
     }).addTo( layer ).addTo(map);
+}
+// ===============================================
+//               End of UI functions
+// ===============================================
+
+
+// ===============================================
+//                Helper functions
+// ===============================================
+
+// iterates through the gNB list
+// and returns a copy of the gNB object with the gNB_id provided
+// (if not found it returns null)
+// 
+function helper_find_gNB( gNB_id ) {
+    for (const item of gNBs) {
+        if ( item.gNB_id == gNB_id ) {
+            return JSON.parse(JSON.stringify( item )); // return a copy of the item
+        }
+    }
+    return null;
+}
+
+
+// iterates through the gNB list
+// and updates (if found) the gNB object provided
+//
+function helper_update_gNB( gNB_obj ) {
+
+    for (i=0 ; i<gNBs.length ; i++) {
+        if ( gNBs[i].id == gNB_obj.id ) {
+            gNBs[i] = JSON.parse(JSON.stringify( gNB_obj )); // found, updated
+        }
+    }
+}
+
+
+// iterates through the gNB list
+// and removes (if found) the gNB_id provided
+// 
+function helper_delete_gNB( gNB_id ) {
+
+    var i = gNBs.length;
+    while (i--) {
+        if ( gNBs[i].gNB_id == gNB_id ) {
+            gNBs.splice(i, 1);
+        }
+    }
+}
+
+
+// iterates through the cells list
+// and removes (if found) the cell_id provided
+// 
+function helper_delete_cell( cell_id ) {
+
+    var i = cells.length;
+    while (i--) {
+        if ( cells[i].cell_id == cell_id ) {
+            cells.splice(i, 1);
+        }
+    }
+}
+
+
+// iterates through the UEs list
+// and removes (if found) the supi provided
+// 
+function helper_delete_UE( UE_supi ) {
+
+    var i = ues.length;
+    while (i--) {
+        if ( ues[i].supi == UE_supi ) {
+            ues.splice(i, 1);
+        }
+    }
+}
+
+
+// iterates through the paths list
+// and removes (if found) the path_id provided
+// 
+function helper_delete_path( path_id ) {
+
+    var i = paths.length;
+    while (i--) {
+        if ( paths[i].id == path_id ) {
+            paths.splice(i, 1);
+        }
+    }
+}
+
+
+// iterates through the cells list
+// and returns a copy of the cell object with the cell_id provided
+// (if not found it returns null)
+// 
+function helper_find_cell( cell_id ) {
+    for (const item of cells) {
+        if ( item.cell_id == cell_id ) {
+            return JSON.parse(JSON.stringify( item )); // return a copy of the item
+        }
+    }
+    return null;
+}
+
+
+// iterates through the cell list
+// and updates (if found) the cell oject provided
+//
+function helper_update_cell( cell_obj ) {
+
+    for (i=0 ; i<cells.length ; i++) {
+        if ( cells[i].id == cell_obj.id ) {
+            cells[i] = JSON.parse(JSON.stringify( cell_obj )); // found, updated
+        }
+    }
+}
+
+
+// iterates through the UE list
+// and returns a copy of the UE object with the UE_id provided
+// (if not found it returns null)
+// 
+function helper_find_UE( UE_supi ) {
+    for (const item of ues) {
+        if ( item.supi == UE_supi ) {
+            return JSON.parse(JSON.stringify( item )); // return a copy of the item
+        }
+    }
+    return null;
+}
+
+
+// iterates through the UE list
+// and updates (if found) the UE object provided
+//
+function helper_update_UE( UE_obj ) {
+
+    for (i=0 ; i<ues.length ; i++) {
+        if ( ues[i].id == UE_obj.id ) {
+            ues[i] = JSON.parse(JSON.stringify( UE_obj )); // found, updated
+        }
+    }
+}
+
+
+// iterates through the path list
+// and returns a copy of the path object with the path_id provided
+// (if not found it returns null)
+// 
+function helper_find_path( path_id ) {
+    console.log(path_id);
+    for (const item of paths) {
+        if ( item.id == path_id ) {
+            console.log(item);
+            return JSON.parse(JSON.stringify( item )); // return a copy of the item
+        }
+    }
+    return null;
+}
+
+
+// iterates through the path list
+// and updates (if found) the path object provided
+//
+function helper_update_path( path_obj ) {
+
+    for (i=0 ; i<paths.length ; i++) {
+        if ( paths[i].id == path_obj.id ) {
+            console.log(paths[i]);
+            paths[i] = JSON.parse(JSON.stringify( path_obj )); // found, updated
+        }
+    }
+}
+
+
+function helper_create_db_id_to_gNB_id_bindings() {
+
+    // reset
+    db_ID_to_gNB_id = {};
+
+    // reload
+    $.each(gNBs, function (i, item) {
+        db_ID_to_gNB_id[ item.id.toString() ] = item.gNB_id;
+    });
+}
+
+
+// helper function to return an array of latitude,longitude pairs
+// that will be later used by leaflet to set bounds to a map
+// 
+function helper_calculate_map_bounds_from_cells(  ) {
+    
+    var map_bounds = [];
+
+    for (const item of cells) {
+        map_bounds.push( [ item.latitude, item.longitude ] );
+    }
+    return map_bounds;
 }
 
 
@@ -2489,6 +2482,9 @@ function helper_fix_points_format( datapoints ) {
     }
     return fixed;
 }
+// ===============================================
+//             End of Helper functions
+// ===============================================
 
 
 
@@ -2501,7 +2497,12 @@ function helper_fix_points_format( datapoints ) {
 
 
 
-// ======================================================================
+
+
+
+// ===============================================
+//                  GEO functions
+// ===============================================
 
 
 // How to generate coordinates in between two known points
@@ -2557,5 +2558,6 @@ function generate_coords_between_points(φ1, λ1, φ2, λ2){
     }).addTo( add_path_path_lg ).addTo( add_path_map );
 }
 
-
-
+// ===============================================
+//               End of GEO functions
+// ===============================================
