@@ -103,6 +103,7 @@ def create_subscription(
         json_compatible_item_data.pop("id")
         link = str(http_request.url) + '/' + str(response.id)
         json_compatible_item_data["link"] = link
+        json_compatible_item_data["ipv4Addr"] = UE.ip_address_v4
         crud.monitoring.update(db=db, db_obj=response, obj_in={"link" : link})
         
         response_header = {"location" : link}

@@ -47,7 +47,7 @@ class MonitoringEventSubscriptionCreate(BaseModel):
 
 class MonitoringEventSubscription(MonitoringEventSubscriptionCreate):
     link: Optional[AnyHttpUrl] = Field("https://myresource.com", description="String identifying a referenced resource. This is also returned as a location header in 201 Created Response")
-    
+    ipv4Addr: Optional[IPvAnyAddress] = Field(None, description="String identifying an Ipv4 address")   
     class Config:
             orm_mode = True
 
