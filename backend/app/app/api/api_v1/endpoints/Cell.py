@@ -1,17 +1,13 @@
 from typing import Any, List
-
 from fastapi import APIRouter, Depends, HTTPException, Path
-from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
-
 from app import crud, models, schemas
 from app.api import deps
-from app.tools.distance import check_distance
 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[schemas.Cell])
+@router.get("", response_model=List[schemas.Cell])
 def read_Cells(
     db: Session = Depends(deps.get_db),
     skip: int = 0 ,
@@ -33,7 +29,7 @@ def read_Cells(
     return Cells
 
 
-@router.post("/", response_model=schemas.Cell)
+@router.post("", response_model=schemas.Cell)
 def create_Cell(
     *,
     db: Session = Depends(deps.get_db),
@@ -104,15 +100,19 @@ def read_Cell(
 def get_by_gNB_id(
     *,
     db: Session = Depends(deps.get_db),
-    gNB_id: int,
-    skip: int = 0,
-    limit: int = 100,
+    gNB_id: str = Path(..., description="The gNB id of the gNB in hexadecimal format", example='AAAAA1'),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
     Get Cells of specifc gNB.
     """
-    Cell = crud.cell.get_by_gNB_id(db=db, gNB_id=gNB_id, skip=skip, limit=limit)
+    gNB = crud.gnb.get_gNB_id(db=db, id=gNB_id)
+    if not gNB:
+        raise HTTPException(status_code=404, detail=f"gNB with id {gNB_id} not found")
+    if not crud.user.is_superuser(current_user) and (gNB.owner_id != current_user.id):
+        raise HTTPException(status_code=400, detail="Not enough permissions")
+
+    Cell = crud.cell.get_by_gNB_id(db=db, gNB_id=gNB.id)
     if not Cell:
         raise HTTPException(status_code=404, detail="Cell for specific gNB not found")
     if not crud.user.is_superuser(current_user) and (Cell.owner_id != current_user.id):

@@ -1,6 +1,5 @@
 import requests
 import json
-import logging
 
 def location_callback(UE_model, callbackurl, subscription):
     url = callbackurl
@@ -15,6 +14,48 @@ def location_callback(UE_model, callbackurl, subscription):
         "enodeBId": str(UE_model.Cell.gNB.gNB_id)
     }
     })
+    headers = {
+    'accept': 'application/json',
+    'Content-Type': 'application/json'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+    
+    return response
+
+def qos_callback(callbackurl, resource, qos_status, ipv4):
+    url = callbackurl
+
+    payload = json.dumps({
+    "transaction" : resource,
+    "ipv4Addr" : ipv4,
+    "eventReports": [
+    {
+      "event": qos_status,
+      "accumulatedUsage": {
+        "duration": None,
+        "totalVolume": None,
+        "downlinkVolume": None,
+        "uplinkVolume": None
+      },
+      "appliedQosRef": None,
+      "qosMonReports": [
+        {
+          "ulDelays": [
+            0
+          ],
+          "dlDelays": [
+            0
+          ],
+          "rtDelays": [
+            0
+          ]
+        }
+      ]
+    }]
+    })    
+    
+    
     headers = {
     'accept': 'application/json',
     'Content-Type': 'application/json'

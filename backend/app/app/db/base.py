@@ -1,7 +1,7 @@
 # Import all the models, so that Base has them before being
 # imported by Alembic
 from app.db.base_class import Base  # noqa
-from app.models.location_frontend import Path  # noqa
+from app.models.path import Path  # noqa
 from app.models.user import User  # noqa
 from app.models.gNB import gNB # gNB
 from app.models.Cell import Cell # Cell

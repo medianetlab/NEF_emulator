@@ -30,7 +30,7 @@ var UE_refresh_sec_default = 1000; // 1 sec
 var UE_refresh_sec         = -1;   // when select = "off" AND disabled = true
 
 // template for UE buttons
-var ue_btn_tpl = `<button class="btn btn-success px-4 btn-ue" type="button" id="btn-ue-{{id}}" data-supi={{supi}} data-running=false>{{name}}</button> `
+var ue_btn_tpl = `<button class="btn btn-success btn-sm px-4 btn-ue" type="button" id="btn-ue-{{id}}" data-supi={{supi}} data-running=false>{{name}}</button> `
 
 var looping_UEs = 0;
 
@@ -110,6 +110,10 @@ $( document ).ready(function() {
     start_events_refresh_interval();
     ui_add_select_listener_events_reload();
 
+
+    // in case the header-toggle button is pressed,
+    // the map container resizes and the map has to invalidateSize()
+    $('#mapid').resize(function(){mymap.invalidateSize()});
 });
 
 $( window ).resize(function() {
@@ -245,9 +249,6 @@ function reload_events_refresh_interval( new_option ) {
 //         initialize the Leaflet.js map 
 // ===============================================
 // 
-// TODO: calculate the center of the map depending on
-//       the cells positions.
-// 
 function ui_initialize_map() {
 
     // set map height
@@ -293,7 +294,7 @@ function ui_initialize_map() {
 // 
 function api_get_UEs() {
     
-    var url = app.api_url + '/UEs/?skip=0&limit=100';
+    var url = app.api_url + '/UEs?skip=0&limit=100';
 
     $.ajax({
         type: 'GET',
@@ -463,7 +464,7 @@ function ui_map_paint_Cells() {
 // 
 function api_get_specific_path( id ) {
     
-    var url = app.api_url + '/frontend/location/' + id;
+    var url = app.api_url + '/paths/' + id;
 
     $.ajax({
         type: 'GET',
@@ -504,7 +505,7 @@ function ui_map_paint_path( data ) {
 
     var latlng   = fix_points_format( data.points );
     var polyline = L.polyline(latlng, {
-        color: '#00a3cc',
+        color: data.color,
         opacity: 0.2
     }).addTo(paths_lg).addTo(mymap);
 }
@@ -538,7 +539,7 @@ function fix_points_format( datapoints ) {
 // 
 function api_start_loop( ue ) {
 
-    var url = app.api_url + '/utils/start-loop/';
+    var url = app.api_url + '/utils/start-loop';
     var data = {
         "supi": ue.supi
     };
@@ -587,7 +588,7 @@ function api_start_loop( ue ) {
 // 
 function api_stop_loop( ue ) {
 
-    var url = app.api_url + '/utils/stop-loop/';
+    var url = app.api_url + '/utils/stop-loop';
     var data = {
         "supi": ue.supi
     };

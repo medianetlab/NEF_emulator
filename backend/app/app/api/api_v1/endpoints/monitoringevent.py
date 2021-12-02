@@ -7,28 +7,9 @@ from sqlalchemy.orm import Session
 from app import crud, models, schemas
 from app.api import deps
 from app import tools
-from app.core.config import settings
 from app.api.api_v1.endpoints.utils import add_notifications
 
-
-def location_reporting(db: Session,  item_in_json: Any, user: models.User):
-    UE = crud.ue.get_ipv4(db=db, ipv4=item_in_json["ipv4Addr"], owner_id=user.id)
-    if not UE: 
-        raise HTTPException(status_code=409, detail="UE with this ipv4 doesn't exist")    
-    
-    if item_in_json["monitoringType"] == "LOCATION_REPORTING" and item_in_json["maximumNumberOfReports"]>0:
-        item_in_json["monitoringEventReport"] = {}
-        item_in_json["monitoringEventReport"]["locationInfo"] = {}
-        item_in_json["monitoringEventReport"]["monitoringType"] = {}
-        item_in_json["monitoringEventReport"]["locationInfo"]["cellId"] = {}
-        item_in_json["monitoringEventReport"]["locationInfo"]["enodeBId"] = {}        
-        item_in_json["monitoringEventReport"]["monitoringType"] = item_in_json["monitoringType"]
-        item_in_json["monitoringEventReport"]["locationInfo"]["cellId"] = UE.Cell_id
-        item_in_json["monitoringEventReport"]["locationInfo"]["enodeBId"] = UE.gNB_id
-        return item_in_json
-
 router = APIRouter()
-
 
 @router.get("/{scsAsId}/subscriptions", response_model=List[schemas.MonitoringEventSubscription], responses={204: {"model" : None}})
 def read_active_subscriptions(
@@ -98,6 +79,9 @@ def create_subscription(
     if not UE: 
         raise HTTPException(status_code=409, detail="UE with this external identifier doesn't exist")
     
+    if crud.monitoring.get_sub_externalId(db=db, externalId=item_in.externalId):
+        raise HTTPException(status_code=409, detail=f"There is already an active subscription for UE with external id {item_in.externalId}")
+    
     if item_in.monitoringType == "LOCATION_REPORTING" and item_in.maximumNumberOfReports == 1:
         
         json_compatible_item_data = {}
@@ -119,6 +103,7 @@ def create_subscription(
         json_compatible_item_data.pop("id")
         link = str(http_request.url) + '/' + str(response.id)
         json_compatible_item_data["link"] = link
+        json_compatible_item_data["ipv4Addr"] = UE.ip_address_v4
         crud.monitoring.update(db=db, db_obj=response, obj_in={"link" : link})
         
         response_header = {"location" : link}

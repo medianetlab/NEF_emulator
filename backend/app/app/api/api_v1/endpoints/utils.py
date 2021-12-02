@@ -1,5 +1,6 @@
 from datetime import datetime
 import threading, logging, time, requests
+from pymongo import MongoClient
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from fastapi.responses import JSONResponse
@@ -9,11 +10,12 @@ from sqlalchemy.util.langhelpers import counter
 from app.db.session import SessionLocal
 from app import models, schemas, crud
 from app.api import deps
-from app.schemas import monitoringevent 
-from app.utils import send_test_email
+from app.schemas import monitoringevent, UserPlaneNotificationData
 from app.tools.distance import check_distance
-from app.tools.send_callback import location_callback
+from app.tools.send_callback import location_callback, qos_callback
 from app import tools
+from app.crud import crud_mongo
+from .qosInformation import qos_reference_match
 
 #Dictionary holding threads that are running per user id.
 threads = {}
@@ -116,6 +118,16 @@ class BackgroundTasks(threading.Thread):
                                 crud.monitoring.remove(db=db, id=sub.id)
                                 logging.warning("Subscription has expired (expiration date)")
 
+                        #QoS Monitoring Event (handover)
+                        ues_connected = crud.ue.get_by_Cell(db=db, cell_id=UE.Cell_id)
+                        if len(ues_connected) > 1:
+                            gbr = 'QOS_NOT_GUARANTEED'
+                        else:
+                            gbr = 'QOS_GUARANTEED'
+
+                        logging.critical(gbr)
+                        qos_notification_control(gbr ,current_user, UE.ip_address_v4)
+                        
                     # logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
                     
                     if UE.speed == 'LOW':
@@ -150,10 +162,14 @@ def add_notifications(request: Request, response: JSONResponse, is_notification:
 
     #Find the service API 
     #Keep in mind that whether endpoint changes format, the following if statement needs review
-    #Since new APIs are added in the emulator, the if statement will expand. e.g.,   elif endpoint.find('qos') != -1: serviceAPI = "As Session With QoS"
+    #Since new APIs are added in the emulator, the if statement will expand
     endpoint = request.url.path
     if endpoint.find('monitoring') != -1:
         serviceAPI = "Monitoring Event API"
+    elif endpoint.find('session-with-qos') != -1:
+        serviceAPI = "AsSession With QoS API"
+    elif endpoint.find('qosInfo') != -1:
+        serviceAPI = "QoS Information"
 
     #Request body check and trim
     if(request.method == 'POST') or (request.method == 'PUT'):  
@@ -179,8 +195,48 @@ def add_notifications(request: Request, response: JSONResponse, is_notification:
     return json_data
 
 
+def qos_notification_control(gbr_status: str, current_user, ipv4):
+    client = MongoClient("mongodb://mongo:27017", username='root', password='pass')
+    db = client.fastapi
+
+    doc = crud_mongo.read(db, 'QoSMonitoring', 'ipv4Addr', ipv4)
+
+    #Check if the document exists
+    if not doc:
+        logging.info("Subscription not found")
+        return
+    #If the document exists then validate the owner
+    if not crud.user.is_superuser(current_user) and (doc['owner_id'] != current_user.id):
+        logging.info("Not enough permissions")
+        return
+    
+    qos_standardized = qos_reference_match(doc.get('qosReference'))
+
+    logging.critical(qos_standardized)
+    logging.critical(qos_standardized.get('type'))
+
+    if qos_standardized.get('type') == 'GBR' or qos_standardized.get('type') == 'DC-GBR':
+        try:
+            response = qos_callback(doc.get('notificationDestination'), doc.get('link'), gbr_status, ipv4)
+            logging.critical(response.json())
+        except requests.exceptions.ConnectionError as ex:
+            logging.critical("Failed to send the callback request")
+            logging.critical(ex) 
+    else:
+        logging.critical('Non-GBR subscription')
+
+    return
+
+    
 router = APIRouter()
 
+@router.post("/session-with-qos/callback")
+def create_item(item: UserPlaneNotificationData, request: Request):
+    logging.info(item.json())
+
+    http_response = JSONResponse(content={'ack' : 'TRUE'}, status_code=200)
+    add_notifications(request, http_response, True)
+    return http_response 
 
 @router.post("/monitoring/callback")
 def create_item(item: monitoringevent.MonitoringNotification, request: Request):
@@ -228,7 +284,7 @@ def get_last_notifications(
     
     return updated_notification
 
-@router.post("/start-loop/", status_code=200)
+@router.post("/start-loop", status_code=200)
 def initiate_movement(
     *,
     msg: schemas.Msg,
@@ -246,7 +302,7 @@ def initiate_movement(
     print(threads)
     return {"msg": "Loop started"}
 
-@router.post("/stop-loop/", status_code=200)
+@router.post("/stop-loop", status_code=200)
 def terminate_movement(
      *,
     msg: schemas.Msg,
@@ -273,11 +329,11 @@ def state_movement(
     """
     Get the state
     """
+    return {"running": retrieve_ue_state(supi, current_user.id)}
+
+def retrieve_ue_state(supi: str, user_id: int) -> bool: 
     try:
-        return {"running": threads[f"{supi}"][f"{current_user.id}"].is_alive()}
+        return threads[f"{supi}"][f"{user_id}"].is_alive()
     except KeyError as ke:
         print('Key Not Found in Threads Dictionary:', ke)
-        # raise HTTPException(status_code=200, detail="There is no thread running for this UE! Please initiate a new thread")
-        return {"running" : False}
-
-    
+        return False

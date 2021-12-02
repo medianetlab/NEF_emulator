@@ -11,34 +11,35 @@ class Point(BaseModel):
 
 class PathBase(BaseModel):
     description: Optional[str] = None
-    points: Optional[List[Point]] = None 
     start_point: Optional[Point] = None
     end_point: Optional[Point] = None
     color: Optional[str] = None
 
 # Properties to receive on item creation
 class PathCreate(PathBase):
-    pass
+    points: Optional[List[Point]] = None 
 
 
 # Properties to receive on item update
 class PathUpdate(PathBase):
-    pass
+    points: Optional[List[Point]] = None 
 
 
 # Properties shared by models stored in DB
 class PathInDBBase(PathBase):
     id: int
-    owner_id: int
 
     class Config: #this class is used to provide configurations to Pydantic
         orm_mode = True #instead of getting a value from a dict (Pydantic Model) {id = data["id"]} you can get it from an attribure (ORM Model) {id = data.id} 
 
 
-# Properties to return to client
-class Path(PathInDBBase):
-    pass
+# Properties to return to client (get all | skip points list)
+class Paths(PathInDBBase):
+    pass 
 
+# Properties to return to client (get by id)
+class Path(PathInDBBase):
+    points: Optional[List[Point]] = None 
 
 # Properties properties stored in DB
 class PathInDB(PathInDBBase):

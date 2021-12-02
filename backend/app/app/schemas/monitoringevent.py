@@ -39,7 +39,7 @@ class MonitoringEventSubscriptionCreate(BaseModel):
     #Remember, when you actually trying to access the database through CRUD methods you need to typecast the pydantic types to strings, int etc.
     # ipv4Addr: Optional[IPvAnyAddress] = Field(None, description="String identifying an Ipv4 address")    
     # ipv6Addr: Optional[IPvAnyAddress] = Field("0:0:0:0:0:0:0:1", description="String identifying an Ipv6 address. Default value ::1/128 (loopback)")
-    notificationDestination: AnyHttpUrl = "http://localhost:80/api/v1/utils/monitoring/callback" #Default value for development testing
+    notificationDestination: AnyHttpUrl = Field("http://localhost:80/api/v1/utils/monitoring/callback", description="Reference resource (URL) identifying service consumer's endpoint, in order to receive the asynchronous notification.") #Default value for development testing
     monitoringType: MonitoringType
     maximumNumberOfReports: Optional[int] = Field(None, description="Identifies the maximum number of event reports to be generated. Value 1 makes the Monitoring Request a One-time Request", ge=1)
     monitorExpireTime: Optional[datetime] = Field(None, description="Identifies the absolute time at which the related monitoring event request is considered to expire")
@@ -47,7 +47,7 @@ class MonitoringEventSubscriptionCreate(BaseModel):
 
 class MonitoringEventSubscription(MonitoringEventSubscriptionCreate):
     link: Optional[AnyHttpUrl] = Field("https://myresource.com", description="String identifying a referenced resource. This is also returned as a location header in 201 Created Response")
-    
+    ipv4Addr: Optional[IPvAnyAddress] = Field(None, description="String identifying an Ipv4 address")   
     class Config:
             orm_mode = True
 

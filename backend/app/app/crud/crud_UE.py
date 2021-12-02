@@ -1,13 +1,10 @@
 from typing import List
-from pydantic import IPvAnyAddress
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app.crud.base import CRUDBase
 from app.models.UE import UE
 from app.schemas.UE import UECreate, UEUpdate
-
-import logging
 
 class CRUD_UE(CRUDBase[UE, UECreate, UEUpdate]):
     def create_with_owner(
@@ -31,7 +28,7 @@ class CRUD_UE(CRUDBase[UE, UECreate, UEUpdate]):
             .all()
         )
 
-    def get_supi(self, db: Session, supi: str) -> UE: #Optionally, transfer this function in CRUDUE, since CRUDBase is for generic use, inherited from all the CRUD modules
+    def get_supi(self, db: Session, supi: str) -> UE: 
         return db.query(self.model).filter(self.model.supi == supi).first()
 
     def get_ipv4(
@@ -39,7 +36,25 @@ class CRUD_UE(CRUDBase[UE, UECreate, UEUpdate]):
     ) -> UE:
         return (
             db.query(self.model)
-            .filter(UE.ip_address_v4 == ipv4, UE.owner_id == owner_id) #Check also owner id in get_by_gNB, etc...
+            .filter(UE.ip_address_v4 == ipv4, UE.owner_id == owner_id)
+            .first()
+        )
+    
+    def get_ipv6(
+        self, db: Session, *, ipv6: str, owner_id: int
+    ) -> UE:
+        return (
+            db.query(self.model)
+            .filter(UE.ip_address_v6 == ipv6, UE.owner_id == owner_id) 
+            .first()
+        )
+
+    def get_mac(
+        self, db: Session, *, mac: str, owner_id: int
+    ) -> UE:
+        return (
+            db.query(self.model)
+            .filter(UE.mac_address == mac, UE.owner_id == owner_id) 
             .first()
         )
 
@@ -53,24 +68,20 @@ class CRUD_UE(CRUDBase[UE, UECreate, UEUpdate]):
         )
 
     def get_by_gNB(
-        self, db: Session, *, gNB_id: int, skip: int = 0, limit: int = 100
+        self, db: Session, *, gNB_id: int
     ) -> List[UE]:
         return (
             db.query(self.model)
             .filter(UE.gNB_id == gNB_id)
-            .offset(skip)
-            .limit(limit)
             .all()
         )
 
     def get_by_Cell(
-        self, db: Session, *, Cell_id: int, skip: int = 0, limit: int = 100
+        self, db: Session, *, cell_id: int
     ) -> List[UE]:
         return (
             db.query(self.model)
-            .filter(UE.Cell_id == Cell_id)
-            .offset(skip)
-            .limit(limit)
+            .filter(UE.Cell_id == cell_id)
             .all()
         )
 

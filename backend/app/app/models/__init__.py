@@ -1,4 +1,4 @@
-from .location_frontend import Path, Points
+from .path import Path, Points
 from .user import User
 from .Cell import Cell
 from .gNB import gNB
