@@ -1,7 +1,5 @@
 from typing import TYPE_CHECKING
-
-#from sqlalchemy import Boolean, Column, Integer, String
-from sqlalchemy import *
+from sqlalchemy import Column, Integer, String, Float, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -12,34 +10,24 @@ if TYPE_CHECKING:
     from .gNB import gNB  # noqa: F401
 
 
-
-
 class Cell(Base):
     # id for db/primary key
     id = Column(Integer, primary_key=True, index=True)
 
-    #id of each cell
+    #id of each cell in hexadecimal number
     cell_id = Column(String, index=True)
-
-    # Name of each UE
     name = Column(String, index=True)
-
-    # Description of each UE
     description = Column(String, index=True)
-
-    owner_id = Column(Integer, ForeignKey("user.id"))
-
-    # Relationship of owner -> 'User' Model
-    owner = relationship("User", back_populates="Cells")
-
-    ## Additional Columns
-    # For Cell
-
     latitude = Column(Float, index=True)
     longitude = Column(Float, index=True)
     radius = Column(Float, index=True)
+
+    #Foreign Keys
+    owner_id = Column(Integer, ForeignKey("user.id"))
     gNB_id = Column(Integer, ForeignKey("gnb.id"))
 
+    # Relationships
+    owner = relationship("User", back_populates="Cells")
     UE = relationship("UE", back_populates="Cell")
     gNB = relationship("gNB", back_populates="Cells")
 
