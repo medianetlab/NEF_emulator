@@ -54,10 +54,15 @@ def create_subscription(
     http_request: Request
 ) -> Any:
     
+    json_request = jsonable_encoder(item_in)
     #Currently only EVENT_TRIGGERED is supported
-
-    if 'EVENT_TRIGGERED' not in jsonable_encoder(item_in)['qosMonInfo']['repFreqs']:
-        raise HTTPException(status_code=400, detail="Only 'EVENT_TRIGGERED' reporting frequency is supported at the current version. Please enter 'EVENT_TRIGGERED' in repFreqs field")
+    fiveG_qi = qos_reference_match(item_in.qosReference)
+    if fiveG_qi.get('type') == 'GBR' or fiveG_qi.get('type') == 'DC-GBR':
+        if (json_request['qosMonInfo'] == None) or (json_request['qosMonInfo']['repFreqs'] == None):
+            raise HTTPException(status_code=400, detail="Please enter a value in repFreqs field")
+        else:
+            if 'EVENT_TRIGGERED' not in json_request['qosMonInfo']['repFreqs']:
+                raise HTTPException(status_code=400, detail="Only 'EVENT_TRIGGERED' reporting frequency is supported at the current version. Please enter 'EVENT_TRIGGERED' in repFreqs field")
         
     
     #Ensure that the user sends only one of the ipv4, ipv6, macAddr fields
@@ -241,7 +246,7 @@ def send_qos_gnb(qos_reference, db, ue):
     #Create a new QoS Profile in NG_RAN
     qos_profile.update({"gNB_id" : ue.Cell.gNB.gNB_id})
     crud_mongo.create(db, 'QoSProfile', qos_profile)
-    return
+    return 
         
 
 def validate_ids(item_request: dict):

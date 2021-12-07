@@ -9,7 +9,7 @@
             "service" : "TCP-based"
         },
         {
-            "value" : 8,
+            "value" : 7,
             "type" : "NonGBR",
             "priority": 70,
             "PDB": 100,

@@ -2104,11 +2104,11 @@ function ui_add_path_modal_reset_form() {
     
 
     // leaflet js map
-    add_path_start_dot.remove();
-    add_path_end_dot.remove()
-    add_path_polyline.remove();
-    add_path_path_lg.clearLayers();
-    add_path_path_lg.clearLayers();
+    if (add_path_start_dot) { add_path_start_dot.remove();      }
+    if (add_path_end_dot  ) { add_path_end_dot.remove();        }
+    if (add_path_polyline ) { add_path_polyline.remove();       }
+    if (add_path_path_lg  ) { add_path_path_lg.clearLayers();   }
+    if (add_path_points_lg) { add_path_points_lg.clearLayers(); }
 
     // data
     add_path_tmp_obj = {
