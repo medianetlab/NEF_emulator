@@ -24,7 +24,7 @@ make build
 make up
 
 # 4.
-make db-init-simple
+make db-init
 ```
 
 >\* 💡 Info: *To use the `make` command you need to `apt install build-essential` first. In case you don't want to proceed with this installation, you can head over to the `Makefile` and copy/paste the shell commands that are being used for every step.*
