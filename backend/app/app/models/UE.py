@@ -35,7 +35,7 @@ class UE(Base):
     owner_id = Column(Integer, ForeignKey("user.id"))
     gNB_id = Column(Integer, ForeignKey("gnb.id"))
     Cell_id = Column(Integer, ForeignKey("cell.id"))
-    path_id = Column(Integer, ForeignKey("path.id"))
+    path_id = Column(Integer, index=True)
 
     #Relationships
     owner = relationship("User", back_populates="UEs")

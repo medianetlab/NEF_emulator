@@ -16,7 +16,6 @@ from app.tools.send_callback import location_callback, qos_callback
 from app import tools
 from app.crud import crud_mongo
 from .qosInformation import qos_reference_match
-from pydantic import BaseModel
 
 #Dictionary holding threads that are running per user id.
 threads = {}
