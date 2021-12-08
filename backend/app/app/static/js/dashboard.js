@@ -663,8 +663,9 @@ function api_put_cell( cell_obj ) {
 
 // Ajax request to update UE
 // on success: update it inside datatables too
+// and return to callback
 // 
-function api_put_UE( UE_obj ) {
+function api_put_UE_callback( UE_obj, callback ) {
     
     var url = app.api_url + '/UEs/' + UE_to_be_edited; // using UE_obj.UE_id would not work if the user has provided new UE_id value
 
@@ -693,12 +694,12 @@ function api_put_UE( UE_obj ) {
         },
         success: function(data)
         {
-            // console.log(data);
+            console.log("PUT UE success");
+            console.log(data);
             ui_display_toast_msg("success", "Success!", "The UE has been updated");
-            
             helper_update_UE( data );
-            
             ues_datatable.clear().rows.add( ues ).draw();
+            callback(data);
         },
         error: function(err)
         {
@@ -724,8 +725,6 @@ function api_post_assign_path( UE_supi, path_id ) {
             "supi": UE_supi,
             "path": path_id
           };
-    
-    console.log(data);
 
     $.ajax({
         type: 'POST',
@@ -744,9 +743,8 @@ function api_post_assign_path( UE_supi, path_id ) {
             // console.log(data);
             ui_display_toast_msg("success", "Success!", "The path has been assigned");
             
-            helper_update_UE( data );
-            
-            ues_datatable.clear().rows.add( ues ).draw();
+            // update local UE obj
+            helper_update_UE_path(UE_supi, path_id);
         },
         error: function(err)
         {
@@ -898,8 +896,9 @@ function api_post_cell( cell_obj ) {
 
 // Ajax request to create UE
 // on success: add it inside datatables too
+// and return to callback
 // 
-function api_post_UE( UE_obj ) {
+function api_post_UE_callback( UE_obj, callback ) {
 
     // console.log(cell_obj);
     
@@ -927,6 +926,7 @@ function api_post_UE( UE_obj ) {
             ues.push(data);
             ues_datatable.clear().rows.add( ues ).draw();
             ui_update_card( '#num-UEs-card' , ues.length );
+            callback(data);
         },
         error: function(err)
         {
@@ -1793,6 +1793,8 @@ function ui_add_btn_listeners_for_UEs_CUD_operations() {
     // CREATE
     $('#add_UE_btn').on('click', function(){
 
+        var assign_path_id = parseInt( $('#add_UE_path').val() );
+
         var data = {
           // general info
           supi                : $('#add_UE_supi').val(),
@@ -1807,15 +1809,20 @@ function ui_add_btn_listeners_for_UEs_CUD_operations() {
           mnc                 : $('#add_UE_mnc').val(),
           dnn                 : $('#add_UE_dnn').val(),
           // location & path
-          path_id             : parseInt( $('#add_UE_path').val() ),
+          path_id             : assign_path_id,
           speed               : $('#add_UE_speed').val(),
           gNB_id              : 1,
           Cell_id             : 1,
         };
 
-        api_post_UE( data );
-        api_post_assign_path(data.supi, parseInt( $('#add_UE_path').val() ));
+
         add_UE_modal.hide();
+
+        // api calls
+        api_post_UE_callback( data, function(UE_obj){
+            // on success, assign path
+            api_post_assign_path( UE_obj.supi, assign_path_id );
+        });
     });
 
     // DELETE
@@ -1826,6 +1833,8 @@ function ui_add_btn_listeners_for_UEs_CUD_operations() {
 
     // UPDATE
     $('#update_UE_btn').on('click', function(){
+
+        var assign_path_id = parseInt( $('#edit_UE_path').val() );
         
         // get possible changes from form
         // general info
@@ -1839,13 +1848,17 @@ function ui_add_btn_listeners_for_UEs_CUD_operations() {
         edit_UE_tmp_obj.mac_address   = $('#edit_UE_mac').val();
 
         // location & path
-        edit_UE_tmp_obj.path_id = parseInt( $('#edit_UE_path').val() );
+        edit_UE_tmp_obj.path_id = assign_path_id;
         edit_UE_tmp_obj.speed   = $('#edit_UE_speed').val();
 
-        api_put_UE( edit_UE_tmp_obj );
-        api_post_assign_path(edit_UE_tmp_obj.supi, edit_UE_tmp_obj.path_id);
         
         edit_UE_modal.hide();
+
+        // api calls
+        api_put_UE_callback( edit_UE_tmp_obj, function(UE_obj){
+            // on success, assign path
+            api_post_assign_path( UE_obj.supi, assign_path_id );
+        });
     });
 }
 
@@ -2493,8 +2506,24 @@ function helper_find_UE( UE_supi ) {
 function helper_update_UE( UE_obj ) {
 
     for (i=0 ; i<ues.length ; i++) {
-        if ( ues[i].id == UE_obj.id ) {
+        if ( ues[i].supi == UE_obj.supi ) {
+            UE_obj["id"] = ues[i].id;
             ues[i] = JSON.parse(JSON.stringify( UE_obj )); // found, updated
+        }
+    }
+}
+
+
+// iterates through the UE list
+// and updates (if found) the UE object provided
+// with the new path_id 
+//
+function helper_update_UE_path( UE_supi, path_id ) {
+
+    for (i=0 ; i<ues.length ; i++) {
+        if ( ues[i].supi == UE_supi ) {
+            ues[i].path_id = path_id; // found, updated path
+            ues[i] = JSON.parse(JSON.stringify( ues[i] ));  // update object
         }
     }
 }
