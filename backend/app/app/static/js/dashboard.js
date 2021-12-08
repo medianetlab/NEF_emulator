@@ -671,8 +671,13 @@ function api_put_UE( UE_obj ) {
     var UE_obj_copy =  JSON.parse(JSON.stringify( UE_obj )); // copy to be used with fewer object properties
 
     // remove not required properties
+    delete UE_obj_copy.supi;
+    delete UE_obj_copy.latitude;
+    delete UE_obj_copy.longitude;
+    delete UE_obj_copy.cell_id_hex;
     delete UE_obj_copy.id;
     delete UE_obj_copy.owner_id;
+    delete UE_obj_copy.path_id;
 
     $.ajax({
         type: 'PUT',
@@ -708,6 +713,53 @@ function api_put_UE( UE_obj ) {
     });
 }
 
+// Ajax request to associate UE with paths
+// on success: update it inside datatables too
+// 
+function api_post_assign_path( UE_supi, path_id ) {
+    
+    var url = app.api_url + '/UEs/associate/path'; // using UE_obj.UE_id would not work if the user has provided new UE_id value
+
+    var data ={
+            "supi": UE_supi,
+            "path": path_id
+          };
+    
+    console.log(data);
+
+    $.ajax({
+        type: 'POST',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        data:         JSON.stringify(data),
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            // console.log(data);
+            ui_display_toast_msg("success", "Success!", "The path has been assigned");
+            
+            helper_update_UE( data );
+            
+            ues_datatable.clear().rows.add( ues ).draw();
+        },
+        error: function(err)
+        {
+            console.log(err);
+            ui_display_toast_msg("error", "Error: The path could not be assigned", err.responseJSON.detail);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
 
 // Ajax request to update path
 // on success: update it inside datatables too
@@ -852,6 +904,8 @@ function api_post_UE( UE_obj ) {
     // console.log(cell_obj);
     
     var url = app.api_url + '/UEs';
+
+    delete UE_obj.path_id; //not needed after the assignment of paths changed. The path_id attribute is now used by api_post_assign_path
 
     $.ajax({
         type: 'POST',
@@ -1760,6 +1814,7 @@ function ui_add_btn_listeners_for_UEs_CUD_operations() {
         };
 
         api_post_UE( data );
+        api_post_assign_path(data.supi, parseInt( $('#add_UE_path').val() ));
         add_UE_modal.hide();
     });
 
@@ -1787,12 +1842,9 @@ function ui_add_btn_listeners_for_UEs_CUD_operations() {
         edit_UE_tmp_obj.path_id = parseInt( $('#edit_UE_path').val() );
         edit_UE_tmp_obj.speed   = $('#edit_UE_speed').val();
 
-        delete edit_UE_tmp_obj.supi;
-        delete edit_UE_tmp_obj.latitude;
-        delete edit_UE_tmp_obj.longitude;
-        delete edit_UE_tmp_obj.cell_id_hex;
-
         api_put_UE( edit_UE_tmp_obj );
+        api_post_assign_path(edit_UE_tmp_obj.supi, edit_UE_tmp_obj.path_id);
+        
         edit_UE_modal.hide();
     });
 }
