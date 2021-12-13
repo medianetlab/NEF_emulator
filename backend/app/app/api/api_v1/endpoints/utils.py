@@ -16,6 +16,7 @@ from app.tools.send_callback import location_callback, qos_callback
 from app import tools
 from app.crud import crud_mongo
 from .qosInformation import qos_reference_match
+from pydantic import BaseModel
 
 #Dictionary holding threads that are running per user id.
 threads = {}
@@ -230,38 +231,38 @@ def qos_notification_control(gbr_status: str, current_user, ipv4):
     
 router = APIRouter()
 
-# class callback(BaseModel):
-#     callbackurl: str
+class callback(BaseModel):
+    callbackurl: str
 
-# @router.post("/test/callback")
-# def get_test(
-#     item_in: callback
-#     ):
+@router.post("/test/callback")
+def get_test(
+    item_in: callback
+    ):
     
-#     callbackurl = item_in.callbackurl
-#     print(callbackurl)
-#     payload = json.dumps({
-#     "externalId" : "10003@domain.com",
-#     "ipv4Addr" : "10.0.0.3",
-#     "subscription" : "http://localhost:8888/api/v1/3gpp-monitoring-event/v1/myNetapp/subscriptions/3",
-#     "monitoringType": "LOCATION_REPORTING",
-#     "locationInfo": {
-#         "cellId": "AAAAA1002",
-#         "enodeBId": "AAAAA1"
-#     }
-#     })
+    callbackurl = item_in.callbackurl
+    print(callbackurl)
+    payload = json.dumps({
+    "externalId" : "10000@domain.com",
+    "ipv4Addr" : "10.0.0.0",
+    "subscription" : "http://localhost:8888/api/v1/3gpp-monitoring-event/v1/myNetapp/subscriptions/whatever",
+    "monitoringType": "LOCATION_REPORTING",
+    "locationInfo": {
+        "cellId": "AAAAAAAAA",
+        "enodeBId": "AAAAAA"
+    }
+    })
 
-#     headers = {
-#     'accept': 'application/json',
-#     'Content-Type': 'application/json'
-#     }
+    headers = {
+    'accept': 'application/json',
+    'Content-Type': 'application/json'
+    }
 
-#     try:
-#         response = requests.request("POST", callbackurl, headers=headers, data=payload)
-#         return response.json()
-#     except requests.exceptions.ConnectionError as ex:
-#         logging.warning(ex)
-#         raise HTTPException(status_code=409, detail="Failed to send the callback request")
+    try:
+        response = requests.request("POST", callbackurl, headers=headers, data=payload)
+        return response.json()
+    except requests.exceptions.ConnectionError as ex:
+        logging.warning(ex)
+        raise HTTPException(status_code=409, detail=f"Failed to send the callback request. Error: {ex}")
 
 @router.post("/session-with-qos/callback")
 def create_item(item: UserPlaneNotificationData, request: Request):

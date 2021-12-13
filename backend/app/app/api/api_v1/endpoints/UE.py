@@ -75,17 +75,6 @@ def create_UE(
         raise HTTPException(
             status_code=409, detail="ERROR: This Cell_id you specified doesn't exist. Please create a new Cell with this Cell_id or use an existing Cell")
 
-    # path = exists(db=db, gNB_id=item_in.gNB_id,
-    #               cell_id=item_in.Cell_id, path_id=item_in.path_id)
-
-    # random_point = get_random_point(db, path.id)
-
-    # json_data = jsonable_encoder(item_in)
-    # json_data['ip_address_v6'] = item_in.ip_address_v6.exploded
-
-    # #Assign the initial coordinates (retrieved from path) to the UE
-    # json_data['latitude'] = random_point.get('latitude')
-    # json_data['longitude'] = random_point.get('longitude')
     json_data = jsonable_encoder(item_in)
     json_data['ip_address_v4'] = str(item_in.ip_address_v4)
     json_data['ip_address_v6'] = str(item_in.ip_address_v6.exploded)
@@ -126,24 +115,6 @@ def update_UE(
     elif (UE.external_identifier != item_in.external_identifier) and crud.ue.get_externalId(db=db, externalId=item_in.external_identifier, owner_id=current_user.id):
         raise HTTPException(
             status_code=409, detail=f"This external id {item_in.mac_address} already exists")
-
-    # path = exists(db=db, gNB_id=item_in.gNB_id,
-    #               cell_id=item_in.Cell_id, path_id=item_in.path_id)
-
-    # #Check if UE is moving and the path is changed
-    # if retrieve_ue_state(supi, current_user.id) and (UE.path_id != item_in.path_id):
-    #     raise HTTPException(
-    #         status_code=400, detail=f"UE with SUPI {supi} is currently moving. You are not allowed to edit UE's path while it's moving")
-    # else:
-    #     json_data = jsonable_encoder(item_in)
-    #     json_data['ip_address_v4'] = str(item_in.ip_address_v4)
-    #     json_data['ip_address_v6'] = str(item_in.ip_address_v6.exploded)
-
-    #     #Assign the random coordinates (retrieved from path) to the UE, if user chooses another path
-    #     if UE.path_id != item_in.path_id:
-    #         random_point = get_random_point(db, path.id)
-    #         json_data['latitude'] = random_point.get('latitude')
-    #         json_data['longitude'] = random_point.get('longitude')
 
     json_data = jsonable_encoder(item_in)
     json_data['ip_address_v4'] = str(item_in.ip_address_v4)
@@ -253,7 +224,7 @@ def read_UE_Cell(
         raise HTTPException(status_code=400, detail="Not enough permissions")
     return UEs
 
-
+#Assign paths to UEs
 @router.post("/associate/path", response_model=schemas.ue_path)
 def assign_predefined_path(
     *,

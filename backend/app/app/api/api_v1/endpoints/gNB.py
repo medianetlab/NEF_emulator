@@ -39,24 +39,13 @@ def create_gNB(
     """
     Create new gNB.
     """
-    try:
-        gNB = crud.gnb.get_gNB_id(db=db, id=item_in.gNB_id)
-    except:
-        pass
+    gNB = crud.gnb.get_gNB_id(db=db, id=item_in.gNB_id)
 
     if gNB:
         raise HTTPException(status_code=409, detail="ERROR: gNB with this id already exists")
     elif not gNB:
         gNB = crud.gnb.create_with_owner(db=db, obj_in=item_in, owner_id=current_user.id)
         return gNB
-    # else: 
-    #     raise HTTPException(status_code=404, detail="ERROR: gNB with this id already exists")
-
-    # if not gNB:
-    #     gNB = crud.gnb.create_with_owner(db=db, obj_in=item_in, owner_id=current_user.id)
-    #     return gNB
-    # else:
-    #     return "gNB with that id already exists"
 
 
 @router.put("/{gNB_id}", response_model=schemas.gNB)
