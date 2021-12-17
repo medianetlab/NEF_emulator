@@ -81,3 +81,7 @@ async def map(request: Request):
 @app.get("/", response_class=HTMLResponse)
 async def map(request: Request):
     return RedirectResponse("/dashboard")
+
+@app.get("/export", response_class=HTMLResponse)
+async def export(request: Request):
+    return templates.TemplateResponse("export.html", {"request": request})
