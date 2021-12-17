@@ -63,7 +63,7 @@ def test_update_existing_gNB(client: TestClient, superuser_token_headers: Dict[s
             if item1 == item2:
                 assert updated_gnb[item1] != first_gnb[item2]
 
-    assert response.status_code == 200 or response.status_code == 404 or response.status_code == 400
+    assert response.status_code == 200
 
     gnb_db_id = response.json().get('id')
     crud.gnb.remove(db=db, id=gnb_db_id)
@@ -84,15 +84,16 @@ def test_read_existing_gNB(client: TestClient, superuser_token_headers: Dict[str
 
     response = client.get(f'{settings.API_V1_STR}/gNBs/{gnb_id}',
                           headers=superuser_token_headers)
-    
+
     api_gnb = response.json()
     existing_gnb = crud.gnb.get_gNB_id(db=db, id=gNB_id)
 
-    assert response.status_code == 200 or response.status_code == 404 or response.status_code == 400
+    assert response.status_code == 200
     assert existing_gnb
     assert existing_gnb.gNB_id == api_gnb['gNB_id']
 
     crud.gnb.remove(db=db, id=gNB.id)
+
 
 def test_remove_existing_gNB(client: TestClient, superuser_token_headers: Dict[str, str], db: Session):
     gNB_id = "000000"
@@ -108,11 +109,11 @@ def test_remove_existing_gNB(client: TestClient, superuser_token_headers: Dict[s
     gnb_id = gNB.gNB_id
 
     response = client.delete(f'{settings.API_V1_STR}/gNBs/{gnb_id}',
-                          headers=superuser_token_headers)
-    
+                             headers=superuser_token_headers)
+
     api_gnb = response.json()
     existing_gnb = crud.gnb.get_gNB_id(db=db, id=gNB_id)
 
-    assert response.status_code == 200 or response.status_code == 404 or response.status_code == 400 or response.status_code == 409
+    assert response.status_code == 200
     assert existing_gnb == None
     assert gNB_id == api_gnb['gNB_id']

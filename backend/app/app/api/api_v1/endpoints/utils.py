@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import HTTPException
+from sqlalchemy.orm.session import Session
 from sqlalchemy.util.langhelpers import counter
 from app.db.session import SessionLocal
 from app import models, schemas, crud
@@ -230,6 +231,49 @@ def qos_notification_control(gbr_status: str, current_user, ipv4):
 
     
 router = APIRouter()
+
+@router.get("/export/scenario")
+def get_scenario(
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_user)
+) -> Any:
+    """
+    Export the scenario
+    """
+    gNBs = crud.gnb.get_multi_by_owner(db=db, owner_id=current_user.id, skip=0, limit=100)
+    Cells = crud.cell.get_multi_by_owner(db=db, owner_id=current_user.id, skip=0, limit=100)
+    UEs = crud.ue.get_multi_by_owner(db=db, owner_id=current_user.id, skip=0, limit=100)
+    paths = crud.path.get_multi_by_owner(db=db, owner_id=current_user.id, skip=0, limit=100)
+
+    
+    json_gNBs= jsonable_encoder(gNBs)
+    json_Cells= jsonable_encoder(Cells)
+    json_UEs= jsonable_encoder(UEs)
+    json_path = jsonable_encoder(paths)
+    
+    for item_json in json_path:
+        for path in paths:
+            if path.id == item_json.get('id'):
+                item_json["start_point"] = {}
+                item_json["end_point"] = {}
+                item_json["start_point"]["latitude"] = path.start_lat
+                item_json["start_point"]["longitude"] = path.start_long
+                item_json["end_point"]["latitude"] = path.end_lat
+                item_json["end_point"]["longitude"] = path.end_long
+                points = crud.points.get_points(db=db, path_id=path.id)
+                item_json["points"] = []
+                for obj in jsonable_encoder(points):
+                    item_json["points"].append({'latitude' : obj.get('latitude'), 'longitude' : obj.get('longitude')})
+
+    export_json = {
+        "owner" : current_user.id,
+        "gNBs" : json_gNBs,
+        "cells" : json_Cells,
+        "UEs" : json_UEs,
+        "paths" : json_path
+    }
+
+    return export_json
 
 class callback(BaseModel):
     callbackurl: str
