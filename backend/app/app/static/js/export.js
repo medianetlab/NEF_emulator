@@ -32,6 +32,11 @@ $( document ).ready(function() {
   $('#export-btn-copy').on('click', function(){
     copyTextToClipboard( scenario_json_str );
   });
+
+  $('#export-btn-save').on('click', function(){
+    download_json();
+  });
+
 });
 
 
@@ -70,6 +75,8 @@ function api_get_scenario() {
 }
 
 
+
+
 function ui_display_toast_msg( type, title, text ) {
     toastr_options = {
         closeButton     : true,
@@ -80,6 +87,17 @@ function ui_display_toast_msg( type, title, text ) {
     toastr[type](text, title, toastr_options);
 }
 
+
+
+
+
+function download_json() {
+  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(scenario_json_str);
+  var dlAnchorElem = document.getElementById('downloadAnchorElem');
+  dlAnchorElem.setAttribute("href",     dataStr     );
+  dlAnchorElem.setAttribute("download", "scenario.json");
+  dlAnchorElem.click();
+}
 
 // ==================================================================================================
 // code from: https://stackoverflow.com/questions/400212/how-do-i-copy-to-the-clipboard-in-javascript
