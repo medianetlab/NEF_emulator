@@ -232,7 +232,7 @@ def qos_notification_control(gbr_status: str, current_user, ipv4):
     
 router = APIRouter()
 
-@router.get("/export/scenario")
+@router.get("/export/scenario", response_model=schemas.scenario)
 def get_scenario(
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user)
@@ -266,7 +266,6 @@ def get_scenario(
                     item_json["points"].append({'latitude' : obj.get('latitude'), 'longitude' : obj.get('longitude')})
 
     export_json = {
-        "owner" : current_user.id,
         "gNBs" : json_gNBs,
         "cells" : json_Cells,
         "UEs" : json_UEs,
@@ -274,6 +273,63 @@ def get_scenario(
     }
 
     return export_json
+
+@router.post("/import/scenario")
+def create_scenario(
+    scenario_in: schemas.scenario,
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_user), 
+) -> Any:
+    """
+    Export the scenario
+    """
+    err = {}
+    
+    gNBs = scenario_in.gNBs
+    cells = scenario_in.cells
+    ues = scenario_in.UEs
+    paths = scenario_in.paths
+
+    db.execute('TRUNCATE TABLE cell, gnb, monitoring, path, points, ue RESTART IDENTITY')
+    
+    for gNB_in in gNBs:
+        gNB = crud.gnb.get_gNB_id(db=db, id=gNB_in.gNB_id)
+        if gNB:
+            print(f"ERROR: gNB with id {gNB_in.gNB_id} already exists")
+            err.update({f"{gNB_in.name}" : f"ERROR: gNB with id {gNB_in.gNB_id} already exists"})
+        else:
+            gNB = crud.gnb.create_with_owner(db=db, obj_in=gNB_in, owner_id=current_user.id)
+
+    for cell_in in cells:
+        cell = crud.cell.get_Cell_id(db=db, id=cell_in.cell_id)
+        if cell:
+            print(f"ERROR: Cell with id {cell_in.cell_id} already exists")
+            err.update({f"{cell_in.name}" : f"ERROR: Cell with id {cell_in.cell_id} already exists"})
+            crud.cell.remove_all_by_owner(db=db, owner_id=current_user.id)
+        else:
+            cell = crud.cell.create_with_owner(db=db, obj_in=cell_in, owner_id=current_user.id)
+
+    for ue_in in ues:
+        ue = crud.ue.get_supi(db=db, supi=ue_in.supi)
+        if ue:
+            print(f"ERROR: UE with supi {ue_in.supi} already exists")
+            err.update({f"{ue.name}" : f"ERROR: UE with supi {ue_in.supi} already exists"})
+        else:
+            ue = crud.ue.create_with_owner(db=db, obj_in=ue_in, owner_id=current_user.id)
+
+    for path_in in paths:
+        path = crud.path.get_description(db=db, description = path_in.description)
+        if path:
+            print(f"ERROR: Path with description \'{path_in.description}\' already exists")
+            err.update({f"{path_in.description}" : f"ERROR: Path with description \'{path_in.description}\' already exists"})
+        else:
+            path = crud.path.create_with_owner(db=db, obj_in=path_in, owner_id=current_user.id)
+            crud.points.create(db=db, obj_in=path_in, path_id=path.id) 
+    
+    if bool(err) == True:
+        raise HTTPException(status_code=409, detail=err)
+    else:
+        return ""
 
 class callback(BaseModel):
     callbackurl: str
