@@ -85,3 +85,7 @@ async def map(request: Request):
 @app.get("/export", response_class=HTMLResponse)
 async def export(request: Request):
     return templates.TemplateResponse("export.html", {"request": request})
+
+@app.get("/import", response_class=HTMLResponse)
+async def import_page(request: Request):
+    return templates.TemplateResponse("import.html", {"request": request})
