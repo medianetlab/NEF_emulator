@@ -29,7 +29,7 @@ $( document ).ready(function() {
     scenario_json_str = cm.getValue();
 
     if (scenario_json_str.length == 0 ) {
-
+      ui_display_toast_msg("warning", "Oups!", "Make sure you add some json first!");
     }
     else {
       api_import_scenario( scenario_json_str );
