@@ -63,7 +63,7 @@ function api_import_scenario( data_json_str ) {
         error: function(err)
         {
             console.log(err);
-            ui_display_toast_msg("error", "Oups!", "Could not copy to clipboard.");
+            ui_display_toast_msg("error", "Oups!", "The scenario could not be imported.");
         },
         complete: function()
         {
