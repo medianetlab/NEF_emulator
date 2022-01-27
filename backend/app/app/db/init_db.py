@@ -1,4 +1,3 @@
-import csv
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
@@ -27,11 +26,11 @@ def init_db(db: Session) -> None:
         )
         user = crud.user.create(db, obj_in=user_in)  # noqa: F841
 
-    user = crud.user.get_by_email(db, email='simple_user@5g-api-emulator.medianetlab.eu')
+    user = crud.user.get_by_email(db, email='user@my-email.com')
     if not user:
         user_in = schemas.UserCreate(
-            email='simple_user@5g-api-emulator.medianetlab.eu',
-            password='password',
+            email='user@my-email.com',
+            password='pass',
             is_superuser=False,
         )
         user = crud.user.create(db, obj_in=user_in) 

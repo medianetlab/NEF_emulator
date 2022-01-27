@@ -6,6 +6,7 @@ from app.crud.base import CRUDBase
 from app.models.UE import UE
 from app.schemas.UE import UECreate, UEUpdate
 
+
 class CRUD_UE(CRUDBase[UE, UECreate, UEUpdate]):
     def create_with_owner(
         self, db: Session, *, obj_in: UECreate, owner_id: int
@@ -28,7 +29,7 @@ class CRUD_UE(CRUDBase[UE, UECreate, UEUpdate]):
             .all()
         )
 
-    def get_supi(self, db: Session, supi: str) -> UE: 
+    def get_supi(self, db: Session, supi: str) -> UE:
         return db.query(self.model).filter(self.model.supi == supi).first()
 
     def get_ipv4(
@@ -39,13 +40,13 @@ class CRUD_UE(CRUDBase[UE, UECreate, UEUpdate]):
             .filter(UE.ip_address_v4 == ipv4, UE.owner_id == owner_id)
             .first()
         )
-    
+
     def get_ipv6(
         self, db: Session, *, ipv6: str, owner_id: int
     ) -> UE:
         return (
             db.query(self.model)
-            .filter(UE.ip_address_v6 == ipv6, UE.owner_id == owner_id) 
+            .filter(UE.ip_address_v6 == ipv6, UE.owner_id == owner_id)
             .first()
         )
 
@@ -54,7 +55,7 @@ class CRUD_UE(CRUDBase[UE, UECreate, UEUpdate]):
     ) -> UE:
         return (
             db.query(self.model)
-            .filter(UE.mac_address == mac, UE.owner_id == owner_id) 
+            .filter(UE.mac_address == mac, UE.owner_id == owner_id)
             .first()
         )
 
@@ -87,7 +88,7 @@ class CRUD_UE(CRUDBase[UE, UECreate, UEUpdate]):
 
     def update_coordinates(
         self, db: Session, *, lat: float, long: float, db_obj: UE
-    )-> UE:
+    ) -> UE:
         setattr(db_obj, 'latitude', lat)
         setattr(db_obj, 'longitude', long)
         db.add(db_obj)
@@ -95,7 +96,7 @@ class CRUD_UE(CRUDBase[UE, UECreate, UEUpdate]):
         db.refresh(db_obj)
         return db_obj
 
-    def remove_supi(self, db: Session, *, supi: str) -> UE: #Optionally, transfer this function in CRUDUE, since CRUDBase is for generic use, inherited from all the CRUD modules
+    def remove_supi(self, db: Session, *, supi: str) -> UE:
         print(f'"removing supi"{supi}')
         obj = db.query(self.model).filter(UE.supi == supi).first()
         print("Done")
@@ -104,6 +105,5 @@ class CRUD_UE(CRUDBase[UE, UECreate, UEUpdate]):
         db.commit()
         return obj
 
-## Nothing written here by pant
 
 ue = CRUD_UE(UE)

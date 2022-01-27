@@ -182,8 +182,7 @@ curl -X 'POST' \
   "mcc": 202,
   "mnc": 1,
   "external_identifier": "10001@domain.com",
-  "speed": "LOW",
-  "path_id": 2
+  "speed": "LOW"
 }'
 
 curl -X 'POST' \
@@ -204,8 +203,7 @@ curl -X 'POST' \
   "mcc": 202,
   "mnc": 1,
   "external_identifier": "10002@domain.com",
-  "speed": "LOW",
-  "path_id": 1
+  "speed": "LOW"
 }'
 
 curl -X 'POST' \
@@ -226,10 +224,37 @@ curl -X 'POST' \
   "mcc": 202,
   "mnc": 1,
   "external_identifier": "10003@domain.com",
-  "speed": "HIGH",
-  "path_id": 2
+  "speed": "HIGH"
 }'
 
+curl -X 'POST' \
+  "http://localhost:${PORT}/api/v1/UEs/associate/path" \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "supi": "202010000000001",
+  "path": 2
+}'
 
+curl -X 'POST' \
+  "http://localhost:${PORT}/api/v1/UEs/associate/path" \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "supi": "202010000000002",
+  "path": 1
+}'
+
+curl -X 'POST' \
+  "http://localhost:${PORT}/api/v1/UEs/associate/path" \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "supi": "202010000000003",
+  "path": 2
+}'
 
 printf '\n==================================================\n\n'

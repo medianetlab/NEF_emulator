@@ -1,14 +1,11 @@
 from typing import TYPE_CHECKING
-
-#from sqlalchemy import Boolean, Column, Integer, String
-from sqlalchemy import *
+from sqlalchemy import Column, Integer, String, Boolean
 from sqlalchemy.orm import relationship
-
 from app.db.base_class import Base
 
 if TYPE_CHECKING:
     ## Import class Item from ./item.py file
-    from .location_frontend import Path  # noqa: F401
+    from .path import Path  # noqa: F401
     from .UE import UE  # noqa: F401
     from .gNB import gNB  # noqa: F401
     from .Cell import Cell  # noqa: F401
@@ -35,14 +32,8 @@ class User(Base):
     ## User.is_superuser: Sets type to Boolean, sets default value to False.
     is_superuser = Column(Boolean(), default=False)
 
-    ## Create a relationship with Class 'Item' and variable 'owner'
+    ## Relationships
     Paths = relationship("Path", back_populates="owner")
-
     UEs = relationship("UE", back_populates="owner")
-
     Cells = relationship("Cell", back_populates="owner")
-
     gNBs = relationship("gNB", back_populates="owner")
-
-
-#list-like
