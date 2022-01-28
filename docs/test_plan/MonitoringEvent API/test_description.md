@@ -3,7 +3,7 @@
 ## Test Plan for Monitoring Event API
 
 ### Tests for HTTP POST Method
-* Test Case 1: Create subscription by Authorized NetApp
+* [Test Case 1: Create subscription by Authorized NetApp](#test-case-1-create-subscription-by-authorized-netapp)
 * Test Case 2: One-time request to the Monitoring Event API by Authorized NetApp
 * Test Case 3: Create subscription when there is already an active subscription for a registered UE
 * Test Case 4: Create subscription by unAuthorized NetApp
@@ -40,11 +40,11 @@ This test case will check that the NetApp creates a subscription successfully to
 * Actions:
     1. Netapp subscribes to Monitoring Event API with an HTTP POST request for a registered UE
     2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/{scsAsId}/subscriptions**</kbd>
-    3. Request Body
+    3. Request Body: [request body]
     
 * Post-Conditions:
     1. 201 Created response
-    2. Response body
+    2. Response body 
     3. The URI of the created resource is returned in the 'Location' HTTP header  according to the structure: 
 <kbd>**{apiRoot}/nef/api/v1/3gpp-monitoring-event/{scsAsId}/subscriptions/{subscriptionId}**</kbd>
 
@@ -290,3 +290,5 @@ This test case will check that an unauthorised NetApp cannot retrieve an individ
     
 * Post-Conditions:
     1. 401 Unauthorized
+
+[request body]: ./post_subscription_request.json
