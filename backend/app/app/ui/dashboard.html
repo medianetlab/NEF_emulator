@@ -54,7 +54,8 @@
         <li class="nav-item"><a class="nav-link" href="/dashboard">
             <svg class="nav-icon">
               <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-speedometer"></use>
-            </svg> Dashboard</a></li>
+            </svg> Dashboard</a>
+        </li>
         
 
         <li class="nav-title">Emulator</li>
@@ -76,18 +77,24 @@
 
 
         <li class="nav-title">API TOOLS</li>
-        <li class="nav-item"><a class="nav-link" href="/docs" target="_blank">
-            <svg class="nav-icon">
-              <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-file"></use>
-            </svg> Swagger UI</a>
-        </li>
+        <li class="nav-group" aria-expanded="false"><a class="nav-link nav-group-toggle" href="#">
+          <svg class="nav-icon">
+            <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-description"></use>
+          </svg> Swagger UI</a>
+        <ul class="nav-group-items" style="height: auto;">
+          <li class="nav-item"><a class="nav-link" href="/nef/docs" target="_blank">
+            Northbound APIs</a>
+          </li>
+          <li class="nav-item"><a class="nav-link" href="/docs" target="_blank">
+            NEF_Emulator</a>
+          </li>
+        </ul>
         <li class="nav-item"><a class="nav-link" href="/redoc" target="_blank">
             <svg class="nav-icon">
               <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-file"></use>
             </svg> ReDoc</a>
         </li>
         
-
         <li class="nav-divider"></li>
       </ul>
       <button class="sidebar-toggler" type="button" data-coreui-toggle="unfoldable"></button>
