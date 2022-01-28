@@ -1,0 +1,7 @@
+{
+  "externalId": "10002@domain.com",
+  "notificationDestination": "http://localhost:80/api/v1/utils/monitoring/callback",
+  "monitoringType": "LOCATION_REPORTING",
+  "maximumNumberOfReports": 1,
+  "monitorExpireTime": "2022-01-28T13:00:48.634Z"
+}
