@@ -694,8 +694,8 @@ function api_put_UE_callback( UE_obj, callback ) {
         },
         success: function(data)
         {
-            console.log("PUT UE success");
-            console.log(data);
+            // console.log("PUT UE success");
+            // console.log(data);
             ui_display_toast_msg("success", "Success!", "The UE has been updated");
             helper_update_UE( data );
             ues_datatable.clear().rows.add( ues ).draw();
@@ -2534,10 +2534,10 @@ function helper_update_UE_path( UE_supi, path_id ) {
 // (if not found it returns null)
 // 
 function helper_find_path( path_id ) {
-    console.log(path_id);
+    // console.log(path_id);
     for (const item of paths) {
         if ( item.id == path_id ) {
-            console.log(item);
+            // console.log(item);
             return JSON.parse(JSON.stringify( item )); // return a copy of the item
         }
     }
@@ -2552,7 +2552,7 @@ function helper_update_path( path_obj ) {
 
     for (i=0 ; i<paths.length ; i++) {
         if ( paths[i].id == path_obj.id ) {
-            console.log(paths[i]);
+            // console.log(paths[i]);
             paths[i] = JSON.parse(JSON.stringify( path_obj )); // found, updated
         }
     }
