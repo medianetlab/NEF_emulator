@@ -119,9 +119,13 @@ def update_UE(
     json_data = jsonable_encoder(item_in)
     json_data['ip_address_v4'] = str(item_in.ip_address_v4)
     json_data['ip_address_v6'] = str(item_in.ip_address_v6.exploded)
+
     UE = crud.ue.update(db=db, db_obj=UE, obj_in=json_data)
 
-    return UE
+    json_data.update({"cell_id_hex": UE.Cell.cell_id})
+    json_data.update({"supi": supi})
+
+    return json_data
 
 
 @router.get("/{supi}", response_model=schemas.UE)
