@@ -35,8 +35,7 @@ class UEUpdate(UEBase):
     pass
 
 class ue_path(BaseModel):
-    supi: constr(regex=r'^[0-9]{15,16}$') = Field(default="202010000000000", description= """String identifying a Supi that shall contain either an IMSI, a network specific identifier, a Global Cable Identifier (GCI) or a Global Line Identifier (GLI) as specified in clause 2.2A of 3GPP TS 23.003.                                                                                      
-                                                                                             In the current version (v1.1.0) only IMSI is supported""")    
+    supi: constr(regex=r'^[0-9]{15,16}$') = Field(default="202010000000000", description= """String identifying a Supi that shall contain either an IMSI, a network specific identifier, a Global Cable Identifier (GCI) or a Global Line Identifier (GLI) as specified in clause 2.2A of 3GPP TS 23.003.                                                                                                                                                                             In the current version (v1.1.0) only IMSI is supported""")    
     path: int
 
 # Properties to return to client

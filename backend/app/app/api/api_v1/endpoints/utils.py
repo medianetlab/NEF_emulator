@@ -18,6 +18,7 @@ from app import tools
 from app.crud import crud_mongo
 from .qosInformation import qos_reference_match
 from pydantic import BaseModel
+from app.api.api_v1.endpoints.paths import get_random_point
 
 #Dictionary holding threads that are running per user id.
 threads = {}
@@ -250,7 +251,8 @@ def get_scenario(
     json_Cells= jsonable_encoder(Cells)
     json_UEs= jsonable_encoder(UEs)
     json_path = jsonable_encoder(paths)
-    
+    ue_path_association = []
+
     for item_json in json_path:
         for path in paths:
             if path.id == item_json.get('id'):
@@ -265,11 +267,22 @@ def get_scenario(
                 for obj in jsonable_encoder(points):
                     item_json["points"].append({'latitude' : obj.get('latitude'), 'longitude' : obj.get('longitude')})
 
+    for ue in UEs:
+        if ue.path_id:
+            json_ue_path_association = {}
+            json_ue_path_association["supi"] = ue.supi
+            json_ue_path_association["path"] = ue.path_id
+            ue_path_association.append(json_ue_path_association)
+         
+    logging.critical(ue_path_association)
+    logging.critical(json_UEs)
+
     export_json = {
         "gNBs" : json_gNBs,
         "cells" : json_Cells,
         "UEs" : json_UEs,
-        "paths" : json_path
+        "paths" : json_path,
+        "ue_path_association" : ue_path_association
     }
 
     return export_json
@@ -289,6 +302,7 @@ def create_scenario(
     cells = scenario_in.cells
     ues = scenario_in.UEs
     paths = scenario_in.paths
+    ue_path_association = scenario_in.ue_path_association
 
     db.execute('TRUNCATE TABLE cell, gnb, monitoring, path, points, ue RESTART IDENTITY')
     
@@ -325,6 +339,19 @@ def create_scenario(
         else:
             path = crud.path.create_with_owner(db=db, obj_in=path_in, owner_id=current_user.id)
             crud.points.create(db=db, obj_in=path_in, path_id=path.id) 
+
+    for ue_path in ue_path_association:
+        if retrieve_ue_state(ue_path.supi, current_user.id):
+            err.update(f"UE with SUPI {ue_path.supi} is currently moving. You are not allowed to edit UE's path while it's moving")
+        else:
+        #Assign the coordinates
+            UE = crud.ue.get_supi(db=db, supi=ue_path.supi)
+            json_data = jsonable_encoder(UE)
+            json_data['path_id'] = ue_path.path
+            random_point = get_random_point(db, ue_path.path)
+            json_data['latitude'] = random_point.get('latitude')
+            json_data['longitude'] = random_point.get('longitude')
+            UE = crud.ue.update(db=db, db_obj=UE, obj_in=json_data)
     
     if bool(err) == True:
         raise HTTPException(status_code=409, detail=err)
