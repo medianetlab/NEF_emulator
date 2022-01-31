@@ -924,8 +924,8 @@ function api_post_UE_callback( UE_obj, callback ) {
             ui_display_toast_msg("success", "Success!", "The UE has been created");
             
             ues.push(data);
-            ues_datatable.clear().rows.add( ues ).draw();
-            ui_update_card( '#num-UEs-card' , ues.length );
+            // ues_datatable.clear().rows.add( ues ).draw();    // moved inside callback
+            // ui_update_card( '#num-UEs-card' , ues.length );  // moved inside callback
             callback(data);
         },
         error: function(err)
@@ -1182,10 +1182,10 @@ function ui_init_datatable_UEs() {
         columns: [
             { "data": "supi", className: "dt-center" },
             { "data": "name", className: "dt-center" },
-            { "data": "description" },
-            { "data": "Cell_id", className: "dt-center" },
+            { "data": "external_identifier" },
+            { "data": "cell_id_hex", className: "dt-center" },
             { "data": "ip_address_v4", className: "dt-center" },
-            { "data": "mac_address", className: "dt-center" },
+            { "data": "path_id", className: "dt-center" },
             { "data": "speed", className: "dt-center" },
             { "data": null, className: "dt-right" },
         ]
@@ -1822,6 +1822,10 @@ function ui_add_btn_listeners_for_UEs_CUD_operations() {
         api_post_UE_callback( data, function(UE_obj){
             // on success, assign path
             api_post_assign_path( UE_obj.supi, assign_path_id );
+
+            setInterval(function(){
+                window.location.href = [location.protocol, '//', location.host, "/dashboard"].join('');
+            },1000);
         });
     });
 
