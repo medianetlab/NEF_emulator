@@ -12,7 +12,7 @@ from app.api.api_v1.endpoints.paths import get_random_point
 router = APIRouter()
 
 
-@router.get("", response_model=List[schemas.UEs])
+@router.get("", response_model=List[schemas.UEhex])
 def read_UEs(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
@@ -38,7 +38,7 @@ def read_UEs(
     return JSONResponse(content=json_UEs, status_code=200)
 
 
-@router.post("", response_model=schemas.UE)
+@router.post("", response_model=schemas.UEhex)
 def create_UE(
     *,
     db: Session = Depends(deps.get_db),
@@ -80,10 +80,12 @@ def create_UE(
     json_data['ip_address_v6'] = str(item_in.ip_address_v6.exploded)
     
     UE = crud.ue.create_with_owner(db=db, obj_in=json_data, owner_id=current_user.id)
-    return UE
+    json_data.update({"cell_id_hex": UE.Cell.cell_id, "path_id" : 0})
+
+    return json_data
 
 
-@router.put("/{supi}", response_model=schemas.UE)
+@router.put("/{supi}", response_model=schemas.UEhex)
 def update_UE(
     *,
     db: Session = Depends(deps.get_db),
@@ -121,9 +123,7 @@ def update_UE(
     json_data['ip_address_v6'] = str(item_in.ip_address_v6.exploded)
 
     UE = crud.ue.update(db=db, db_obj=UE, obj_in=json_data)
-
-    json_data.update({"cell_id_hex": UE.Cell.cell_id})
-    json_data.update({"supi": supi})
+    json_data.update({"cell_id_hex": UE.Cell.cell_id, "supi": supi, "path_id" : UE.path_id})
 
     return json_data
 
