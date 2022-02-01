@@ -1167,6 +1167,18 @@ function ui_init_datatable_UEs() {
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
         columnDefs: [
             {
+                "targets": 5,
+                "data": null,
+                "defaultContent": '',
+                "orderable" : true,
+                "searchable": true,
+                "render": function ( data, type, row ) {
+                    // return row.id;
+                    if (data == 0) {return "-";}
+                    else {return data;}
+                }
+            },
+            {
                 "targets": 7,
                 "data": null,
                 "defaultContent": '',
@@ -1516,6 +1528,7 @@ function ui_show_edit_UE_modal( UE_supi ) {
 
     // refresh the path options in the select input
     $('#edit_UE_path').empty(); // delete the old ones
+    $('#edit_UE_path').append($('<option>', {"value":0, "text":"no path selected"})); // add option for "no path selected"
     $.each(paths, function (i, item) {
 
         var data = { 
@@ -1535,17 +1548,23 @@ function ui_show_edit_UE_modal( UE_supi ) {
     edit_UE_map.invalidateSize(); // this helps the map display its tiles correctly after the size of the modal is finalized
 
     // add a solid-color small circle (dot) at the current lat,lon
-    L.circle([edit_UE_tmp_obj.latitude,edit_UE_tmp_obj.longitude], 3, {
-        color: 'none',
-        fillColor: '#3590e2',
-        fillOpacity: 1.0
-    }).addTo(edit_UE_position_lg).addTo( edit_UE_map );
+    if ((edit_UE_tmp_obj.latitude != null) && (edit_UE_tmp_obj.longitude != null)) {
+        L.circle([edit_UE_tmp_obj.latitude,edit_UE_tmp_obj.longitude], 3, {
+            color: 'none',
+            fillColor: '#3590e2',
+            fillOpacity: 1.0
+        }).addTo(edit_UE_position_lg).addTo( edit_UE_map );
+    }
+    
 
-    // paint the current path of the UE
-    api_get_specific_path_callback( edit_UE_tmp_obj.path_id, function(data){
-        // console.log(data);
-        ui_map_paint_path(data, edit_UE_map, edit_UE_path_lg);
-    });
+    // paint the current path of the UE (if not zero)
+    if (edit_UE_tmp_obj.path_id != 0) {
+        api_get_specific_path_callback( edit_UE_tmp_obj.path_id, function(data){
+            // console.log(data);
+            ui_map_paint_path(data, edit_UE_map, edit_UE_path_lg);
+        });
+    }
+    
     
     edit_UE_map.setView(
         {
@@ -1860,8 +1879,13 @@ function ui_add_btn_listeners_for_UEs_CUD_operations() {
 
         // api calls
         api_put_UE_callback( edit_UE_tmp_obj, function(UE_obj){
-            // on success, assign path
-            api_post_assign_path( UE_obj.supi, assign_path_id );
+            // on success, assign path (if selected)
+            if (assign_path_id != 0 ){
+                api_post_assign_path( UE_obj.supi, assign_path_id );
+            }
+            else {
+                // TODO: handle this case with the backend
+            }
         });
     });
 }
@@ -2246,18 +2270,23 @@ function ui_edit_UE_modal_add_listeners() {
     $('#edit_UE_path').on('change', function(){
         selected_path_id = $(this).val();
 
-        // add path to map
-        // and set view + zoom level
-        api_get_specific_path_callback( selected_path_id, function(data){
+        if (selected_path_id != 0) {
+            // add path to map
+            // and set view + zoom level
+            api_get_specific_path_callback( selected_path_id, function(data){
+                edit_UE_path_lg.clearLayers();
+                ui_map_paint_path(data, edit_UE_map, edit_UE_path_lg);
+
+                // set bounds for view + zoom depending on the position of cells
+                var map_bounds     = helper_calculate_map_bounds_from_cells();            
+                var leaflet_bounds = new L.LatLngBounds(map_bounds);
+
+                edit_UE_map.fitBounds( leaflet_bounds );
+            });
+        }
+        else {
             edit_UE_path_lg.clearLayers();
-            ui_map_paint_path(data, edit_UE_map, edit_UE_path_lg);
-
-            // set bounds for view + zoom depending on the position of cells
-            var map_bounds     = helper_calculate_map_bounds_from_cells();            
-            var leaflet_bounds = new L.LatLngBounds(map_bounds);
-
-            edit_UE_map.fitBounds( leaflet_bounds );
-        });
+        }
     });
 }
 
