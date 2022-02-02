@@ -698,7 +698,7 @@ function api_put_UE_callback( UE_obj, callback ) {
             // console.log(data);
             ui_display_toast_msg("success", "Success!", "The UE has been updated");
             helper_update_UE( data );
-            ues_datatable.clear().rows.add( ues ).draw();
+            // ues_datatable.clear().rows.add( ues ).draw();
             callback(data);
         },
         error: function(err)
@@ -745,6 +745,7 @@ function api_post_assign_path( UE_supi, path_id ) {
             
             // update local UE obj
             helper_update_UE_path(UE_supi, path_id);
+            ues_datatable.clear().rows.add( ues ).draw();
         },
         error: function(err)
         {
