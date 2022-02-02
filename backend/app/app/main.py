@@ -59,7 +59,7 @@ async def err404(request: Request):
 
 
 @app.get("/err401", response_class=HTMLResponse)
-async def err404(request: Request):
+async def err401(request: Request):
     return templates.TemplateResponse("401.html", {"request": request})
 
 

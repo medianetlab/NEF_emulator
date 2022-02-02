@@ -7,3 +7,4 @@ class scenario(BaseModel):
     cells: List[schemas.CellCreate]
     UEs: List[schemas.UE]
     paths: List[schemas.PathCreate]
+    ue_path_association: List[schemas.ue_path]

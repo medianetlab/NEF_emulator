@@ -152,4 +152,12 @@ def delete_path(
 
     crud.points.delete_points(db=db, path_id=id)    
     path = crud.path.remove(db=db, id=id)
+
+    UEs = crud.ue.get_multi_by_owner(db=db, owner_id=current_user.id, skip=0, limit=100)
+
+    for ue in UEs:
+        if ue.path_id == id:
+           crud.ue.update(db=db, db_obj=ue, obj_in={"path_id" : 0})
+    
     return path
+
