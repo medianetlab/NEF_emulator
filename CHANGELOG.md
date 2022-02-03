@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.3.1
+
+- Fix endpoints on MonitoringEvent API <kbd>{apiroot}/nef/api/v1/3gpp-monitoring-event/**v1**/{scsAsId}/subscriptions</kbd>
+
 ## v1.3.0
 
 
