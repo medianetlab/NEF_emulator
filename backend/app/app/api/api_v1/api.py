@@ -18,7 +18,7 @@ api_router.include_router(qosInformation.router, prefix="/qosInfo", tags=["QoS I
 
     # ---Create a subapp---
 nef_router = APIRouter()
-nef_router.include_router(monitoringevent.router, prefix="/3gpp-monitoring-event", tags=["Monitoring Event API"])
+nef_router.include_router(monitoringevent.router, prefix="/3gpp-monitoring-event/v1", tags=["Monitoring Event API"])
 nef_router.include_router(qosMonitoring.router, prefix="/3gpp-as-session-with-qos/v1", tags=["Session With QoS API"])
 
 
