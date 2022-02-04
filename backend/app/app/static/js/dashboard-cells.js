@@ -123,10 +123,7 @@ function api_delete_cell( cell_id ) {
         {
             // console.log(data);
             ui_display_toast_msg("success", "Success!", "The Cell has been permanently deleted");
-            
-            helper_delete_cell( cell_id );
-            cells_datatable.clear().rows.add( cells ).draw();
-            ui_update_card( '#num-cells-card' , cells.length );
+            ui_fetch_and_update_cells_data();
         },
         error: function(err)
         {
@@ -170,10 +167,7 @@ function api_put_cell( cell_obj ) {
         {
             // console.log(data);
             ui_display_toast_msg("success", "Success!", "The Cell has been updated");
-            
-            helper_update_cell( data );
-            
-            cells_datatable.clear().rows.add( cells ).draw();
+            ui_fetch_and_update_cells_data();
         },
         error: function(err)
         {
@@ -213,10 +207,7 @@ function api_post_cell( cell_obj ) {
         {
             // console.log(data);
             ui_display_toast_msg("success", "Success!", "The Cell has been created");
-            
-            cells.push(data);
-            cells_datatable.clear().rows.add( cells ).draw();
-            ui_update_card( '#num-cells-card' , cells.length );
+            ui_fetch_and_update_cells_data();
         },
         error: function(err)
         {

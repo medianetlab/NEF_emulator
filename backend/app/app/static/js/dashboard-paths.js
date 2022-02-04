@@ -126,10 +126,7 @@ function api_delete_path( path_id ) {
         {
             // console.log(data);
             ui_display_toast_msg("success", "Success!", "The path has been permanently deleted");
-            
-            helper_delete_path( path_id );
-            paths_datatable.clear().rows.add( paths ).draw();
-            ui_update_card( '#num-paths-card' , paths.length );
+            ui_fetch_and_update_paths_data();
         },
         error: function(err)
         {
@@ -174,10 +171,7 @@ function api_put_path( path_obj ) {
         {
             // console.log(data);
             ui_display_toast_msg("success", "Success!", "The Path has been updated");
-            
-            helper_update_path( data );
-            
-            paths_datatable.clear().rows.add( paths ).draw();
+            ui_fetch_and_update_paths_data();
         },
         error: function(err)
         {
@@ -191,6 +185,48 @@ function api_put_path( path_obj ) {
         timeout: 5000
     });
 }
+
+
+// Ajax request to create path
+// on success: add it inside datatables too
+// 
+function api_post_path( path_obj ) {
+    
+    var url = app.api_url + '/paths';
+
+    $.ajax({
+        type: 'POST',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        data:         JSON.stringify(path_obj),
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            // console.log(data);
+            ui_display_toast_msg("success", "Success!", "The path has been created");
+            ui_fetch_and_update_paths_data();
+            
+            ui_add_path_modal_reset_form();
+        },
+        error: function(err)
+        {
+            console.log(err);
+            ui_display_toast_msg("error", "Error: path could not be created", err.responseJSON.detail[0].msg);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 5000
+    });
+}
+
 
 // Ajax request to associate UE with paths
 // on success: update it inside datatables too
@@ -220,10 +256,7 @@ function api_post_assign_path( UE_supi, path_id ) {
         {
             // console.log(data);
             ui_display_toast_msg("success", "Success!", "The path has been assigned");
-            
-            // update local UE obj
-            helper_update_UE_path(UE_supi, path_id);
-            ues_datatable.clear().rows.add( ues ).draw();
+            ui_fetch_and_update_ues_data();
         },
         error: function(err)
         {
@@ -238,47 +271,6 @@ function api_post_assign_path( UE_supi, path_id ) {
     });
 }
 
-// Ajax request to create path
-// on success: add it inside datatables too
-// 
-function api_post_path( path_obj ) {
-    
-    var url = app.api_url + '/paths';
-
-    $.ajax({
-        type: 'POST',
-        url:  url,
-        contentType : 'application/json',
-        headers: {
-            "authorization": "Bearer " + app.auth_obj.access_token
-        },
-        data:         JSON.stringify(path_obj),
-        processData:  false,
-        beforeSend: function() {
-            // 
-        },
-        success: function(data)
-        {
-            // console.log(data);
-            ui_display_toast_msg("success", "Success!", "The path has been created");
-            
-            paths.push(data);
-            paths_datatable.clear().rows.add( paths ).draw();
-            ui_add_path_modal_reset_form();
-            ui_update_card( '#num-paths-card' , paths.length );
-        },
-        error: function(err)
-        {
-            console.log(err);
-            ui_display_toast_msg("error", "Error: path could not be created", err.responseJSON.detail[0].msg);
-        },
-        complete: function()
-        {
-            // 
-        },
-        timeout: 5000
-    });
-}
 
 // Ajax request to get specific Path data
 // on success: callback()

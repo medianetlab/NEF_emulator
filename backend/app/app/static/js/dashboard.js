@@ -2,10 +2,6 @@
 //                 Document ready
 // ===============================================
 $( document ).ready(function() {
-    // api_get_gNBs();
-    // api_get_Cells()
-    // api_get_UEs()
-    // api_get_paths()
 
     ui_fetch_and_update_gNBs_data();
     ui_fetch_and_update_cells_data();

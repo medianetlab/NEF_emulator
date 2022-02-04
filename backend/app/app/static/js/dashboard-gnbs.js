@@ -109,11 +109,7 @@ function api_delete_gNB( gNB_id ) {
         {
             // console.log(data);
             ui_display_toast_msg("success", "Success!", "The gNB has been permanently deleted");
-            
-            helper_delete_gNB( gNB_id );
-            helper_create_db_id_to_gNB_id_bindings();
-            gNBs_datatable.clear().rows.add( gNBs ).draw();
-            ui_update_card( '#num-gnbs-card' , gNBs.length );
+            ui_fetch_and_update_gNBs_data();
         },
         error: function(err)
         {
@@ -157,11 +153,7 @@ function api_put_gNB( gNB_obj ) {
         {
             // console.log(data);
             ui_display_toast_msg("success", "Success!", "The gNB has been updated");
-            
-            helper_update_gNB( data );
-            helper_create_db_id_to_gNB_id_bindings();
-            
-            gNBs_datatable.clear().rows.add( gNBs ).draw();
+            ui_fetch_and_update_gNBs_data();
         },
         error: function(err)
         {
@@ -199,11 +191,7 @@ function api_post_gNB( gNB_obj ) {
         {
             // console.log(data);
             ui_display_toast_msg("success", "Success!", "The gNB has been created");
-            
-            gNBs.push(data);
-            helper_create_db_id_to_gNB_id_bindings();
-            gNBs_datatable.clear().rows.add( gNBs ).draw();
-            ui_update_card( '#num-gnbs-card' , gNBs.length );
+            ui_fetch_and_update_gNBs_data();
         },
         error: function(err)
         {

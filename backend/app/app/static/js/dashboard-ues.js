@@ -120,10 +120,7 @@ function api_delete_UE( UE_supi ) {
         {
             // console.log(data);
             ui_display_toast_msg("success", "Success!", "The UE has been permanently deleted");
-            
-            helper_delete_UE( UE_supi );
-            ues_datatable.clear().rows.add( ues ).draw();
-            ui_update_card( '#num-UEs-card' , ues.length );
+            ui_fetch_and_update_ues_data();
         },
         error: function(err)
         {
@@ -171,10 +168,9 @@ function api_put_UE_callback( UE_obj, callback ) {
         },
         success: function(data)
         {
-            // console.log("PUT UE success");
             // console.log(data);
             ui_display_toast_msg("success", "Success!", "The UE has been updated");
-            helper_update_UE( data );
+            // helper_update_UE( data );
             // ues_datatable.clear().rows.add( ues ).draw();
             callback(data);
         },
@@ -220,7 +216,7 @@ function api_post_UE_callback( UE_obj, callback ) {
             // console.log(data);
             ui_display_toast_msg("success", "Success!", "The UE has been created");
             
-            ues.push(data);
+            // ues.push(data);
             // ues_datatable.clear().rows.add( ues ).draw();    // moved inside callback
             // ui_update_card( '#num-UEs-card' , ues.length );  // moved inside callback
             callback(data);
@@ -408,10 +404,6 @@ function ui_add_btn_listeners_for_UEs_CUD_operations() {
         api_post_UE_callback( data, function(UE_obj){
             // on success, assign path
             api_post_assign_path( UE_obj.supi, assign_path_id );
-
-            setInterval(function(){
-                window.location.href = [location.protocol, '//', location.host, "/dashboard"].join('');
-            },1000);
         });
     });
 
@@ -447,12 +439,8 @@ function ui_add_btn_listeners_for_UEs_CUD_operations() {
         // api calls
         api_put_UE_callback( edit_UE_tmp_obj, function(UE_obj){
             // on success, assign path (if selected)
-            if (assign_path_id != 0 ){
-                api_post_assign_path( UE_obj.supi, assign_path_id );
-            }
-            else {
-                // TODO: handle this case with the backend
-            }
+            api_post_assign_path( UE_obj.supi, assign_path_id );
+            ui_fetch_and_update_ues_data();
         });
     });
 }
