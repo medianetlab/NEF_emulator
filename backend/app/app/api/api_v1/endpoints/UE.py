@@ -239,28 +239,31 @@ def assign_predefined_path(
     """
     Assign paths to UEs
     """
+    if retrieve_ue_state(item_in.supi, current_user.id):
+        raise HTTPException(status_code=400, detail=f"UE with SUPI {item_in.supi} is currently moving. You are not allowed to edit UE's path while it's moving")
+
     UE = crud.ue.get_supi(db=db, supi=item_in.supi)
     if not UE:
         raise HTTPException(status_code=404, detail="UE not found")
     if not crud.user.is_superuser(current_user) and (UE.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
 
-    path = crud.path.get(db=db, id=item_in.path)
-    if not path:
-        raise HTTPException(
-            status_code=409, detail="ERROR: This path_id you specified doesn't exist. Please create a new path with this path_id or use an existing path")
-
-    if retrieve_ue_state(item_in.supi, current_user.id):
-        raise HTTPException(status_code=400, detail=f"UE with SUPI {item_in.supi} is currently moving. You are not allowed to edit UE's path while it's moving")
-    else:
-        #Assign the coordinates
-        if UE.path_id != item_in.path:
-            json_data = jsonable_encoder(UE)
-            json_data['path_id'] = item_in.path
-            random_point = get_random_point(db, item_in.path)
-            json_data['latitude'] = random_point.get('latitude')
-            json_data['longitude'] = random_point.get('longitude')
-            
-            UE = crud.ue.update(db=db, db_obj=UE, obj_in=json_data)
-
+    if item_in.path >= 1:
+        path = crud.path.get(db=db, id=item_in.path)
+        if not path:
+            raise HTTPException(
+                status_code=409, detail="ERROR: This path_id you specified doesn't exist. Please create a new path with this path_id or use an existing path")
+    elif item_in.path == 0:
+        crud.ue.update(db=db, db_obj=UE, obj_in={'path_id' : 0})
         return item_in
+    
+    #Assign the coordinates on path change
+    if UE.path_id != item_in.path:
+        json_data = jsonable_encoder(UE)
+        json_data['path_id'] = item_in.path
+        random_point = get_random_point(db, item_in.path)
+        json_data['latitude'] = random_point.get('latitude')
+        json_data['longitude'] = random_point.get('longitude')
+        crud.ue.update(db=db, db_obj=UE, obj_in=json_data)
+
+    return item_in

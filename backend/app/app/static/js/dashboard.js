@@ -1881,12 +1881,7 @@ function ui_add_btn_listeners_for_UEs_CUD_operations() {
         // api calls
         api_put_UE_callback( edit_UE_tmp_obj, function(UE_obj){
             // on success, assign path (if selected)
-            if (assign_path_id != 0 ){
-                api_post_assign_path( UE_obj.supi, assign_path_id );
-            }
-            else {
-                // TODO: handle this case with the backend
-            }
+            api_post_assign_path( UE_obj.supi, assign_path_id );    
         });
     });
 }

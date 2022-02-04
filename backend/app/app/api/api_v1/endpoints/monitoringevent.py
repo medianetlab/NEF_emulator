@@ -79,7 +79,7 @@ def create_subscription(
     if not UE: 
         raise HTTPException(status_code=409, detail="UE with this external identifier doesn't exist")
     
-    if crud.monitoring.get_sub_externalId(db=db, externalId=item_in.externalId):
+    if crud.monitoring.get_sub_externalId(db=db, externalId=item_in.externalId, owner_id=current_user.id):
         raise HTTPException(status_code=409, detail=f"There is already an active subscription for UE with external id {item_in.externalId}")
     
     if item_in.monitoringType == "LOCATION_REPORTING" and item_in.maximumNumberOfReports == 1:
