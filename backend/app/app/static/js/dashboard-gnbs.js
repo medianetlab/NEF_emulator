@@ -53,7 +53,7 @@ var gNBs_datatable  = null;
 // on success: update the card at the top of the page
 // and fill the datatable with values
 // 
-function api_get_gNBs() {
+function api_get_gNBs( callback ) {
     
     var url = app.api_url + '/gNBs?skip=0&limit=100';
 
@@ -71,11 +71,8 @@ function api_get_gNBs() {
         },
         success: function(data)
         {
-            console.log(data);5
-            gNBs = data;
-            ui_update_card( '#num-gnbs-card' , gNBs.length );
-            ui_init_datatable_gNBs();
-            helper_create_db_id_to_gNB_id_bindings();
+            console.log( data );
+            callback( data );
         },
         error: function(err)
         {
@@ -270,6 +267,11 @@ function ui_init_datatable_gNBs() {
         ]
     } );
 }
+
+
+function ui_redraw_datatable_gNBs() {
+  gNBs_datatable.clear().rows.add( gNBs ).draw();
+}
 // ===============================================
 //           End of Datatable functions
 // ===============================================
@@ -286,6 +288,26 @@ function ui_init_datatable_gNBs() {
 // ===============================================
 //                  UI functions
 // ===============================================
+
+
+function ui_fetch_and_update_gNBs_data() {
+
+  api_get_gNBs( function( gNBs_data_fetched ){
+    gNBs = gNBs_data_fetched;
+    ui_update_card( '#num-gnbs-card' , gNBs.length );
+
+    // first time fetched: init datatable
+    // else: redraw datatable
+    if ( gNBs_datatable == null) {
+      ui_init_datatable_gNBs();
+    } else {
+      ui_redraw_datatable_gNBs();
+    }
+    
+    helper_create_db_id_to_gNB_id_bindings();
+  });
+}
+
 
 
 // adds listeners for CUD operations regarding gNBs

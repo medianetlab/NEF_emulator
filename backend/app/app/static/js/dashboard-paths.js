@@ -70,7 +70,7 @@ var paths_datatable = null;
 // on success: update the card at the top of the page
 // and fill the datatable with values
 // 
-function api_get_paths() {
+function api_get_paths( callback ) {
     
     var url = app.api_url + '/paths?skip=0&limit=100';
 
@@ -89,9 +89,7 @@ function api_get_paths() {
         success: function(data)
         {
             console.log(data);
-            paths = data;
-            ui_update_card( '#num-paths-card' , paths.length );
-            ui_init_datatable_paths();
+            callback( data );
         },
         error: function(err)
         {
@@ -360,6 +358,11 @@ function ui_init_datatable_paths() {
         ]
     } );
 }
+
+
+function ui_redraw_datatable_paths() {
+  paths_datatable.clear().rows.add( paths ).draw();
+}
 // ===============================================
 //           End of Datatable functions
 // ===============================================
@@ -371,6 +374,24 @@ function ui_init_datatable_paths() {
 // ===============================================
 //                  UI functions
 // ===============================================
+
+
+function ui_fetch_and_update_paths_data() {
+
+  api_get_paths( function( paths_data_fetched ){
+    paths = paths_data_fetched;
+    ui_update_card( '#num-paths-card' , paths.length );
+    
+    // first time fetched: init datatable
+    // else: redraw datatable
+    if ( paths_datatable == null) {
+      ui_init_datatable_paths();
+    } else {
+      ui_redraw_datatable_paths();
+    }
+  });
+}
+
 
 
 // adds listeners for CUD operations regarding Paths

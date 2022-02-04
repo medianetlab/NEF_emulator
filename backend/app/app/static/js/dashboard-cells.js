@@ -67,7 +67,7 @@ var cells_datatable = null;
 // on success: update the card at the top of the page
 // and fill the datatable with values
 // 
-function api_get_Cells() {
+function api_get_Cells( callback ) {
     
     var url = app.api_url + '/Cells?skip=0&limit=100';
 
@@ -86,9 +86,7 @@ function api_get_Cells() {
         success: function(data)
         {
             console.log(data);
-            cells = data;
-            ui_update_card( '#num-cells-card' , cells.length );
-            ui_init_datatable_Cells();
+            callback( data );
         },
         error: function(err)
         {
@@ -294,6 +292,11 @@ function ui_init_datatable_Cells() {
         ]
     } );
 }
+
+
+function ui_redraw_datatable_Cells() {
+  cells_datatable.clear().rows.add( cells ).draw();
+}
 // ===============================================
 //           End of Datatable functions
 // ===============================================
@@ -312,6 +315,24 @@ function ui_init_datatable_Cells() {
 // ===============================================
 //                  UI functions
 // ===============================================
+
+
+function ui_fetch_and_update_cells_data() {
+
+  api_get_Cells( function( cells_data_fetched ){
+    cells = cells_data_fetched;
+    ui_update_card( '#num-cells-card' , cells.length );
+    
+    // first time fetched: init datatable
+    // else: redraw datatable
+    if ( cells_datatable == null) {
+      ui_init_datatable_Cells();
+    } else {
+      ui_redraw_datatable_Cells();
+    }
+  });
+}
+
 
 
 // adds listeners for CUD operations regarding Cells
