@@ -1,5 +1,69 @@
 # Changelog
 
+## v1.3.1
+
+- Fix endpoints on MonitoringEvent API <kbd>{apiroot}/nef/api/v1/3gpp-monitoring-event/**v1**/{scsAsId}/subscriptions</kbd>
+
+## v1.3.0
+
+
+### License ⚖️
+ -  added **Apache-2.0 License**
+
+
+
+### Docker 🐳
+
+ - ⛔ breaking change, 🔃 upgrade `docker-compose` to version `1.29.2`, build `5becea4c`
+ - Guidelines: head over to [docs.docker.com/compose/install/](https://docs.docker.com/compose/install/) and choose your OS. For Linux you can use the following 👇:
+
+       sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+ - **Reason:** our `docker-compose.yml` now uses `profiles` ([docs.docker.com/compose/profiles/](https://docs.docker.com/compose/profiles/)). This gives us the option of adding some kind of labeling to every container, for example `["dev", "debug", "frontend"]` that can later be passed to `docker-compose up`. Practically this means that you spin up the containers selectively depending on what you need. With the relative changes to the `Makefile`:
+   - ℹ️ `make up` now runs **only** the **3** containers needed for the NEF_emulator
+   - ✔ `make debug-up`: new command, runs the full composition: **5** containers, 3 needed for NEF + 2 for Database management (Postgres & MongoDB)
+
+
+         make up:
+                docker-compose --profile dev up
+       
+         make debug-up:
+                docker-compose --profile debug up
+
+
+### NEF APIs / backend
+
+ - split documentation in two parts:
+     - NEF_emulator (Swagger - `/docs` | Redoc `/redoc`)
+     - Northbound APIs (Swagger - `/nef/docs` | Redoc `/nef/redoc`)
+ - ⛔ breaking change, split endpoints in two parts:
+     - NEF emulator <kbd>{apiroot}/api/v1/{*NEF_emulator endpoints*}</kbd>
+     - Northbound APIs <kbd>{apiroot}/nef/api/v1/{*Northbound endpoints*}</kbd>
+     
+ - ✔ added functionality to export/import the scenario (gNBs, Cells , UEs, paths) (see UI changes)
+     - <kbd>/api/v1/utils/export/scenario</kbd>
+     - <kbd>/api/v1/utils/import/scenario</kbd>
+ 
+
+
+### UI changes
+
+ - 🔃 upgrade `coreui` to `v4.1.0` which fixes a persistent browser console error
+ - ✔ `/export` page to generate `json` with the scenario (gNBs, Cells, UEs, paths)
+ - ✔ `/import` page to upload `json` and create a previously exported scenario
+ - 📄 `/docs`: added sidebar links to the new API Swagger/ReDoc pages (after the UI / North Bound split)
+ - minor changes to the UE datatable to show more handy attributes (e.g. `external_identifier`, `path`...)
+ - ✔ added 2 Javascript libraries: `codemirror` & `highlight` for `json` highlighting inside textareas
+ - `/dashboard`: added some callback functions needed at `api_put_UE_callback(...)` &  `api_post_UE_callback(...)`
+ - `/dashboard`: added handling for UEs without selected path
+
+
+
+### Testing
+
+ - Initial definition of functional tests for `MonitoringEvent API` and `AsSessionWithQoS API` under [docs/test_plan](https://github.com/medianetlab/NEF_emulator/tree/main/docs/test_plan)
+
+
+ 
 
 ## v.1.2.0
 

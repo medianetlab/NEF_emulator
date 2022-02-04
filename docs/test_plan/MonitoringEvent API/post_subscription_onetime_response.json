@@ -1,0 +1,9 @@
+{
+  "monitoringType": "LOCATION_REPORTING",
+  "locationInfo": {
+    "cellId": "AAAAA1002",
+    "gNBId": "AAAAA1"
+  },
+  "externalId": "10002@domain.com",
+  "ipv4Addr": "10.0.0.2"
+}

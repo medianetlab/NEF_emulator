@@ -1,0 +1,9 @@
+{
+  "link": "http://localhost:8888/nef/api/v1/3gpp-monitoring-event/myNetapp/subscriptions/1",
+  "notificationDestination": "http://localhost:80/api/v1/utils/monitoring/callback",
+  "maximumNumberOfReports": 2,
+  "externalId": "10001@domain.com",
+  "monitoringType": "LOCATION_REPORTING",
+  "monitorExpireTime": "2022-01-28T13:00:48.634000+00:00",
+  "ipv4Addr": "10.0.0.1"
+}
