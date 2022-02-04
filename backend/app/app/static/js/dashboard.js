@@ -91,6 +91,7 @@ function ui_display_toast_msg( type, title, text ) {
     toastr[type](text, title, toastr_options);
 }
 
+
 // ===============================================
 //               End of UI functions
 // ===============================================
