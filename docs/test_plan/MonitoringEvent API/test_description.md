@@ -39,14 +39,14 @@ This test case will check that the NetApp creates a subscription successfully to
 
 * Actions:
     1. Netapp subscribes to Monitoring Event API with an HTTP POST request for a registered UE
-    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/{scsAsId}/subscriptions**</kbd>
+    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/v1/{scsAsId}/subscriptions**</kbd>
     3. Request Body: [request body]
     
 * Post-Conditions:
     1. 201 Created response 
     2. Response body: [response body] 
     3. The URI of the created resource is returned in the 'Location' HTTP header  according to the structure: 
-<kbd>**{apiRoot}/nef/api/v1/3gpp-monitoring-event/{scsAsId}/subscriptions/{subscriptionId}**</kbd>
+<kbd>**{apiRoot}/nef/api/v1/3gpp-monitoring-event/v1/{scsAsId}/subscriptions/{subscriptionId}**</kbd>
 
 ## ✔ Test Case 2: One-time request to the Monitoring Event API by Authorized NetApp
 
@@ -59,7 +59,7 @@ This test case will check that the NetApp sends an one-time response request to 
 
 * Actions:
     1. Netapp sends an HTTP POST request to Monitoring Event API
-    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/{scsAsId}/subscriptions**</kbd>
+    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/v1/{scsAsId}/subscriptions**</kbd>
     3. Request Body: [one time request body]
     
 * Post-Conditions:
@@ -78,7 +78,7 @@ This test case will check that whether the NetApp tries to subscribe to the Moni
 
 * Actions:
     1. Netapp subscribes to Monitoring Event API with an HTTP POST request for a registered UE
-    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/{scsAsId}/subscriptions**</kbd>
+    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/v1/{scsAsId}/subscriptions**</kbd>
     3. Request Body: [request body]
     
 * Post-Conditions:
@@ -93,7 +93,7 @@ This test case will check that an unauthorised NetApp cannot create a subscripti
 
 * Actions:
     1. Netapp subscribes to Monitoring Event API with an HTTP POST request
-    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/{scsAsId}/subscriptions**</kbd> 
+    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/v1/{scsAsId}/subscriptions**</kbd> 
     3. Request Body: [request body]
     
 * Post-Conditions:
@@ -109,7 +109,7 @@ This test case will check if the active subscriptions are retrieved successfully
 
 * Actions:
     1. Netapp sends an HTTP GET request to Monitoring Event API
-    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/{scsAsId}/subscriptions**</kbd>
+    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/v1/{scsAsId}/subscriptions**</kbd>
     
 * Post-Conditions:
     1. 200 OK response
@@ -127,7 +127,7 @@ This test case will check if there are no active subscription to be retrieved by
 
 * Actions:
     1. Netapp sends an HTTP GET request to Monitoring Event API
-    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/{scsAsId}/subscriptions**</kbd>
+    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/v1/{scsAsId}/subscriptions**</kbd>
     
 * Post-Conditions:
     1. 204 No Content 
@@ -143,7 +143,7 @@ This test case will check if the individual subscription by the NetApp from Moni
 * Actions:
     1. Netapp sends an HTTP GET request to Monitoring Event API
     2. Netapp provides in the request the path parameter {subscriptionid}, which initially retrieved in the creation of the subscription
-    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
+    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/v1/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
     
 * Post-Conditions:
     1. 200 OK response 
@@ -159,7 +159,7 @@ This test case will check if the individual subscription retrieved by the NetApp
 * Actions:
     1. Netapp sends an HTTP GET request to Monitoring Event API
     2. Netapp provides in the request the path parameter {subscriptionid}
-    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
+    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/v1/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
     
 * Post-Conditions:
     1. 404 Not Found
@@ -173,7 +173,7 @@ This test case will check that an unauthorised NetApp cannot retrieve all active
 
 * Actions:
     1. Netapp sends an HTTP GET request to Monitoring Event API
-    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/{scsAsId}/subscriptions**</kbd> 
+    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/v1/{scsAsId}/subscriptions**</kbd> 
     
 * Post-Conditions:
     1. 401 Unauthorized
@@ -188,7 +188,7 @@ This test case will check that an unauthorised NetApp cannot retrieve an individ
 * Actions:
     1. Netapp sends an HTTP GET request to Monitoring Event API
     2. Netapp provides in the request the path parameter {subscriptionid}
-    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/{scsAsId}/subscriptions/{subscriptionid}**</kbd> 
+    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/v1/{scsAsId}/subscriptions/{subscriptionid}**</kbd> 
     
 * Post-Conditions:
     1. 401 Unauthorized
@@ -204,7 +204,7 @@ This test case will check if the individual subscription by the NetApp from Moni
 * Actions:
     1. Netapp sends an HTTP PUT request to Monitoring Event API
     2. Netapp provides in the request the path parameter {subscriptionid}, which initially retrieved in the creation of the subscription
-    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
+    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/v1/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
     4. Request body: [request body] 
     
 * Post-Conditions:
@@ -222,7 +222,7 @@ This test case will check if the individual subscription that the NetApp tries t
 * Actions:
     1. Netapp sends an HTTP PUT request to Monitoring Event API
     2. Netapp provides in the request the path parameter {subscriptionid}
-    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
+    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/v1/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
     4. Request body: [request body] 
 
 * Post-Conditions:
@@ -238,7 +238,7 @@ This test case will check that an unauthorised NetApp cannot update an individua
 * Actions:
     1. Netapp sends an HTTP PUT request to Monitoring Event API
     2. Netapp provides in the request the path parameter {subscriptionid}
-    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/{scsAsId}/subscriptions/{subscriptionid}**</kbd> 
+    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/v1/{scsAsId}/subscriptions/{subscriptionid}**</kbd> 
     4. Request body: [request body] 
     
 * Post-Conditions:
@@ -255,7 +255,7 @@ This test case will check if the individual subscription by the NetApp from Moni
 * Actions:
     1. Netapp sends an HTTP DELETE request to Monitoring Event API
     2. Netapp provides in the request the path parameter {subscriptionid}, which initially retrieved in the creation of the subscription
-    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
+    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/v1/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
     
 * Post-Conditions:
     1. 200 OK response 
@@ -272,7 +272,7 @@ This test case will check if the individual subscription that the NetApp tries t
 * Actions:
     1. Netapp sends an HTTP DELETE request to Monitoring Event API
     2. Netapp provides in the request the path parameter {subscriptionid}
-    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
+    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/v1/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
     
 * Post-Conditions:
     1. 404 Not Found
@@ -287,7 +287,7 @@ This test case will check that an unauthorised NetApp cannot retrieve an individ
 * Actions:
     1. Netapp sends an HTTP DELETE request to Monitoring Event API
     2. Netapp provides in the request the path parameter {subscriptionid}
-    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/{scsAsId}/subscriptions/{subscriptionid}**</kbd> 
+    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-monitoring-event/v1/{scsAsId}/subscriptions/{subscriptionid}**</kbd> 
     
 * Post-Conditions:
     1. 401 Unauthorized
