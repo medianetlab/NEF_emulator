@@ -38,14 +38,14 @@ This test case will check that the NetApp creates a subscription successfully to
 
 * Actions:
     1. Netapp subscribes to AsSessionWithQoS API with an HTTP POST request for a registered UE
-    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/{scsAsId}/subscriptions**</kbd>
+    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/v1/{scsAsId}/subscriptions**</kbd>
     3. Request Body: [request body]
     
 * Post-Conditions:
     1. 201 Created response
     2. Response body: [response body]
     3. The URI of the created resource is returned in the 'Location' HTTP header  according to the structure: 
-<kbd>**{apiRoot}/nef/api/v1/3gpp-as-session-with-qos/{scsAsId}/subscriptions/{subscriptionId}**</kbd>
+<kbd>**{apiRoot}/nef/api/v1/3gpp-as-session-with-qos/v1/{scsAsId}/subscriptions/{subscriptionId}**</kbd>
 
 ## ❌ Test Case 2: Create subscription when there is already an active subscription for a registered UE
 
@@ -59,7 +59,7 @@ This test case will check that whether the NetApp tries to subscribe to the AsSe
 
 * Actions:
     1. Netapp subscribes to AsSessionWithQoS API with an HTTP POST request for a registered UE
-    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/{scsAsId}/subscriptions**</kbd>
+    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/v1/{scsAsId}/subscriptions**</kbd>
     3. Request Body: [request body]
     
 * Post-Conditions:
@@ -75,7 +75,7 @@ This test case will check that an unauthorised NetApp cannot create a subscripti
 * Actions:
     1. Netapp subscribes to AsSessionWithQoS API with an HTTP POST request
     2. Request includes only one of UE's identifiers 👉(ipv4, ipv6, mac address)
-    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/{scsAsId}/subscriptions**</kbd> 
+    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/v1/{scsAsId}/subscriptions**</kbd> 
     4. Request Body: [request body]
     
 * Post-Conditions:
@@ -91,7 +91,7 @@ This test case will check if the active subscriptions are retrieved successfully
 
 * Actions:
     1. Netapp sends an HTTP GET request to AsSessionWithQoS API
-    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/{scsAsId}/subscriptions**</kbd>
+    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/v1/{scsAsId}/subscriptions**</kbd>
     
 * Post-Conditions:
     1. 200 OK response 
@@ -109,7 +109,7 @@ This test case will check if there are no active subscription to be retrieved by
 
 * Actions:
     1. Netapp sends an HTTP GET request to AsSessionWithQoS API
-    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/{scsAsId}/subscriptions**</kbd>
+    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/v1/{scsAsId}/subscriptions**</kbd>
     
 * Post-Conditions:
     1. 404 Not Found
@@ -126,7 +126,7 @@ This test case will check if the individual subscription by the NetApp from AsSe
 * Actions:
     1. Netapp sends an HTTP GET request to AsSessionWithQoS API
     2. Netapp provides in the request the path parameter {subscriptionid}, which was initially retrieved in the creation of the subscription
-    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
+    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/v1/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
     
 * Post-Conditions:
     1. 200 OK response 
@@ -143,7 +143,7 @@ This test case will check if the individual subscription retrieved by the NetApp
 * Actions:
     1. Netapp sends an HTTP GET request to AsSessionWithQoS API
     2. Netapp provides in the request the path parameter {subscriptionid}
-    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
+    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/v1/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
     
 * Post-Conditions:
     1. 404 Not Found
@@ -157,7 +157,7 @@ This test case will check that an unauthorised NetApp cannot retrieve all active
 
 * Actions:
     1. Netapp sends an HTTP GET request to AsSessionWithQoS API
-    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/{scsAsId}/subscriptions**</kbd> 
+    2. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/v1/{scsAsId}/subscriptions**</kbd> 
     
 * Post-Conditions:
     1. 401 Unauthorized
@@ -172,7 +172,7 @@ This test case will check that an unauthorised NetApp cannot retrieve an individ
 * Actions:
     1. Netapp sends an HTTP GET request to AsSessionWithQoS API
     2. Netapp provides in the request the path parameter {subscriptionid}
-    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/{scsAsId}/subscriptions/{subscriptionid}**</kbd> 
+    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/v1/{scsAsId}/subscriptions/{subscriptionid}**</kbd> 
     
 * Post-Conditions:
     1. 401 Unauthorized
@@ -189,7 +189,7 @@ This test case will check if the individual subscription by the NetApp from AsSe
 * Actions:
     1. Netapp sends an HTTP PUT request to AsSessionWithQoS API
     2. Netapp provides in the request the path parameter {subscriptionid}, which was initially retrieved in the creation of the subscription
-    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
+    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/v1/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
     4. Request body: [request body]
     
 * Post-Conditions:
@@ -208,7 +208,7 @@ This test case will check if the individual subscription that the NetApp tries t
 * Actions:
     1. Netapp sends an HTTP PUT request to AsSessionWithQoS API
     2. Netapp provides in the request the path parameter {subscriptionid}
-    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
+    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/v1/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
     4. Request body: [request body]
 
 * Post-Conditions:
@@ -224,7 +224,7 @@ This test case will check that an unauthorised NetApp cannot update an individua
 * Actions:
     1. Netapp sends an HTTP PUT request to AsSessionWithQoS API
     2. Netapp provides in the request the path parameter {subscriptionid}
-    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/{scsAsId}/subscriptions/{subscriptionid}**</kbd> 
+    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/v1/{scsAsId}/subscriptions/{subscriptionid}**</kbd> 
     4. Request body: [response body]
     
 * Post-Conditions:
@@ -242,7 +242,7 @@ This test case will check if the individual subscription by the NetApp from AsSe
 * Actions:
     1. Netapp sends an HTTP DELETE request to AsSessionWithQoS API
     2. Netapp provides in the request the path parameter {subscriptionid}, which was initially retrieved in the creation of the subscription
-    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
+    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/v1/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
     
 * Post-Conditions:
     1. 200 OK response 
@@ -260,7 +260,7 @@ This test case will check if the individual subscription that the NetApp tries t
 * Actions:
     1. Netapp sends an HTTP DELETE request to AsSessionWithQoS API
     2. Netapp provides in the request the path parameter {subscriptionid}
-    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
+    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/v1/{scsAsId}/subscriptions/{subscriptionid}**</kbd>
     
 * Post-Conditions:
     1. 404 Not Found
@@ -275,7 +275,7 @@ This test case will check that an unauthorised NetApp cannot retrieve an individ
 * Actions:
     1. Netapp sends an HTTP DELETE request to AsSessionWithQoS API
     2. Netapp provides in the request the path parameter {subscriptionid}
-    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/{scsAsId}/subscriptions/{subscriptionid}**</kbd> 
+    3. Endpoint: <kbd>**{apiroot}/nef/api/v1/3gpp-as-session-with-qos/v1/{scsAsId}/subscriptions/{subscriptionid}**</kbd> 
     
 * Post-Conditions:
     1. 401 Unauthorized
