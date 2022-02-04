@@ -97,7 +97,7 @@ class BackgroundTasks(threading.Thread):
                         crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
                         
                         #Retrieve the subscription of the UE by external Id | This could be outside while true but then the user cannot subscribe when the loop runs
-                        sub = crud.monitoring.get_sub_externalId(db=db, externalId=UE.external_identifier)
+                        sub = crud.monitoring.get_sub_externalId(db=db, externalId=UE.external_identifier, owner_id=current_user.id)
 
                         #Validation of subscription
                         if not sub:

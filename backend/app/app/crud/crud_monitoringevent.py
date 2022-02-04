@@ -30,7 +30,7 @@ class CRUD_Monitoring(CRUDBase[Monitoring, MonitoringEventSubscription, Monitori
             .all()
         )
 
-    def get_sub_externalId(self, db: Session, externalId: str) -> Monitoring:
-        return db.query(self.model).filter(Monitoring.externalId == externalId).first()
+    def get_sub_externalId(self, db: Session, externalId: str, owner_id: int) -> Monitoring:
+        return db.query(self.model).filter(Monitoring.externalId == externalId, Monitoring.owner_id == owner_id).first()
 
 monitoring = CRUD_Monitoring(Monitoring)
