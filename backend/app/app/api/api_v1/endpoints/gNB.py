@@ -64,6 +64,13 @@ def update_gNB(
         raise HTTPException(status_code=404, detail="gNB not found")
     if not crud.user.is_superuser(current_user) and (gNB.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
+
+    #check if the requested gnB_id (hex) exists in db
+    gNBs = crud.gnb.get_multi_by_owner(db=db, owner_id=current_user.id, skip=0, limit=100)
+    for gNB_in in gNBs:
+        if item_in.gNB_id == gNB_in.gNB_id:
+            raise HTTPException(status_code=409, detail=f"gNB with id {item_in.gNB_id} already exists")
+
     gNB = crud.gnb.update(db=db, db_obj=gNB, obj_in=item_in)
     return gNB
 
