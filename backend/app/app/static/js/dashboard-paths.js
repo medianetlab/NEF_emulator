@@ -83,7 +83,8 @@ function api_get_paths() {
         },
         processData:  false,
         beforeSend: function() {
-            $('.card-paths .spinner-grow-sm').show();
+            $('.card-paths       .spinner-grow-sm').show();
+            $('.card-table-paths .spinner-border' ).show();
         },
         success: function(data)
         {
@@ -98,7 +99,8 @@ function api_get_paths() {
         },
         complete: function()
         {
-            $('.card-paths .spinner-grow-sm').hide();
+            $('.card-paths       .spinner-grow-sm').hide();
+            $('.card-table-paths .spinner-border' ).hide();
         },
         timeout: 5000
     });

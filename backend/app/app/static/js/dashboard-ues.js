@@ -77,7 +77,8 @@ function api_get_UEs() {
         },
         processData:  false,
         beforeSend: function() {
-            $('.card-ues .spinner-grow-sm').show();
+            $('.card-ues       .spinner-grow-sm').show();
+            $('.card-table-ues .spinner-border' ).show();
         },
         success: function(data)
         {
@@ -92,7 +93,8 @@ function api_get_UEs() {
         },
         complete: function()
         {
-            $('.card-ues .spinner-grow-sm').hide();
+            $('.card-ues       .spinner-grow-sm').hide();
+            $('.card-table-ues .spinner-border' ).hide();
         },
         timeout: 5000
     });

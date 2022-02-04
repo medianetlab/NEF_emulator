@@ -66,11 +66,12 @@ function api_get_gNBs() {
         },
         processData:  false,
         beforeSend: function() {
-            $('.card-gNBs .spinner-grow-sm').show();
+            $('.card-gNBs       .spinner-grow'  ).show();
+            $('.card-table-gNBs .spinner-border').show();
         },
         success: function(data)
         {
-            console.log(data);
+            console.log(data);5
             gNBs = data;
             ui_update_card( '#num-gnbs-card' , gNBs.length );
             ui_init_datatable_gNBs();
@@ -82,7 +83,8 @@ function api_get_gNBs() {
         },
         complete: function()
         {
-            $('.card-gNBs .spinner-grow-sm').hide();
+            $('.card-gNBs       .spinner-grow'  ).hide();
+            $('.card-table-gNBs .spinner-border').hide();
         },
         timeout: 5000
     });

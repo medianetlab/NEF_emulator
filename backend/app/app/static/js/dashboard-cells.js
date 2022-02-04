@@ -80,7 +80,8 @@ function api_get_Cells() {
         },
         processData:  false,
         beforeSend: function() {
-            $('.card-cells .spinner-grow-sm').show();
+            $('.card-cells       .spinner-grow-sm').show();
+            $('.card-table-cells .spinner-border' ).show();
         },
         success: function(data)
         {
@@ -95,7 +96,8 @@ function api_get_Cells() {
         },
         complete: function()
         {
-            $('.card-cells .spinner-grow-sm').hide();
+            $('.card-cells       .spinner-grow-sm').hide();
+            $('.card-table-cells .spinner-border' ).hide();
         },
         timeout: 5000
     });

@@ -28,3 +28,5 @@
 
 #add_path_color_preview { background-color: #3399ff; display: block; height: 37px; border-radius: 5px;}
 #add_path_modal kbd     { cursor: pointer; }
+
+.card .spinner-border { margin-left: 5px }
