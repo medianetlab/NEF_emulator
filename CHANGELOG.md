@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.3.2
+
+- Fix UE-association-path selection with `path_id` 0 (no path selected) - both dashboard and backend
+- Fix bug in check_expiration_time function
+- The Monitoring Event subscription by external id is retrieved by additional filter `owner_id`
+
 ## v1.3.1
 
 - Fix endpoints on MonitoringEvent API <kbd>{apiroot}/nef/api/v1/3gpp-monitoring-event/**v1**/{scsAsId}/subscriptions</kbd>
