@@ -30,17 +30,21 @@ var cells_datatable = null;
     var edit_cell_tmp_obj  = null;
 
     // leaflet.js map for editing Cell modal
-    var edit_cell_map         = null;
-    var edit_cell_coverage_lg = L.layerGroup(); // map layer group
-    var edit_cell_circle_dot  = null;           // small circle depicting the position of the cell (to be edited)
-    var edit_cell_circle_cov  = null;           // large transparent circle depicting the coverage of the above cell
+    var edit_cell_map            = null;
+    var edit_cell_lg             = L.layerGroup(); // map layer group
+    var edit_cell_coverage_lg    = L.layerGroup(); // map layer group
+    var edit_cell_UE_position_lg = L.layerGroup(); // map layer group
+    var edit_cell_path_lg        = L.layerGroup(); // map layer group
+    var edit_cell_circle_dot     = null;           // small circle depicting the position of the cell (to be edited)
+    var edit_cell_circle_cov     = null;           // large transparent circle depicting the coverage of the above cell
     // leaflet.js map for adding Cell modal
     var add_cell_map            = null;
+    var add_cell_lg             = L.layerGroup(); // map layer group
     var add_cell_coverage_lg    = L.layerGroup(); // map layer group
     var add_cell_UE_position_lg = L.layerGroup(); // map layer group
     var add_cell_path_lg        = L.layerGroup(); // map layer group
-    var add_cell_circle_dot  = null;           // small circle depicting the position of the cell (to be added)
-    var add_cell_circle_cov  = null;           // large transparent circle depicting the coverage of the above cell
+    var add_cell_circle_dot     = null;           // small circle depicting the position of the cell (to be added)
+    var add_cell_circle_cov     = null;           // large transparent circle depicting the coverage of the above cell
 
 // ===============================================
 //             End of Global variables
@@ -403,7 +407,10 @@ function ui_show_delete_cell_modal( cell_id ) {
 // 
 function ui_show_edit_cell_modal( cell_id ) {
 
-    edit_cell_coverage_lg.clearLayers(); // map layer cleanup
+    edit_cell_lg.clearLayers();              // map layer cleanup
+    edit_cell_coverage_lg.clearLayers();     // map layer cleanup
+    edit_cell_UE_position_lg.clearLayers();  // map layer cleanup
+    edit_cell_path_lg.clearLayers();         // map layer cleanup
 
     cell_to_be_edited = cell_id;
 
@@ -452,7 +459,7 @@ function ui_show_edit_cell_modal( cell_id ) {
         color: 'none',
         fillColor: '#000',
         fillOpacity: 1.0
-    }).addTo(edit_cell_coverage_lg).addTo( edit_cell_map );
+    }).addTo(edit_cell_lg).addTo( edit_cell_map );
 
     // and a transparent circle for coverage 
     L.circle([edit_cell_tmp_obj.latitude,edit_cell_tmp_obj.longitude], edit_cell_tmp_obj.radius, {
@@ -474,7 +481,7 @@ function ui_show_edit_cell_modal( cell_id ) {
         color: 'none',
         fillColor: '#2686de',
         fillOpacity: 1.0
-    }).addTo(edit_cell_coverage_lg).addTo( edit_cell_map );
+    }).addTo(edit_cell_lg).addTo( edit_cell_map );
 
     // add a transparent circle for coverage 
     edit_cell_circle_cov = L.circle([edit_cell_tmp_obj.latitude,(edit_cell_tmp_obj.new_longitude)], edit_cell_tmp_obj.radius, {
@@ -482,6 +489,76 @@ function ui_show_edit_cell_modal( cell_id ) {
         fillColor: '#2686de',
         fillOpacity: 0.2
     }).addTo(edit_cell_coverage_lg).addTo( edit_cell_map );
+
+
+
+
+    // display all the other cells
+    if ( cells.length > 0 ) {
+
+      // iterate and add cells to map
+      for (const item of cells) {
+
+        if ( item.cell_id == edit_cell_tmp_obj.cell_id ) { continue; }
+
+        // add a solid-color small circle (dot)
+        L.circle([item.latitude,(item.longitude)], 2, {
+            color: 'none',
+            fillColor: '#f03',
+            fillOpacity: 0.6
+        }).addTo(edit_cell_lg).addTo( edit_cell_map );
+    
+        // add a transparent circle for coverage 
+        L.circle([item.latitude,(item.longitude)], item.radius, {
+            color: 'none',
+            fillColor: '#f03',
+            fillOpacity: 0.05
+        }).addTo(edit_cell_coverage_lg).addTo( edit_cell_map );
+      }
+    }
+
+
+    // if UEs have been added, display them
+    if ( ues.length > 0 ) {
+
+      // iterate and add ues to map
+      for (const ue of ues) {
+        // create markers - this will be executed only once!
+        var walk_icon = L.divIcon({
+            className: 'emu-pin-box',
+            iconSize: L.point(30,42),
+            iconAnchor: L.point(15,42),
+            popupAnchor: L.point(0,-38),
+            tooltipAnchor: L.point(0,0),
+            html: '<div class="pin-bg pin-bg-walk"></div>\
+                   <div class="pin-icon ion-md-walk"></div>'
+        });
+        
+        L.marker([ue.latitude,ue.longitude], {icon: walk_icon}).addTo(edit_cell_map)
+            .bindTooltip(ue.ip_address_v4)
+            .bindPopup("<b>"+ ue.name +"</b><br />"+
+                       // ue.description +"<br />"+
+                       "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
+                       "Cell ID: " + ue.cell_id_hex +"<br />"+
+                       "External identifier: " + ue.external_identifier +"<br />"+
+                       "Speed:"+ ue.speed)
+            .addTo(edit_cell_UE_position_lg); // add to layer group
+        }        
+    }
+
+
+    // display paths if any
+    if ( paths.length > 0 ) {
+      
+      // iterate and add paths to map
+      for (const path of paths) {
+        // paint the current path of the path
+        api_get_specific_path_callback( path.id, function(data){
+            // console.log(data);
+            ui_map_paint_path(data, edit_cell_map, edit_cell_path_lg);
+        });
+      }
+    }
 }
 
 
@@ -513,11 +590,12 @@ function ui_show_add_cell_modal(  ) {
 
     add_cell_map.invalidateSize(); // this helps the map display its tiles correctly after the size of the modal is finalized
 
+    // add a solid-color small circle (dot)
     add_cell_circle_dot = L.circle([48.499998, 23.383331], 2, { // Geographical midpoint of Europe
         color: 'none',
         fillColor: '#2686de',
         fillOpacity: 1.0
-    }).addTo(add_cell_coverage_lg).addTo( add_cell_map );
+    }).addTo(add_cell_lg).addTo( add_cell_map );
 
     // add a transparent circle for coverage 
     add_cell_circle_cov = L.circle([48.499998, 23.383331], 150, { // Geographical midpoint of Europe
@@ -539,7 +617,7 @@ function ui_show_add_cell_modal(  ) {
                 color: 'none',
                 fillColor: '#f03',
                 fillOpacity: 0.6
-            }).addTo(add_cell_coverage_lg).addTo( add_cell_map );
+            }).addTo(add_cell_lg).addTo( add_cell_map );
         
             // add a transparent circle for coverage 
             L.circle([item.latitude,(item.longitude)], item.radius, {
@@ -620,7 +698,7 @@ function ui_initialize_edit_cell_map() {
 
     // map initialization
     edit_cell_map = L.map('edit_cell_mapid', {
-        layers: [grayscale, edit_cell_coverage_lg]
+        layers: [grayscale, edit_cell_lg, edit_cell_coverage_lg, edit_cell_UE_position_lg, edit_cell_path_lg]
     }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
 
 
@@ -630,7 +708,10 @@ function ui_initialize_edit_cell_map() {
         };
 
     var overlays = {
+        "cells"        : edit_cell_lg,
         "cell coverage": edit_cell_coverage_lg,
+        "UEs"          : edit_cell_UE_position_lg,
+        "paths"        : edit_cell_path_lg
     };
 
     L.control.layers(baseLayers, overlays).addTo(edit_cell_map);
@@ -653,7 +734,7 @@ function ui_initialize_add_cell_map() {
 
     // map initialization
     add_cell_map = L.map('add_cell_mapid', {
-        layers: [grayscale, add_cell_coverage_lg, add_cell_UE_position_lg, add_cell_path_lg]
+        layers: [grayscale, add_cell_lg, add_cell_coverage_lg, add_cell_UE_position_lg, add_cell_path_lg]
     }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
 
 
@@ -663,6 +744,7 @@ function ui_initialize_add_cell_map() {
         };
 
     var overlays = {
+        "cells"        : add_cell_lg,
         "cell coverage": add_cell_coverage_lg,
         "UEs"          : add_cell_UE_position_lg,
         "paths"        : add_cell_path_lg
