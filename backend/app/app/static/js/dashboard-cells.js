@@ -492,7 +492,9 @@ function ui_show_add_cell_modal(  ) {
         return;
     }
 
-    add_cell_coverage_lg.clearLayers(); // map layer cleanup
+    add_cell_coverage_lg.clearLayers();     // map layer cleanup
+    add_cell_UE_position_lg.clearLayers();  // map layer cleanup
+    add_cell_path_lg.clearLayers();         // map layer cleanup
 
     // refresh the gNB options in the select input
     $('#add_cell_gNB').empty(); // delete the old ones
@@ -535,15 +537,15 @@ function ui_show_add_cell_modal(  ) {
             // add a solid-color small circle (dot)
             L.circle([item.latitude,(item.longitude)], 2, {
                 color: 'none',
-                fillColor: '#000',
-                fillOpacity: 1.0
+                fillColor: '#f03',
+                fillOpacity: 0.6
             }).addTo(add_cell_coverage_lg).addTo( add_cell_map );
         
             // add a transparent circle for coverage 
             L.circle([item.latitude,(item.longitude)], item.radius, {
                 color: 'none',
-                fillColor: '#000',
-                fillOpacity: 0.1
+                fillColor: '#f03',
+                fillOpacity: 0.05
             }).addTo(add_cell_coverage_lg).addTo( add_cell_map );
         }
         
