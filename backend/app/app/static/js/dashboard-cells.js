@@ -561,7 +561,7 @@ function ui_show_add_cell_modal(  ) {
 function ui_initialize_edit_cell_map() {
 
     // set map height
-    $('#edit_cell_mapid').css({ "height": 300 } );
+    $('#edit_cell_mapid').css({ "height": 600 } );
 
     var mbAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
                 'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -594,7 +594,7 @@ function ui_initialize_edit_cell_map() {
 function ui_initialize_add_cell_map() {
 
     // set map height
-    $('#add_cell_mapid').css({ "height": 300 } );
+    $('#add_cell_mapid').css({ "height": 600 } );
 
     var mbAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
                 'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
