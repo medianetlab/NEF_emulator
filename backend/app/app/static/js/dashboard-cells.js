@@ -35,8 +35,10 @@ var cells_datatable = null;
     var edit_cell_circle_dot  = null;           // small circle depicting the position of the cell (to be edited)
     var edit_cell_circle_cov  = null;           // large transparent circle depicting the coverage of the above cell
     // leaflet.js map for adding Cell modal
-    var add_cell_map         = null;
-    var add_cell_coverage_lg = L.layerGroup(); // map layer group
+    var add_cell_map            = null;
+    var add_cell_coverage_lg    = L.layerGroup(); // map layer group
+    var add_cell_UE_position_lg = L.layerGroup(); // map layer group
+    var add_cell_path_lg        = L.layerGroup(); // map layer group
     var add_cell_circle_dot  = null;           // small circle depicting the position of the cell (to be added)
     var add_cell_circle_cov  = null;           // large transparent circle depicting the coverage of the above cell
 
@@ -533,15 +535,15 @@ function ui_show_add_cell_modal(  ) {
             // add a solid-color small circle (dot)
             L.circle([item.latitude,(item.longitude)], 2, {
                 color: 'none',
-                fillColor: '#2686de',
+                fillColor: '#000',
                 fillOpacity: 1.0
             }).addTo(add_cell_coverage_lg).addTo( add_cell_map );
         
             // add a transparent circle for coverage 
             L.circle([item.latitude,(item.longitude)], item.radius, {
                 color: 'none',
-                fillColor: '#2686de',
-                fillOpacity: 0.2
+                fillColor: '#000',
+                fillOpacity: 0.1
             }).addTo(add_cell_coverage_lg).addTo( add_cell_map );
         }
         
@@ -554,6 +556,49 @@ function ui_show_add_cell_modal(  ) {
 
         // fix high zoom level edge-case
         if (add_cell_map.getZoom() > 17) { add_cell_map.setZoom(17); } 
+    }
+
+
+    // if UEs have been added, display them
+    if ( ues.length > 0 ) {
+
+      // iterate and add ues to map
+      for (const ue of ues) {
+        // create markers - this will be executed only once!
+        var walk_icon = L.divIcon({
+            className: 'emu-pin-box',
+            iconSize: L.point(30,42),
+            iconAnchor: L.point(15,42),
+            popupAnchor: L.point(0,-38),
+            tooltipAnchor: L.point(0,0),
+            html: '<div class="pin-bg pin-bg-walk"></div>\
+                   <div class="pin-icon ion-md-walk"></div>'
+        });
+        
+        L.marker([ue.latitude,ue.longitude], {icon: walk_icon}).addTo(add_cell_map)
+            .bindTooltip(ue.ip_address_v4)
+            .bindPopup("<b>"+ ue.name +"</b><br />"+
+                       // ue.description +"<br />"+
+                       "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
+                       "Cell ID: " + ue.cell_id_hex +"<br />"+
+                       "External identifier: " + ue.external_identifier +"<br />"+
+                       "Speed:"+ ue.speed)
+            .addTo(add_cell_UE_position_lg); // add to layer group
+        }        
+    }
+
+
+    // display paths if any
+    if ( paths.length > 0 ) {
+      
+      // iterate and add paths to map
+      for (const path of paths) {
+        // paint the current path of the path
+        api_get_specific_path_callback( path.id, function(data){
+            // console.log(data);
+            ui_map_paint_path(data, add_cell_map, add_cell_path_lg);
+        });
+      }
     }
 }
 
@@ -606,7 +651,7 @@ function ui_initialize_add_cell_map() {
 
     // map initialization
     add_cell_map = L.map('add_cell_mapid', {
-        layers: [grayscale, add_cell_coverage_lg]
+        layers: [grayscale, add_cell_coverage_lg, add_cell_UE_position_lg, add_cell_path_lg]
     }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
 
 
@@ -617,6 +662,8 @@ function ui_initialize_add_cell_map() {
 
     var overlays = {
         "cell coverage": add_cell_coverage_lg,
+        "UEs"          : add_cell_UE_position_lg,
+        "paths"        : add_cell_path_lg
     };
 
     L.control.layers(baseLayers, overlays).addTo(add_cell_map);
