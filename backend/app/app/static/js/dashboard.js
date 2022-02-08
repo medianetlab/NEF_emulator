@@ -121,6 +121,36 @@ function ui_draw_Cells_to_map(map, cells_layer, coverage_layer, fillColor) {
 
 
 
+function ui_draw_Cells_to_map_excluding_selected(map, cells_layer, coverage_layer, fillColor, selected_cell_id) {
+
+    // if cells have been added
+    // display them
+    if ( cells.length > 0 ) {
+
+        // iterate and add cells to map
+        for (const item of cells) {
+
+            if ( item.cell_id == selected_cell_id ) { continue; }
+
+            // add a solid-color small circle (dot)
+            L.circle([item.latitude,(item.longitude)], 2, {
+                color: 'none',
+                fillColor: fillColor,
+                fillOpacity: 0.6
+            }).addTo( cells_layer ).addTo( map );
+        
+            // add a transparent circle for coverage 
+            L.circle([item.latitude,(item.longitude)], item.radius, {
+                color: 'none',
+                fillColor: fillColor,
+                fillOpacity: 0.05
+            }).addTo( coverage_layer ).addTo( map );
+        }
+    }
+}
+
+
+
 function ui_draw_UEs_to_map(map, ues_layer) {
     // if UEs have been added, display them
     if ( ues.length > 0 ) {

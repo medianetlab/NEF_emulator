@@ -500,73 +500,9 @@ function ui_show_edit_cell_modal( cell_id ) {
 
 
 
-
-    // display all the other cells
-    if ( cells.length > 0 ) {
-
-      // iterate and add cells to map
-      for (const item of cells) {
-
-        if ( item.cell_id == edit_cell_tmp_obj.cell_id ) { continue; }
-
-        // add a solid-color small circle (dot)
-        L.circle([item.latitude,(item.longitude)], 2, {
-            color: 'none',
-            fillColor: '#f03',
-            fillOpacity: 0.6
-        }).addTo(edit_cell_lg).addTo( edit_cell_map );
-    
-        // add a transparent circle for coverage 
-        L.circle([item.latitude,(item.longitude)], item.radius, {
-            color: 'none',
-            fillColor: '#f03',
-            fillOpacity: 0.05
-        }).addTo(edit_cell_coverage_lg).addTo( edit_cell_map );
-      }
-    }
-
-
-    // if UEs have been added, display them
-    if ( ues.length > 0 ) {
-
-      // iterate and add ues to map
-      for (const ue of ues) {
-        // create markers - this will be executed only once!
-        var walk_icon = L.divIcon({
-            className: 'emu-pin-box',
-            iconSize: L.point(30,42),
-            iconAnchor: L.point(15,42),
-            popupAnchor: L.point(0,-38),
-            tooltipAnchor: L.point(0,0),
-            html: '<div class="pin-bg pin-bg-walk"></div>\
-                   <div class="pin-icon ion-md-walk"></div>'
-        });
-        
-        L.marker([ue.latitude,ue.longitude], {icon: walk_icon}).addTo(edit_cell_map)
-            .bindTooltip(ue.ip_address_v4)
-            .bindPopup("<b>"+ ue.name +"</b><br />"+
-                       // ue.description +"<br />"+
-                       "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
-                       "Cell ID: " + ue.cell_id_hex +"<br />"+
-                       "External identifier: " + ue.external_identifier +"<br />"+
-                       "Speed:"+ ue.speed)
-            .addTo(edit_cell_UE_position_lg); // add to layer group
-        }        
-    }
-
-
-    // display paths if any
-    if ( paths.length > 0 ) {
-      
-      // iterate and add paths to map
-      for (const path of paths) {
-        // paint the current path of the path
-        api_get_specific_path_callback( path.id, function(data){
-            // console.log(data);
-            ui_map_paint_path(data, edit_cell_map, edit_cell_path_lg);
-        });
-      }
-    }
+    ui_draw_Cells_to_map_excluding_selected( edit_cell_map, edit_cell_lg, edit_cell_coverage_lg, "#f03", edit_cell_tmp_obj.cell_id );
+    ui_draw_UEs_to_map( edit_cell_map, edit_cell_UE_position_lg );
+    ui_draw_paths_to_map( edit_cell_map, edit_cell_path_lg );
 }
 
 
