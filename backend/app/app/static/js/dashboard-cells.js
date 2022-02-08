@@ -356,6 +356,14 @@ function ui_add_btn_listeners_for_cells_CUD_operations() {
           radius      :   parseInt( $('#add_cell_new_rad').val() ),
         };
 
+        
+        // catch the case where the user hasn't clicked on the map
+        // and display a message to do so
+        if ( (isNaN(data.latitude)) || (isNaN(data.longitude)) ) {
+          ui_display_toast_msg("warning", "Oups! Click on the map", "You have to select a spot on the map for the new cell.");
+          return;
+        }
+
         api_post_cell( data );
         add_cell_modal.hide();
     });
