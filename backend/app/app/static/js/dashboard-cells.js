@@ -569,6 +569,7 @@ function ui_show_add_cell_modal(  ) {
         return;
     }
 
+    add_cell_lg.clearLayers();              // map layer cleanup
     add_cell_coverage_lg.clearLayers();     // map layer cleanup
     add_cell_UE_position_lg.clearLayers();  // map layer cleanup
     add_cell_path_lg.clearLayers();         // map layer cleanup
@@ -590,6 +591,8 @@ function ui_show_add_cell_modal(  ) {
 
     add_cell_map.invalidateSize(); // this helps the map display its tiles correctly after the size of the modal is finalized
 
+
+    // initialize cell and cell coverage and add them to the map
     // add a solid-color small circle (dot)
     add_cell_circle_dot = L.circle([48.499998, 23.383331], 2, { // Geographical midpoint of Europe
         color: 'none',
@@ -604,82 +607,11 @@ function ui_show_add_cell_modal(  ) {
         fillOpacity: 0.2
     }).addTo(add_cell_coverage_lg).addTo( add_cell_map );
 
-    // if cells have been added
-    // display them and
-    // set bounds for view + zoom depending on their position
-    if ( cells.length > 0 ) {
 
-        // iterate and add cells to map
-        for (const item of cells) {
-
-            // add a solid-color small circle (dot)
-            L.circle([item.latitude,(item.longitude)], 2, {
-                color: 'none',
-                fillColor: '#f03',
-                fillOpacity: 0.6
-            }).addTo(add_cell_lg).addTo( add_cell_map );
-        
-            // add a transparent circle for coverage 
-            L.circle([item.latitude,(item.longitude)], item.radius, {
-                color: 'none',
-                fillColor: '#f03',
-                fillOpacity: 0.05
-            }).addTo(add_cell_coverage_lg).addTo( add_cell_map );
-        }
-        
-
-        // set map bounds
-        var map_bounds     = helper_calculate_map_bounds_from_cells();            
-        var leaflet_bounds = new L.LatLngBounds(map_bounds);
-
-        add_cell_map.fitBounds( leaflet_bounds );
-
-        // fix high zoom level edge-case
-        if (add_cell_map.getZoom() > 17) { add_cell_map.setZoom(17); } 
-    }
-
-
-    // if UEs have been added, display them
-    if ( ues.length > 0 ) {
-
-      // iterate and add ues to map
-      for (const ue of ues) {
-        // create markers - this will be executed only once!
-        var walk_icon = L.divIcon({
-            className: 'emu-pin-box',
-            iconSize: L.point(30,42),
-            iconAnchor: L.point(15,42),
-            popupAnchor: L.point(0,-38),
-            tooltipAnchor: L.point(0,0),
-            html: '<div class="pin-bg pin-bg-walk"></div>\
-                   <div class="pin-icon ion-md-walk"></div>'
-        });
-        
-        L.marker([ue.latitude,ue.longitude], {icon: walk_icon}).addTo(add_cell_map)
-            .bindTooltip(ue.ip_address_v4)
-            .bindPopup("<b>"+ ue.name +"</b><br />"+
-                       // ue.description +"<br />"+
-                       "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
-                       "Cell ID: " + ue.cell_id_hex +"<br />"+
-                       "External identifier: " + ue.external_identifier +"<br />"+
-                       "Speed:"+ ue.speed)
-            .addTo(add_cell_UE_position_lg); // add to layer group
-        }        
-    }
-
-
-    // display paths if any
-    if ( paths.length > 0 ) {
-      
-      // iterate and add paths to map
-      for (const path of paths) {
-        // paint the current path of the path
-        api_get_specific_path_callback( path.id, function(data){
-            // console.log(data);
-            ui_map_paint_path(data, add_cell_map, add_cell_path_lg);
-        });
-      }
-    }
+    ui_draw_Cells_to_map(add_cell_map, add_cell_lg, add_cell_coverage_lg, "#f03");
+    ui_map_fit_bounds_to_cells( add_cell_map );
+    ui_draw_UEs_to_map( add_cell_map, add_cell_UE_position_lg );
+    ui_draw_paths_to_map( add_cell_map, add_cell_path_lg );
 }
 
 

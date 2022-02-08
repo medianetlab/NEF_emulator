@@ -93,6 +93,100 @@ function ui_display_toast_msg( type, title, text ) {
 
 
 
+function ui_draw_Cells_to_map(map, cells_layer, coverage_layer, fillColor) {
+
+    // if cells have been added
+    // display them
+    if ( cells.length > 0 ) {
+
+        // iterate and add cells to map
+        for (const item of cells) {
+
+            // add a solid-color small circle (dot)
+            L.circle([item.latitude,(item.longitude)], 2, {
+                color: 'none',
+                fillColor: fillColor,
+                fillOpacity: 0.6
+            }).addTo( cells_layer ).addTo( map );
+        
+            // add a transparent circle for coverage 
+            L.circle([item.latitude,(item.longitude)], item.radius, {
+                color: 'none',
+                fillColor: fillColor,
+                fillOpacity: 0.05
+            }).addTo( coverage_layer ).addTo( map );
+        }
+    }
+}
+
+
+
+function ui_draw_UEs_to_map(map, ues_layer) {
+    // if UEs have been added, display them
+    if ( ues.length > 0 ) {
+
+      // iterate and add ues to map
+      for (const ue of ues) {
+        // create markers - this will be executed only once!
+        var walk_icon = L.divIcon({
+            className: 'emu-pin-box',
+            iconSize: L.point(30,42),
+            iconAnchor: L.point(15,42),
+            popupAnchor: L.point(0,-38),
+            tooltipAnchor: L.point(0,0),
+            html: '<div class="pin-bg pin-bg-walk"></div>\
+                   <div class="pin-icon ion-md-walk"></div>'
+        });
+        
+        L.marker([ue.latitude,ue.longitude], {icon: walk_icon}).addTo( map )
+            .bindTooltip(ue.ip_address_v4)
+            .bindPopup("<b>"+ ue.name +"</b><br />"+
+                       // ue.description +"<br />"+
+                       "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
+                       "Cell ID: " + ue.cell_id_hex +"<br />"+
+                       "External identifier: " + ue.external_identifier +"<br />"+
+                       "Speed:"+ ue.speed)
+            .addTo( ues_layer ); // add to layer group
+        }        
+    }
+}
+
+
+
+
+function ui_draw_paths_to_map(map, path_layer) {
+    // display paths if any
+    if ( paths.length > 0 ) {
+      
+      // iterate and add paths to map
+      for (const path of paths) {
+        // paint the current path of the path
+        api_get_specific_path_callback( path.id, function(data){
+            // console.log(data);
+            ui_map_paint_path(data, map, path_layer);
+        });
+      }
+    }
+}
+
+
+
+function ui_map_fit_bounds_to_cells( map ) {
+    // if cells have been added
+    // display them and
+    // set bounds for view + zoom depending on their position
+    if ( cells.length > 0 ) {
+        // set map bounds
+        var map_bounds     = helper_calculate_map_bounds_from_cells();
+        var leaflet_bounds = new L.LatLngBounds(map_bounds);
+
+        map.fitBounds( leaflet_bounds );
+
+        // fix high zoom level edge-case
+        if (map.getZoom() > 17) { map.setZoom(17); }
+    }
+}
+
 // ===============================================
 //               End of UI functions
 // ===============================================
