@@ -127,6 +127,7 @@ function api_delete_path( path_id ) {
             // console.log(data);
             ui_display_toast_msg("success", "Success!", "The path has been permanently deleted");
             ui_fetch_and_update_paths_data();
+            ui_fetch_and_update_ues_data();
         },
         error: function(err)
         {
