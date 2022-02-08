@@ -33,9 +33,13 @@ var ues_datatable   = null;
     var edit_UE_tmp_obj  = null;
 
     // leaflet.js map for editing UE modal
-    var edit_UE_map         = null;
-    var edit_UE_position_lg = L.layerGroup(); // map layer group for UEs
-    var edit_UE_path_lg     = L.layerGroup(); // map layer group for paths
+    var edit_UE_map          = null;
+    var edit_UE_position_lg  = L.layerGroup(); // map layer group for UEs
+    var edit_UE_cell_lg      = L.layerGroup(); // map layer group
+    var edit_UE_coverage_lg  = L.layerGroup(); // map layer group
+    var edit_UE_path_lg          = L.layerGroup(); // map layer group for paths
+    var edit_UE_selected_path_lg = L.layerGroup(); // map layer group for selected path
+
     var edit_UE_circle_dot  = null;           // small circle depicting the position of the UE (to be edited)
     // leaflet.js map for adding UE modal
     var add_UE_map          = null;
@@ -461,6 +465,9 @@ function ui_show_edit_UE_modal( UE_supi ) {
 
     edit_UE_position_lg.clearLayers(); // map UE   layer cleanup
     edit_UE_path_lg.clearLayers();     // map path layer cleanup
+    edit_UE_cell_lg.clearLayers();
+    edit_UE_coverage_lg.clearLayers();
+    edit_UE_selected_path_lg.clearLayers();
 
     UE_to_be_edited = UE_supi;
 
@@ -524,18 +531,23 @@ function ui_show_edit_UE_modal( UE_supi ) {
     if (edit_UE_tmp_obj.path_id != 0) {
         api_get_specific_path_callback( edit_UE_tmp_obj.path_id, function(data){
             // console.log(data);
-            ui_map_paint_path(data, edit_UE_map, edit_UE_path_lg);
+            ui_map_paint_path(data, edit_UE_map, edit_UE_selected_path_lg, 0.75);
         });
     }
     
     
-    edit_UE_map.setView(
-        {
-            lat: edit_UE_tmp_obj.latitude,
-            lon: edit_UE_tmp_obj.longitude
-        },
-        18 // zoom level
-    );
+    // edit_UE_map.setView(
+    //     {
+    //         lat: edit_UE_tmp_obj.latitude,
+    //         lon: edit_UE_tmp_obj.longitude
+    //     },
+    //     18 // zoom level
+    // );
+
+    ui_draw_Cells_to_map(edit_UE_map, edit_UE_cell_lg, edit_UE_coverage_lg, "#f03");
+    ui_map_fit_bounds_to_cells( edit_UE_map );
+    ui_draw_UEs_to_map( edit_UE_map, edit_UE_position_lg );
+    ui_draw_paths_to_map( edit_UE_map, edit_UE_path_lg, 0.2 );
 }
 
 
@@ -590,7 +602,7 @@ function ui_initialize_edit_UE_map() {
 
     // map initialization
     edit_UE_map = L.map('edit_UE_mapid', {
-        layers: [grayscale, edit_UE_position_lg, edit_UE_path_lg]
+        layers: [grayscale, edit_UE_position_lg, edit_UE_cell_lg, edit_UE_coverage_lg, edit_UE_path_lg, edit_UE_selected_path_lg]
     }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
 
 
@@ -600,8 +612,11 @@ function ui_initialize_edit_UE_map() {
         };
 
     var overlays = {
-        "UE position": edit_UE_position_lg,
-        "path": edit_UE_path_lg,
+        "UEs"      : edit_UE_position_lg,
+        "Cells"    : edit_UE_cell_lg,
+        "Coverage" : edit_UE_coverage_lg,
+        "Paths"     : edit_UE_path_lg,
+        "selected path" : edit_UE_selected_path_lg
     };
 
     L.control.layers(baseLayers, overlays).addTo(edit_UE_map);
@@ -655,8 +670,8 @@ function ui_edit_UE_modal_add_listeners() {
             // add path to map
             // and set view + zoom level
             api_get_specific_path_callback( selected_path_id, function(data){
-                edit_UE_path_lg.clearLayers();
-                ui_map_paint_path(data, edit_UE_map, edit_UE_path_lg);
+                edit_UE_selected_path_lg .clearLayers();
+                ui_map_paint_path(data, edit_UE_map, edit_UE_selected_path_lg, 0.75);
 
                 // set bounds for view + zoom depending on the position of cells
                 var map_bounds     = helper_calculate_map_bounds_from_cells();            
@@ -666,7 +681,7 @@ function ui_edit_UE_modal_add_listeners() {
             });
         }
         else {
-            edit_UE_path_lg.clearLayers();
+            edit_UE_selected_path_lg.clearLayers();
         }
     });
 }
@@ -682,7 +697,7 @@ function ui_add_UE_modal_add_listeners() {
         // and set view + zoom level
         api_get_specific_path_callback( selected_path_id, function(data){
             add_UE_path_lg.clearLayers();
-            ui_map_paint_path(data, add_UE_map, add_UE_path_lg);
+            ui_map_paint_path(data, add_UE_map, add_UE_path_lg, 0.75);
 
             // set bounds for view + zoom depending on the position of cells
             var map_bounds     = helper_calculate_map_bounds_from_cells();            

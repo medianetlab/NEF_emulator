@@ -502,7 +502,7 @@ function ui_show_edit_cell_modal( cell_id ) {
 
     ui_draw_Cells_to_map_excluding_selected( edit_cell_map, edit_cell_lg, edit_cell_coverage_lg, "#f03", edit_cell_tmp_obj.cell_id );
     ui_draw_UEs_to_map( edit_cell_map, edit_cell_UE_position_lg );
-    ui_draw_paths_to_map( edit_cell_map, edit_cell_path_lg );
+    ui_draw_paths_to_map( edit_cell_map, edit_cell_path_lg, 0.2 );
 }
 
 
@@ -555,7 +555,7 @@ function ui_show_add_cell_modal(  ) {
     ui_draw_Cells_to_map(add_cell_map, add_cell_lg, add_cell_coverage_lg, "#f03");
     ui_map_fit_bounds_to_cells( add_cell_map );
     ui_draw_UEs_to_map( add_cell_map, add_cell_UE_position_lg );
-    ui_draw_paths_to_map( add_cell_map, add_cell_path_lg );
+    ui_draw_paths_to_map( add_cell_map, add_cell_path_lg, 0.2 );
 }
 
 

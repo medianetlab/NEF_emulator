@@ -771,12 +771,12 @@ function ui_add_path_modal_add_listeners() {
 // Calls a helper function "fix_points_format()"
 // to prepare the data for leaflet.js format
 // 
-function ui_map_paint_path( data, map, layer ) {
+function ui_map_paint_path( data, map, layer, opacity ) {
 
     var latlng   = helper_fix_points_format( data.points );
     var polyline = L.polyline(latlng, {
         color: data.color,
-        opacity: 0.2
+        opacity: opacity
     }).addTo( layer ).addTo(map);
 }
 

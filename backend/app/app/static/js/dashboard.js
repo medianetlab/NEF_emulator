@@ -184,7 +184,7 @@ function ui_draw_UEs_to_map(map, ues_layer) {
 
 
 
-function ui_draw_paths_to_map(map, path_layer) {
+function ui_draw_paths_to_map(map, path_layer, opacity) {
     // display paths if any
     if ( paths.length > 0 ) {
       
@@ -193,7 +193,7 @@ function ui_draw_paths_to_map(map, path_layer) {
         // paint the current path of the path
         api_get_specific_path_callback( path.id, function(data){
             // console.log(data);
-            ui_map_paint_path(data, map, path_layer);
+            ui_map_paint_path(data, map, path_layer, opacity);
         });
       }
     }
