@@ -37,14 +37,17 @@ var ues_datatable   = null;
     var edit_UE_position_lg  = L.layerGroup(); // map layer group for UEs
     var edit_UE_cell_lg      = L.layerGroup(); // map layer group
     var edit_UE_coverage_lg  = L.layerGroup(); // map layer group
-    var edit_UE_path_lg          = L.layerGroup(); // map layer group for paths
+    var edit_UE_all_paths_lg = L.layerGroup(); // map layer group for paths
     var edit_UE_selected_path_lg = L.layerGroup(); // map layer group for selected path
 
     var edit_UE_circle_dot  = null;           // small circle depicting the position of the UE (to be edited)
     // leaflet.js map for adding UE modal
     var add_UE_map          = null;
     var add_UE_position_lg  = L.layerGroup(); // map layer group for UEs
-    var add_UE_path_lg      = L.layerGroup(); // map layer group for paths
+    var add_UE_cell_lg      = L.layerGroup(); // map layer group
+    var add_UE_coverage_lg  = L.layerGroup(); // map layer group
+    var add_UE_all_paths_lg = L.layerGroup(); // map layer group for all paths
+    var add_UE_selected_path_lg  = L.layerGroup(); // map layer group for selected path
     var add_UE_circle_dot   = null;           // small circle depicting the position of the UE (to be edited)
 
 // ===============================================
@@ -464,7 +467,7 @@ function ui_show_delete_UE_modal( UE_id ) {
 function ui_show_edit_UE_modal( UE_supi ) {
 
     edit_UE_position_lg.clearLayers(); // map UE   layer cleanup
-    edit_UE_path_lg.clearLayers();     // map path layer cleanup
+    edit_UE_all_paths_lg.clearLayers();     // map path layer cleanup
     edit_UE_cell_lg.clearLayers();
     edit_UE_coverage_lg.clearLayers();
     edit_UE_selected_path_lg.clearLayers();
@@ -547,7 +550,7 @@ function ui_show_edit_UE_modal( UE_supi ) {
     ui_draw_Cells_to_map(edit_UE_map, edit_UE_cell_lg, edit_UE_coverage_lg, "#f03");
     ui_map_fit_bounds_to_cells( edit_UE_map );
     ui_draw_UEs_to_map( edit_UE_map, edit_UE_position_lg );
-    ui_draw_paths_to_map( edit_UE_map, edit_UE_path_lg, 0.2 );
+    ui_draw_paths_to_map( edit_UE_map, edit_UE_all_paths_lg, 0.2 );
 }
 
 
@@ -564,6 +567,10 @@ function ui_show_add_UE_modal(  ) {
     }
 
     add_UE_position_lg.clearLayers(); // map layer cleanup
+    add_UE_cell_lg.clearLayers();
+    add_UE_coverage_lg.clearLayers();
+    add_UE_all_paths_lg.clearLayers();
+
 
     // refresh the path options in the select input
     $('#add_UE_path').empty(); // delete the old ones
@@ -583,6 +590,10 @@ function ui_show_add_UE_modal(  ) {
 
     add_UE_map.invalidateSize(); // this helps the map display its tiles correctly after the size of the modal is finalized
 
+    ui_draw_Cells_to_map(add_UE_map, add_UE_cell_lg, add_UE_coverage_lg, "#f03");
+    ui_map_fit_bounds_to_cells( add_UE_map );
+    ui_draw_UEs_to_map( add_UE_map, add_UE_position_lg );
+    ui_draw_paths_to_map( add_UE_map, add_UE_all_paths_lg, 0.2 );
 }
 
 
@@ -602,7 +613,7 @@ function ui_initialize_edit_UE_map() {
 
     // map initialization
     edit_UE_map = L.map('edit_UE_mapid', {
-        layers: [grayscale, edit_UE_position_lg, edit_UE_cell_lg, edit_UE_coverage_lg, edit_UE_path_lg, edit_UE_selected_path_lg]
+        layers: [grayscale, edit_UE_position_lg, edit_UE_cell_lg, edit_UE_coverage_lg, edit_UE_all_paths_lg, edit_UE_selected_path_lg]
     }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
 
 
@@ -615,7 +626,7 @@ function ui_initialize_edit_UE_map() {
         "UEs"      : edit_UE_position_lg,
         "Cells"    : edit_UE_cell_lg,
         "Coverage" : edit_UE_coverage_lg,
-        "Paths"     : edit_UE_path_lg,
+        "Paths"     : edit_UE_all_paths_lg,
         "selected path" : edit_UE_selected_path_lg
     };
 
@@ -640,7 +651,7 @@ function ui_initialize_add_UE_map() {
 
     // map initialization
     add_UE_map = L.map('add_UE_mapid', {
-        layers: [grayscale, add_UE_position_lg, add_UE_path_lg]
+        layers: [grayscale, add_UE_position_lg, add_UE_cell_lg, add_UE_coverage_lg, add_UE_all_paths_lg, add_UE_selected_path_lg]
     }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
 
 
@@ -650,8 +661,11 @@ function ui_initialize_add_UE_map() {
         };
 
     var overlays = {
-        "UE position": add_UE_position_lg,
-        "path": add_UE_path_lg,
+        "UEs"      : add_UE_position_lg,
+        "Cells"    : add_UE_cell_lg,
+        "Coverage" : add_UE_coverage_lg,
+        "Paths"    : add_UE_all_paths_lg,
+        "Selected path" : add_UE_selected_path_lg
     };
 
     L.control.layers(baseLayers, overlays).addTo(add_UE_map);
@@ -668,16 +682,9 @@ function ui_edit_UE_modal_add_listeners() {
 
         if (selected_path_id != 0) {
             // add path to map
-            // and set view + zoom level
             api_get_specific_path_callback( selected_path_id, function(data){
                 edit_UE_selected_path_lg .clearLayers();
                 ui_map_paint_path(data, edit_UE_map, edit_UE_selected_path_lg, 0.75);
-
-                // set bounds for view + zoom depending on the position of cells
-                var map_bounds     = helper_calculate_map_bounds_from_cells();            
-                var leaflet_bounds = new L.LatLngBounds(map_bounds);
-
-                edit_UE_map.fitBounds( leaflet_bounds );
             });
         }
         else {
@@ -694,17 +701,9 @@ function ui_add_UE_modal_add_listeners() {
         selected_path_id = $(this).val();
 
         // add path to map
-        // and set view + zoom level
         api_get_specific_path_callback( selected_path_id, function(data){
-            add_UE_path_lg.clearLayers();
-            ui_map_paint_path(data, add_UE_map, add_UE_path_lg, 0.75);
-
-            // set bounds for view + zoom depending on the position of cells
-            var map_bounds     = helper_calculate_map_bounds_from_cells();            
-            var leaflet_bounds = new L.LatLngBounds(map_bounds);
-
-            add_UE_map.fitBounds( leaflet_bounds );
-            // add_UE_map.setZoom(17);
+            add_UE_selected_path_lg.clearLayers();
+            ui_map_paint_path(data, add_UE_map, add_UE_selected_path_lg, 0.75);
         });
     });
 }
