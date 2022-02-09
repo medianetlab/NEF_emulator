@@ -484,7 +484,7 @@ function ui_show_edit_path_modal( path_id ) {
     api_get_specific_path_callback( edit_path_tmp_obj.id, function(data){
         // console.log(data);
         edit_path_tmp_points = data;
-        ui_map_paint_path(data, edit_path_map, edit_path_path_lg);
+        ui_map_paint_path(data, edit_path_map, edit_path_path_lg, 0.2);
     });
 
     // add a solid-color small circle (dot) at the start lat,lon
@@ -725,7 +725,7 @@ function ui_edit_path_modal_add_listeners() {
             edit_path_path_lg.clearLayers();
             edit_path_tmp_points.color = new_color;
 
-            ui_map_paint_path(edit_path_tmp_points, edit_path_map, edit_path_path_lg);
+            ui_map_paint_path(edit_path_tmp_points, edit_path_map, edit_path_path_lg, 0.2);
         } else {
             ui_display_toast_msg("error", "Error: not a valid color", "A valid hex color value must be used.");
         }
