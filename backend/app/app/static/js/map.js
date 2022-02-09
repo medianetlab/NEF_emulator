@@ -56,6 +56,8 @@ var detail_btn_tpl = `<button class="btn btn-light" type="button" onclick="show_
 // modal for details
 var modal = new coreui.Modal(document.getElementById('details_modal'), {});
 
+var paths_painted = [];
+
 // ===============================================
 
 
@@ -84,7 +86,11 @@ $( document ).ready(function() {
             //  1. get and paint every path per UE
             //  2. create start/stop buttons
             for (const ue of ues) {
-                api_get_specific_path(ue.path_id);
+                // if not already fetched and painted, do so
+                if ( !helper_check_path_is_already_painted( ue.path_id ) ) { 
+                    api_get_specific_path(ue.path_id);
+                    paths_painted.push(ue.path_id);
+                }
                 ui_generate_loop_btn_for( ue );
                 ui_set_loop_btn_status_for( ue );
             }
@@ -1031,4 +1037,15 @@ function get_event_details( event_id ) {
     for (const event of events) {
         if (event.id == event_id) return event;
     }
+}
+
+
+
+function helper_check_path_is_already_painted( path_id ) {
+    for (const item of paths_painted) {
+        if ( item == path_id ) {
+            return true
+        }
+    }
+    return false;
 }
