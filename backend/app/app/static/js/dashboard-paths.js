@@ -807,20 +807,6 @@ function ui_map_paint_path( data, map, layer, opacity ) {
 // ===============================================
 
 
-// iterates through the paths list
-// and removes (if found) the path_id provided
-// 
-function helper_delete_path( path_id ) {
-
-    var i = paths.length;
-    while (i--) {
-        if ( paths[i].id == path_id ) {
-            paths.splice(i, 1);
-        }
-    }
-}
-
-
 // iterates through the path list
 // and returns a copy of the path object with the path_id provided
 // (if not found it returns null)
@@ -834,20 +820,6 @@ function helper_find_path( path_id ) {
         }
     }
     return null;
-}
-
-
-// iterates through the path list
-// and updates (if found) the path object provided
-//
-function helper_update_path( path_obj ) {
-
-    for (i=0 ; i<paths.length ; i++) {
-        if ( paths[i].id == path_obj.id ) {
-            // console.log(paths[i]);
-            paths[i] = JSON.parse(JSON.stringify( path_obj )); // found, updated
-        }
-    }
 }
 
 

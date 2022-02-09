@@ -177,8 +177,6 @@ function api_put_UE_callback( UE_obj, callback ) {
         {
             // console.log(data);
             ui_display_toast_msg("success", "Success!", "The UE has been updated");
-            // helper_update_UE( data );
-            // ues_datatable.clear().rows.add( ues ).draw();
             callback(data);
         },
         error: function(err)
@@ -717,20 +715,6 @@ function ui_add_UE_modal_add_listeners() {
 // ===============================================
 
 
-// iterates through the UEs list
-// and removes (if found) the supi provided
-// 
-function helper_delete_UE( UE_supi ) {
-
-    var i = ues.length;
-    while (i--) {
-        if ( ues[i].supi == UE_supi ) {
-            ues.splice(i, 1);
-        }
-    }
-}
-
-
 // iterates through the UE list
 // and returns a copy of the UE object with the UE_id provided
 // (if not found it returns null)
@@ -744,34 +728,6 @@ function helper_find_UE( UE_supi ) {
     return null;
 }
 
-
-// iterates through the UE list
-// and updates (if found) the UE object provided
-//
-function helper_update_UE( UE_obj ) {
-
-    for (i=0 ; i<ues.length ; i++) {
-        if ( ues[i].supi == UE_obj.supi ) {
-            UE_obj["id"] = ues[i].id;
-            ues[i] = JSON.parse(JSON.stringify( UE_obj )); // found, updated
-        }
-    }
-}
-
-
-// iterates through the UE list
-// and updates (if found) the UE object provided
-// with the new path_id 
-//
-function helper_update_UE_path( UE_supi, path_id ) {
-
-    for (i=0 ; i<ues.length ; i++) {
-        if ( ues[i].supi == UE_supi ) {
-            ues[i].path_id = path_id; // found, updated path
-            ues[i] = JSON.parse(JSON.stringify( ues[i] ));  // update object
-        }
-    }
-}
 
 // ===============================================
 //             End of Helper functions

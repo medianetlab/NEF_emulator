@@ -696,20 +696,6 @@ function ui_add_cell_modal_add_listeners() {
 
 
 // iterates through the cells list
-// and removes (if found) the cell_id provided
-// 
-function helper_delete_cell( cell_id ) {
-
-    var i = cells.length;
-    while (i--) {
-        if ( cells[i].cell_id == cell_id ) {
-            cells.splice(i, 1);
-        }
-    }
-}
-
-
-// iterates through the cells list
 // and returns a copy of the cell object with the cell_id provided
 // (if not found it returns null)
 // 
@@ -721,20 +707,6 @@ function helper_find_cell( cell_id ) {
     }
     return null;
 }
-
-
-// iterates through the cell list
-// and updates (if found) the cell oject provided
-//
-function helper_update_cell( cell_obj ) {
-
-    for (i=0 ; i<cells.length ; i++) {
-        if ( cells[i].id == cell_obj.id ) {
-            cells[i] = JSON.parse(JSON.stringify( cell_obj )); // found, updated
-        }
-    }
-}
-
 
 
 // helper function to return an array of latitude,longitude pairs

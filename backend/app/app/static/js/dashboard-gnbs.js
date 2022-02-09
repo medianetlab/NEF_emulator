@@ -410,33 +410,6 @@ function helper_find_gNB( gNB_id ) {
 }
 
 
-// iterates through the gNB list
-// and updates (if found) the gNB object provided
-//
-function helper_update_gNB( gNB_obj ) {
-
-    for (i=0 ; i<gNBs.length ; i++) {
-        if ( gNBs[i].id == gNB_obj.id ) {
-            gNBs[i] = JSON.parse(JSON.stringify( gNB_obj )); // found, updated
-        }
-    }
-}
-
-
-// iterates through the gNB list
-// and removes (if found) the gNB_id provided
-// 
-function helper_delete_gNB( gNB_id ) {
-
-    var i = gNBs.length;
-    while (i--) {
-        if ( gNBs[i].gNB_id == gNB_id ) {
-            gNBs.splice(i, 1);
-        }
-    }
-}
-
-
 function helper_create_db_id_to_gNB_id_bindings() {
 
     // reset
