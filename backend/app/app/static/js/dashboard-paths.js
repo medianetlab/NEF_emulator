@@ -42,8 +42,13 @@ var paths_datatable = null;
     var edit_path_end_dot     = null;           // small circle depicting the   ending point of the path (to be edited)
     // leaflet.js map for adding UE modal
     var add_path_map         = null;
-    var add_path_path_lg     = L.layerGroup(); // map layer group for path
-    var add_path_points_lg   = L.layerGroup(); // map layer group for start/end points
+
+    var add_path_UE_position_lg = L.layerGroup(); // map layer group for UEs
+    var add_path_cell_lg        = L.layerGroup(); // map layer group
+    var add_path_coverage_lg    = L.layerGroup(); // map layer group
+    var add_path_all_paths_lg   = L.layerGroup(); // map layer group for all paths
+    var add_path_new_path_lg    = L.layerGroup(); // map layer group for path
+    var add_path_points_lg      = L.layerGroup(); // map layer group for start/end points
     var add_path_start_dot   = null;           // small circle depicting the starting point of the path (to be added)
     var add_path_end_dot     = null;           // small circle depicting the   ending point of the path (to be added)
     var add_path_polyline    = null;
@@ -508,7 +513,12 @@ function ui_show_edit_path_modal( path_id ) {
 // 
 function ui_show_add_path_modal() {
 
-    add_path_path_lg.clearLayers();     // map path layer cleanup
+    add_path_UE_position_lg.clearLayers();
+    add_path_cell_lg.clearLayers();
+    add_path_coverage_lg.clearLayers();
+    add_path_all_paths_lg.clearLayers();
+    add_path_points_lg.clearLayers();
+    add_path_new_path_lg.clearLayers();     // map path layer cleanup
 
     add_path_tmp_obj = {
             description: "",
@@ -536,6 +546,11 @@ function ui_show_add_path_modal() {
     }
 
     add_path_map.invalidateSize(); // this helps the map display its tiles correctly after the size of the modal is finalized
+
+    ui_draw_Cells_to_map(add_path_map, add_path_cell_lg, add_path_coverage_lg, "#f03");
+    ui_map_fit_bounds_to_cells( add_path_map );
+    ui_draw_UEs_to_map( add_path_map, add_path_UE_position_lg );
+    ui_draw_paths_to_map( add_path_map, add_path_all_paths_lg, 0.2 );
 }
 
 
@@ -590,7 +605,7 @@ function ui_initialize_add_path_map() {
 
     // map initialization
     add_path_map = L.map('add_path_mapid', {
-        layers: [grayscale, add_path_points_lg, add_path_path_lg ]
+        layers: [grayscale, add_path_UE_position_lg, add_path_cell_lg, add_path_coverage_lg, add_path_all_paths_lg, add_path_points_lg, add_path_new_path_lg ]
     }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
 
 
@@ -600,8 +615,12 @@ function ui_initialize_add_path_map() {
         };
 
     var overlays = {
-        "path":   add_path_path_lg,
-        "points": add_path_points_lg
+        "UEs"     : add_path_UE_position_lg,
+        "Cells"   : add_path_cell_lg,
+        "Coverage": add_path_coverage_lg,
+        "Paths"   : add_path_all_paths_lg,
+        "New path": add_path_new_path_lg,
+        "points"  : add_path_points_lg
     };
 
     L.control.layers(baseLayers, overlays).addTo(add_path_map);
@@ -668,7 +687,7 @@ function ui_add_path_modal_reset_form() {
     if (add_path_start_dot) { add_path_start_dot.remove();      }
     if (add_path_end_dot  ) { add_path_end_dot.remove();        }
     if (add_path_polyline ) { add_path_polyline.remove();       }
-    if (add_path_path_lg  ) { add_path_path_lg.clearLayers();   }
+    if (add_path_new_path_lg  ) { add_path_new_path_lg.clearLayers();   }
     if (add_path_points_lg) { add_path_points_lg.clearLayers(); }
 
     // data
@@ -733,7 +752,7 @@ function ui_add_path_modal_add_listeners() {
             $('#add_path_color_preview').css('background-color', new_color);
 
             // redraw the path
-            add_path_path_lg.clearLayers();
+            add_path_new_path_lg.clearLayers();
             add_path_tmp_obj.color = new_color;
 
             if ( add_path_polyline != null) { add_path_polyline.remove(); }
@@ -743,7 +762,7 @@ function ui_add_path_modal_add_listeners() {
             add_path_polyline = L.polyline(latlng, {
                 color: add_path_tmp_obj.color,
                 opacity: 0.2
-            }).addTo( add_path_path_lg ).addTo( add_path_map );
+            }).addTo( add_path_new_path_lg ).addTo( add_path_map );
             
         } else {
             ui_display_toast_msg("error", "Error: not a valid color", "A valid hex color value must be used.");
@@ -914,7 +933,7 @@ function generate_coords_between_points(φ1, λ1, φ2, λ2){
     add_path_polyline = L.polyline(latlng, {
         color: add_path_tmp_obj.color,
         opacity: 0.2
-    }).addTo( add_path_path_lg ).addTo( add_path_map );
+    }).addTo( add_path_new_path_lg ).addTo( add_path_map );
 }
 
 // ===============================================
