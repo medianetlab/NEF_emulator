@@ -2,7 +2,7 @@
 
 ## ⚙ Setup locally
 
-**Host prerequisites**: `docker`, `docker-compose`, `build-essential`\*, `jq`\*\*
+**Host prerequisites**: `docker`, `docker-compose 1.29.2`, `build-essential`\*, `jq`\*\*
 
 After cloning the repository, there are 4 more steps to do. For convinience, we have created a [`Makefile`](Makefile) that contains a command for each step + several common `docker-compose` tasks which you may find handy in the future.
 
