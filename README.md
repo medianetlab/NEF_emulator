@@ -35,7 +35,7 @@ make db-init
 
 After the containers are up and running:
 
- - access and start playing with the Swager UI at: [localhost:8888/docs](http://localhost:8888/docs)
+ - access and start playing with the Swager UI at: [localhost:8888/nef/docs](http://localhost:8888/nef/docs)
  - login to the admin dashboard at: [localhost:8888/login](http://localhost:8888/login)
      - Default credentials: `admin@my-email.com` / `pass`
      - they can be found/changed inside your `.env` file
