@@ -23,6 +23,10 @@
     - 🪛 `map.js` add a list of painted paths to first check and -if not already added on the map- continue painting it. (The problem appeared visually when multiple UEs had the same path assigned)
 
 
+### NEF APIs / backend
+
+- Fix problem with `path_id` on import/export scenario. (e.g., if we export a scenario with UEs with path_ids 1,2,4, when the scenario is imported, the path with id 4 is added as path with 3. The UE is successfully correlated with the new path id 3)
+
 <br><br>
 
 
