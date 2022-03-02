@@ -262,6 +262,7 @@ def get_scenario(
                 item_json["start_point"]["longitude"] = path.start_long
                 item_json["end_point"]["latitude"] = path.end_lat
                 item_json["end_point"]["longitude"] = path.end_long
+                item_json["id"] = path.id
                 points = crud.points.get_points(db=db, path_id=path.id)
                 item_json["points"] = []
                 for obj in jsonable_encoder(points):
@@ -332,6 +333,8 @@ def create_scenario(
             ue = crud.ue.create_with_owner(db=db, obj_in=ue_in, owner_id=current_user.id)
 
     for path_in in paths:
+        path_old_id = path_in.id
+
         path = crud.path.get_description(db=db, description = path_in.description)
         if path:
             print(f"ERROR: Path with description \'{path_in.description}\' already exists")
@@ -339,19 +342,31 @@ def create_scenario(
         else:
             path = crud.path.create_with_owner(db=db, obj_in=path_in, owner_id=current_user.id)
             crud.points.create(db=db, obj_in=path_in, path_id=path.id) 
+            
+            for ue_path in ue_path_association:
+                if retrieve_ue_state(ue_path.supi, current_user.id):
+                    err.update(f"UE with SUPI {ue_path.supi} is currently moving. You are not allowed to edit UE's path while it's moving")
+                else:
+                    #Assign the coordinates
+                    UE = crud.ue.get_supi(db=db, supi=ue_path.supi)
+                    json_data = jsonable_encoder(UE)
+                    
+                    #Check if the old path id or the new one is associated with one or more UEs store in ue_path_association dictionary
+                    #If not then add path_id 0 on UE's table 
+                    print(f'Ue_path_association {ue_path.path}')
+                    print(f'Path old id: {path_old_id}')
+                    if ue_path.path == path_old_id:
+                        print(f'New path id {path.id}')
+                        json_data['path_id'] = path.id
+                        random_point = get_random_point(db, path.id)
+                        json_data['latitude'] = random_point.get('latitude')
+                        json_data['longitude'] = random_point.get('longitude')
+                    
+                    crud.ue.update(db=db, db_obj=UE, obj_in=json_data)
+                    
+                    
 
-    for ue_path in ue_path_association:
-        if retrieve_ue_state(ue_path.supi, current_user.id):
-            err.update(f"UE with SUPI {ue_path.supi} is currently moving. You are not allowed to edit UE's path while it's moving")
-        else:
-        #Assign the coordinates
-            UE = crud.ue.get_supi(db=db, supi=ue_path.supi)
-            json_data = jsonable_encoder(UE)
-            json_data['path_id'] = ue_path.path
-            random_point = get_random_point(db, ue_path.path)
-            json_data['latitude'] = random_point.get('latitude')
-            json_data['longitude'] = random_point.get('longitude')
-            UE = crud.ue.update(db=db, db_obj=UE, obj_in=json_data)
+    
     
     if bool(err) == True:
         raise HTTPException(status_code=409, detail=err)
