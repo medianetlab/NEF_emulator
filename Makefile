@@ -30,10 +30,10 @@ stop:
 	docker-compose stop
 
 build:
-	docker-compose build
+	docker-compose --profile debug build
 
 build-no-cache:
-	docker-compose build --no-cache
+	docker-compose --profile debug build --no-cache
 
 logs:
 	docker-compose logs -f
