@@ -24,13 +24,10 @@ class UEBase(BaseModel):
     external_identifier: Optional[str] = Field("123456789@domain.com", description="Globally unique identifier containing a Domain Identifier and a Local Identifier. \<Local Identifier\>@\<Domain Identifier\>")
     speed: Speed = Field(default="LOW", description="This value describes UE's speed. Possible values are \"STATIONARY\" (e.g, IoT device), \"LOW(e.g, pedestrian)\" and \"HIGH (e.g., vehicle)\"")
 
-# Properties to receive on item creation
 class UECreate(UEBase):
     supi: constr(regex=r'^[0-9]{15,16}$') = Field(default="202010000000000", description= """String identifying a Supi that shall contain either an IMSI, a network specific identifier, a Global Cable Identifier (GCI) or a Global Line Identifier (GLI) as specified in clause 2.2A of 3GPP TS 23.003. 
                                                                                              In the current version (v1.1.0) only IMSI is supported""")
 
-
-# Properties to receive on item update
 class UEUpdate(UEBase):
     pass
 
@@ -45,10 +42,11 @@ class UE(UEBase):
     latitude: Optional[confloat(ge=-90, le=90)] 
     longitude: Optional[confloat(ge=-180, le=180)]                                                                                      
     path_id: int
+    state: Optional[bool]
     
     class Config:
         orm_mode = True
 
-# Properties to return to client for all UEs
+# Properties to return to client with cell id hex 
 class UEhex(UE):
     cell_id_hex: str
