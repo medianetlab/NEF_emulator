@@ -13,8 +13,6 @@ class Speed(str, Enum):
 class UEBase(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
-    gNB_id: int
-    Cell_id: int
     ip_address_v4: Optional[IPvAnyAddress] = Field(default='10.0.0.0', description="String identifying an Ipv4 address")    
     ip_address_v6: Optional[IPvAnyAddress] = Field(default="0:0:0:0:0:0:0:0", description="String identifying an Ipv6 address. Default value ::1/128 (loopback)")
     mac_address: constr(regex=r'^([0-9a-fA-F]{2})((-[0-9a-fA-F]{2}){5})$') = '22-00-00-00-00-00'
@@ -42,7 +40,8 @@ class UE(UEBase):
     latitude: Optional[confloat(ge=-90, le=90)] 
     longitude: Optional[confloat(ge=-180, le=180)]                                                                                      
     path_id: int
-    state: Optional[bool]
+    gNB_id: int
+    Cell_id: int
     
     class Config:
         orm_mode = True

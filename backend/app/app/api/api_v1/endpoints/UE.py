@@ -2,6 +2,7 @@ from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, Path
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+from sqlalchemy import null
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
@@ -33,12 +34,18 @@ def read_UEs(
     for json_UE in json_UEs:
         for UE in UEs:
             if UE.Cell_id == json_UE.get('Cell_id'):
-                json_UE.update({"cell_id_hex": UE.Cell.cell_id})
+                if UE.Cell_id != None:
+                    json_UE.update({"cell_id_hex": UE.Cell.cell_id})
+                    json_UE.update({"gNB_id" : UE.Cell.gNB_id})
+                else:
+                    json_UE.update({"cell_id_hex": None})
+                    json_UE.update({"gNB_id" : None})
+
 
     return JSONResponse(content=json_UEs, status_code=200)
 
 
-@router.post("", response_model=schemas.UEhex)
+@router.post("", response_model=schemas.UECreate)
 def create_UE(
     *,
     db: Session = Depends(deps.get_db),
@@ -65,27 +72,18 @@ def create_UE(
         raise HTTPException(
             status_code=409, detail=f"UE with external id {str(item_in.mac_address)} already exists")
 
-    gnb = crud.gnb.get(db=db, id=item_in.gNB_id)
-    cell = crud.cell.get(db=db, id=item_in.Cell_id)
-
-    if not gnb:
-        raise HTTPException(
-            status_code=409, detail="ERROR: This gNB_id you specified doesn't exist. Please create a new gNB with this gNB_id or use an existing gNB")
-    elif not cell:
-        raise HTTPException(
-            status_code=409, detail="ERROR: This Cell_id you specified doesn't exist. Please create a new Cell with this Cell_id or use an existing Cell")
-
     json_data = jsonable_encoder(item_in)
     json_data['ip_address_v4'] = str(item_in.ip_address_v4)
     json_data['ip_address_v6'] = str(item_in.ip_address_v6.exploded)
-    
+    json_data['Cell_id'] = None
+
     UE = crud.ue.create_with_owner(db=db, obj_in=json_data, owner_id=current_user.id)
-    json_data.update({"cell_id_hex": UE.Cell.cell_id, "path_id" : 0})
+    json_data.update({"path_id" : 0})
 
     return json_data
 
 
-@router.put("/{supi}", response_model=schemas.UEhex)
+@router.put("/{supi}", response_model=schemas.UEUpdate)
 def update_UE(
     *,
     db: Session = Depends(deps.get_db),
@@ -123,7 +121,7 @@ def update_UE(
     json_data['ip_address_v6'] = str(item_in.ip_address_v6.exploded)
 
     UE = crud.ue.update(db=db, db_obj=UE, obj_in=json_data)
-    json_data.update({"cell_id_hex": UE.Cell.cell_id, "supi": supi, "path_id" : UE.path_id})
+    json_data.update({"supi": supi, "path_id" : UE.path_id})
 
     return json_data
 

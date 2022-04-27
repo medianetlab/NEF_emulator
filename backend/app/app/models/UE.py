@@ -31,11 +31,9 @@ class UE(Base):
     latitude = Column(Float, index=True)
     longitude = Column(Float, index=True)
     path_id = Column(Integer, index=True)
-    state = Column(Boolean, index= True)
 
     #Foreign Keys
     owner_id = Column(Integer, ForeignKey("user.id"))
-    gNB_id = Column(Integer, ForeignKey("gnb.id"))
     Cell_id = Column(Integer, ForeignKey("cell.id"))
     
 
