@@ -1,4 +1,3 @@
-from os import path
 from typing import Optional
 from enum import Enum
 from pydantic import BaseModel, constr, confloat, IPvAnyAddress
@@ -39,13 +38,13 @@ class UE(UEBase):
                                                                                              In the current version (v1.1.0) only IMSI is supported""")
     latitude: Optional[confloat(ge=-90, le=90)] 
     longitude: Optional[confloat(ge=-180, le=180)]                                                                                      
-    path_id: int
-    gNB_id: int
-    Cell_id: int
+    path_id: Optional[int]
+    gNB_id: Optional[int]
+    Cell_id: Optional[int]
     
     class Config:
         orm_mode = True
 
 # Properties to return to client with cell id hex 
 class UEhex(UE):
-    cell_id_hex: str
+    cell_id_hex: Optional[str]

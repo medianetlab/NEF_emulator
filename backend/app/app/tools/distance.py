@@ -1,5 +1,4 @@
 import math
-import logging
 
 def distance(lat1, lon1, lat2, lon2): #Haversine formula: determines the great-circle distance between two points on a sphere given their longitudes and latitudes.
     R = 6371e3
