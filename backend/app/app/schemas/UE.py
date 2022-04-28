@@ -35,7 +35,7 @@ class ue_path(BaseModel):
 # Properties to return to client
 class UE(UEBase):
     supi: constr(regex=r'^[0-9]{15,16}$') = Field(default="202010000000000", description= """String identifying a Supi that shall contain either an IMSI, a network specific identifier, a Global Cable Identifier (GCI) or a Global Line Identifier (GLI) as specified in clause 2.2A of 3GPP TS 23.003.                                                                                          
-                                                                                             In the current version (v1.1.0) only IMSI is supported""")
+                                                                                      In the current version (v1.1.0) only IMSI is supported""")
     latitude: Optional[confloat(ge=-90, le=90)] 
     longitude: Optional[confloat(ge=-180, le=180)]                                                                                      
     path_id: Optional[int]
@@ -48,3 +48,4 @@ class UE(UEBase):
 # Properties to return to client with cell id hex 
 class UEhex(UE):
     cell_id_hex: Optional[str]
+    id: int
