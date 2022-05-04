@@ -26,8 +26,17 @@
 ### NEF APIs / backend
 
 - Fix problem with `path_id` on import/export scenario. (e.g., if we export a scenario with UEs with path_ids 1,2,4, when the scenario is imported, the path with id 4 is added as path with 3. The UE is successfully correlated with the new path id 3)
+- Forbid user to update (gnb/cell)'s hex ids, if they already exist
 
+### Other
+
+- ✔ `make db-reset` : except for reseting the postgresql db, add functionality to also reset mongo db
+- 🔥 `make build` / `make build-no-cache` : hotfix add `--profile` option to `docker-compose`
+
+### Libraries
+- Fix build error caused by jinja2 newer version (lock to v.3.0.3)
 <br><br>
+
 
 
 ## v1.3.2
