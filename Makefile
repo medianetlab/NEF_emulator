@@ -30,10 +30,10 @@ stop:
 	docker-compose stop
 
 build:
-	docker-compose build
+	docker-compose --profile debug build
 
 build-no-cache:
-	docker-compose build --no-cache
+	docker-compose --profile debug build --no-cache
 
 logs:
 	docker-compose logs -f
@@ -57,6 +57,7 @@ db-init: #simple scenario with 3 UEs, 3 Cells, 1 gNB
 
 db-reset:
 	docker-compose exec db psql -h localhost -U postgres -d app -c 'TRUNCATE TABLE cell, gnb, monitoring, path, points, ue RESTART IDENTITY;'
+	docker-compose exec mongo /bin/bash -c 'mongo fastapi -u $$MONGO_USER -p $$MONGO_PASSWORD --authenticationDatabase admin --eval "db.dropDatabase();"'
 
 
 db-reinit: db-reset db-init

@@ -33,14 +33,21 @@ var ues_datatable   = null;
     var edit_UE_tmp_obj  = null;
 
     // leaflet.js map for editing UE modal
-    var edit_UE_map         = null;
-    var edit_UE_position_lg = L.layerGroup(); // map layer group for UEs
-    var edit_UE_path_lg     = L.layerGroup(); // map layer group for paths
+    var edit_UE_map          = null;
+    var edit_UE_position_lg  = L.layerGroup(); // map layer group for UEs
+    var edit_UE_cell_lg      = L.layerGroup(); // map layer group
+    var edit_UE_coverage_lg  = L.layerGroup(); // map layer group
+    var edit_UE_all_paths_lg = L.layerGroup(); // map layer group for paths
+    var edit_UE_selected_path_lg = L.layerGroup(); // map layer group for selected path
+
     var edit_UE_circle_dot  = null;           // small circle depicting the position of the UE (to be edited)
     // leaflet.js map for adding UE modal
     var add_UE_map          = null;
     var add_UE_position_lg  = L.layerGroup(); // map layer group for UEs
-    var add_UE_path_lg      = L.layerGroup(); // map layer group for paths
+    var add_UE_cell_lg      = L.layerGroup(); // map layer group
+    var add_UE_coverage_lg  = L.layerGroup(); // map layer group
+    var add_UE_all_paths_lg = L.layerGroup(); // map layer group for all paths
+    var add_UE_selected_path_lg  = L.layerGroup(); // map layer group for selected path
     var add_UE_circle_dot   = null;           // small circle depicting the position of the UE (to be edited)
 
 // ===============================================
@@ -170,8 +177,6 @@ function api_put_UE_callback( UE_obj, callback ) {
         {
             // console.log(data);
             ui_display_toast_msg("success", "Success!", "The UE has been updated");
-            // helper_update_UE( data );
-            // ues_datatable.clear().rows.add( ues ).draw();
             callback(data);
         },
         error: function(err)
@@ -460,7 +465,10 @@ function ui_show_delete_UE_modal( UE_id ) {
 function ui_show_edit_UE_modal( UE_supi ) {
 
     edit_UE_position_lg.clearLayers(); // map UE   layer cleanup
-    edit_UE_path_lg.clearLayers();     // map path layer cleanup
+    edit_UE_all_paths_lg.clearLayers();     // map path layer cleanup
+    edit_UE_cell_lg.clearLayers();
+    edit_UE_coverage_lg.clearLayers();
+    edit_UE_selected_path_lg.clearLayers();
 
     UE_to_be_edited = UE_supi;
 
@@ -524,18 +532,23 @@ function ui_show_edit_UE_modal( UE_supi ) {
     if (edit_UE_tmp_obj.path_id != 0) {
         api_get_specific_path_callback( edit_UE_tmp_obj.path_id, function(data){
             // console.log(data);
-            ui_map_paint_path(data, edit_UE_map, edit_UE_path_lg);
+            ui_map_paint_path(data, edit_UE_map, edit_UE_selected_path_lg, 0.75);
         });
     }
     
     
-    edit_UE_map.setView(
-        {
-            lat: edit_UE_tmp_obj.latitude,
-            lon: edit_UE_tmp_obj.longitude
-        },
-        18 // zoom level
-    );
+    // edit_UE_map.setView(
+    //     {
+    //         lat: edit_UE_tmp_obj.latitude,
+    //         lon: edit_UE_tmp_obj.longitude
+    //     },
+    //     18 // zoom level
+    // );
+
+    ui_draw_Cells_to_map(edit_UE_map, edit_UE_cell_lg, edit_UE_coverage_lg, "#f03");
+    ui_map_fit_bounds_to_cells( edit_UE_map );
+    ui_draw_UEs_to_map( edit_UE_map, edit_UE_position_lg );
+    ui_draw_paths_to_map( edit_UE_map, edit_UE_all_paths_lg, 0.2 );
 }
 
 
@@ -552,6 +565,10 @@ function ui_show_add_UE_modal(  ) {
     }
 
     add_UE_position_lg.clearLayers(); // map layer cleanup
+    add_UE_cell_lg.clearLayers();
+    add_UE_coverage_lg.clearLayers();
+    add_UE_all_paths_lg.clearLayers();
+
 
     // refresh the path options in the select input
     $('#add_UE_path').empty(); // delete the old ones
@@ -571,6 +588,10 @@ function ui_show_add_UE_modal(  ) {
 
     add_UE_map.invalidateSize(); // this helps the map display its tiles correctly after the size of the modal is finalized
 
+    ui_draw_Cells_to_map(add_UE_map, add_UE_cell_lg, add_UE_coverage_lg, "#f03");
+    ui_map_fit_bounds_to_cells( add_UE_map );
+    ui_draw_UEs_to_map( add_UE_map, add_UE_position_lg );
+    ui_draw_paths_to_map( add_UE_map, add_UE_all_paths_lg, 0.2 );
 }
 
 
@@ -578,7 +599,7 @@ function ui_show_add_UE_modal(  ) {
 function ui_initialize_edit_UE_map() {
 
     // set map height
-    $('#edit_UE_mapid').css({ "height": 300 } );
+    $('#edit_UE_mapid').css({ "height": 600 } );
 
     var mbAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
                 'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -590,7 +611,7 @@ function ui_initialize_edit_UE_map() {
 
     // map initialization
     edit_UE_map = L.map('edit_UE_mapid', {
-        layers: [grayscale, edit_UE_position_lg, edit_UE_path_lg]
+        layers: [grayscale, edit_UE_position_lg, edit_UE_cell_lg, edit_UE_coverage_lg, edit_UE_all_paths_lg, edit_UE_selected_path_lg]
     }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
 
 
@@ -600,8 +621,11 @@ function ui_initialize_edit_UE_map() {
         };
 
     var overlays = {
-        "UE position": edit_UE_position_lg,
-        "path": edit_UE_path_lg,
+        "UEs"      : edit_UE_position_lg,
+        "Cells"    : edit_UE_cell_lg,
+        "Coverage" : edit_UE_coverage_lg,
+        "Paths"     : edit_UE_all_paths_lg,
+        "selected path" : edit_UE_selected_path_lg
     };
 
     L.control.layers(baseLayers, overlays).addTo(edit_UE_map);
@@ -613,7 +637,7 @@ function ui_initialize_edit_UE_map() {
 function ui_initialize_add_UE_map() {
 
     // set map height
-    $('#add_UE_mapid').css({ "height": 300 } );
+    $('#add_UE_mapid').css({ "height": 600 } );
 
     var mbAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
                 'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -625,7 +649,7 @@ function ui_initialize_add_UE_map() {
 
     // map initialization
     add_UE_map = L.map('add_UE_mapid', {
-        layers: [grayscale, add_UE_position_lg, add_UE_path_lg]
+        layers: [grayscale, add_UE_position_lg, add_UE_cell_lg, add_UE_coverage_lg, add_UE_all_paths_lg, add_UE_selected_path_lg]
     }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
 
 
@@ -635,8 +659,11 @@ function ui_initialize_add_UE_map() {
         };
 
     var overlays = {
-        "UE position": add_UE_position_lg,
-        "path": add_UE_path_lg,
+        "UEs"      : add_UE_position_lg,
+        "Cells"    : add_UE_cell_lg,
+        "Coverage" : add_UE_coverage_lg,
+        "Paths"    : add_UE_all_paths_lg,
+        "Selected path" : add_UE_selected_path_lg
     };
 
     L.control.layers(baseLayers, overlays).addTo(add_UE_map);
@@ -653,20 +680,13 @@ function ui_edit_UE_modal_add_listeners() {
 
         if (selected_path_id != 0) {
             // add path to map
-            // and set view + zoom level
             api_get_specific_path_callback( selected_path_id, function(data){
-                edit_UE_path_lg.clearLayers();
-                ui_map_paint_path(data, edit_UE_map, edit_UE_path_lg);
-
-                // set bounds for view + zoom depending on the position of cells
-                var map_bounds     = helper_calculate_map_bounds_from_cells();            
-                var leaflet_bounds = new L.LatLngBounds(map_bounds);
-
-                edit_UE_map.fitBounds( leaflet_bounds );
+                edit_UE_selected_path_lg .clearLayers();
+                ui_map_paint_path(data, edit_UE_map, edit_UE_selected_path_lg, 0.75);
             });
         }
         else {
-            edit_UE_path_lg.clearLayers();
+            edit_UE_selected_path_lg.clearLayers();
         }
     });
 }
@@ -679,17 +699,9 @@ function ui_add_UE_modal_add_listeners() {
         selected_path_id = $(this).val();
 
         // add path to map
-        // and set view + zoom level
         api_get_specific_path_callback( selected_path_id, function(data){
-            add_UE_path_lg.clearLayers();
-            ui_map_paint_path(data, add_UE_map, add_UE_path_lg);
-
-            // set bounds for view + zoom depending on the position of cells
-            var map_bounds     = helper_calculate_map_bounds_from_cells();            
-            var leaflet_bounds = new L.LatLngBounds(map_bounds);
-
-            add_UE_map.fitBounds( leaflet_bounds );
-            // add_UE_map.setZoom(17);
+            add_UE_selected_path_lg.clearLayers();
+            ui_map_paint_path(data, add_UE_map, add_UE_selected_path_lg, 0.75);
         });
     });
 }
@@ -701,20 +713,6 @@ function ui_add_UE_modal_add_listeners() {
 // ===============================================
 //                Helper functions
 // ===============================================
-
-
-// iterates through the UEs list
-// and removes (if found) the supi provided
-// 
-function helper_delete_UE( UE_supi ) {
-
-    var i = ues.length;
-    while (i--) {
-        if ( ues[i].supi == UE_supi ) {
-            ues.splice(i, 1);
-        }
-    }
-}
 
 
 // iterates through the UE list
@@ -730,34 +728,6 @@ function helper_find_UE( UE_supi ) {
     return null;
 }
 
-
-// iterates through the UE list
-// and updates (if found) the UE object provided
-//
-function helper_update_UE( UE_obj ) {
-
-    for (i=0 ; i<ues.length ; i++) {
-        if ( ues[i].supi == UE_obj.supi ) {
-            UE_obj["id"] = ues[i].id;
-            ues[i] = JSON.parse(JSON.stringify( UE_obj )); // found, updated
-        }
-    }
-}
-
-
-// iterates through the UE list
-// and updates (if found) the UE object provided
-// with the new path_id 
-//
-function helper_update_UE_path( UE_supi, path_id ) {
-
-    for (i=0 ; i<ues.length ; i++) {
-        if ( ues[i].supi == UE_supi ) {
-            ues[i].path_id = path_id; // found, updated path
-            ues[i] = JSON.parse(JSON.stringify( ues[i] ));  // update object
-        }
-    }
-}
 
 // ===============================================
 //             End of Helper functions
