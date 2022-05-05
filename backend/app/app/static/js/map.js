@@ -355,7 +355,7 @@ function ui_map_paint_UEs() {
                 .bindPopup("<b>"+ ue.name +"</b><br />"+
                            // ue.description +"<br />"+
                            "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
-                           "Cell ID: " + ue.cell_id_hex +"<br />"+
+                           "Cell ID: " + ( (ue.cell_id_hex==null)? "-" : ue.cell_id_hex ) +"<br />"+
                            "External identifier: " + ue.external_identifier +"<br />"+
                            "Speed:"+ ue.speed)
                 .addTo(ues_lg); // add to layer group
@@ -368,7 +368,7 @@ function ui_map_paint_UEs() {
             ue_markers[ue.supi].setPopupContent("<b>"+ ue.name +"</b><br />"+
                            // ue.description +"<br />"+
                            "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
-                           "Cell ID: " + ue.cell_id_hex +"<br />"+
+                           "Cell ID: " + ( (ue.cell_id_hex==null)? "-" : ue.cell_id_hex ) +"<br />"+
                            "External identifier: " + ue.external_identifier +"<br />"+
                            "Speed:"+ ue.speed);
         }
