@@ -360,6 +360,12 @@ function ui_map_paint_UEs() {
                            "Speed:"+ ue.speed)
                 .addTo(ues_lg); // add to layer group
 
+            if ( ue.cell_id_hex==null ) {
+                L.DomUtil.addClass(ue_markers[ue.supi]._icon, 'null-cell');
+            } else {
+                L.DomUtil.removeClass(ue_markers[ue.supi]._icon, 'null-cell');
+            }
+
         }
         else {
             // move existing markers
@@ -371,6 +377,12 @@ function ui_map_paint_UEs() {
                            "Cell ID: " + ( (ue.cell_id_hex==null)? "-" : ue.cell_id_hex ) +"<br />"+
                            "External identifier: " + ue.external_identifier +"<br />"+
                            "Speed:"+ ue.speed);
+
+            if ( ue.cell_id_hex==null ) {
+                L.DomUtil.addClass(ue_markers[ue.supi]._icon, 'null-cell');
+            } else {
+                L.DomUtil.removeClass(ue_markers[ue.supi]._icon, 'null-cell');
+            }
         }
     }
     UEs_first_paint = false;   
