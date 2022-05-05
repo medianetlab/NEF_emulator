@@ -1,6 +1,11 @@
 # Changelog
 
-## v1.3.3
+## v1.4.0
+
+### Scenario `import` / `export`
+
+ - ⛔ breaking change: `json` data of exported scenarios from `v1.3.x` will not able to be imported to `v1.4.0`. Users will have to recreate them manually.
+
 
 ### UI changes
 
@@ -31,15 +36,18 @@
 - 🙅‍♂️Forbid user to update (gnb/cell)'s `hex ids`, if they already exist
 - Add disconnected state functionality. 👉 When there is no radio coverage 📵 the UE disconnects from the cell that it's currently connected. 
 
+### Docker 🐳
+
+- 🔥 hotfix `make build` / `make build-no-cache`: add `--profile` option to `docker-compose`
+
+
+### Libraries
+
+- 🪛 Fix build error caused by `jinja2` newer version (lock to `v.3.0.3`)
+
 ### Other
 
 - ✔ `make db-reset` : except for reseting the postgresql db, add functionality to also reset mongo db
-- 🔥 `make build` / `make build-no-cache` : hotfix add `--profile` option to `docker-compose`
-
-### Libraries
-- Fix build error caused by jinja2 newer version (lock to v.3.0.3)
-
-
 
 <br><br>
 
