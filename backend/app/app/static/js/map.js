@@ -56,6 +56,8 @@ var detail_btn_tpl = `<button class="btn btn-light" type="button" onclick="show_
 // modal for details
 var modal = new coreui.Modal(document.getElementById('details_modal'), {});
 
+var paths_painted = [];
+
 // ===============================================
 
 
@@ -84,7 +86,11 @@ $( document ).ready(function() {
             //  1. get and paint every path per UE
             //  2. create start/stop buttons
             for (const ue of ues) {
-                api_get_specific_path(ue.path_id);
+                // if not already fetched and painted, do so
+                if ( !helper_check_path_is_already_painted( ue.path_id ) ) { 
+                    api_get_specific_path(ue.path_id);
+                    paths_painted.push(ue.path_id);
+                }
                 ui_generate_loop_btn_for( ue );
                 ui_set_loop_btn_status_for( ue );
             }
@@ -349,10 +355,16 @@ function ui_map_paint_UEs() {
                 .bindPopup("<b>"+ ue.name +"</b><br />"+
                            // ue.description +"<br />"+
                            "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
-                           "Cell ID: " + ue.cell_id_hex +"<br />"+
+                           "Cell ID: " + ( (ue.cell_id_hex==null)? "-" : ue.cell_id_hex ) +"<br />"+
                            "External identifier: " + ue.external_identifier +"<br />"+
                            "Speed:"+ ue.speed)
                 .addTo(ues_lg); // add to layer group
+
+            if ( ue.cell_id_hex==null ) {
+                L.DomUtil.addClass(ue_markers[ue.supi]._icon, 'null-cell');
+            } else {
+                L.DomUtil.removeClass(ue_markers[ue.supi]._icon, 'null-cell');
+            }
 
         }
         else {
@@ -362,9 +374,15 @@ function ui_map_paint_UEs() {
             ue_markers[ue.supi].setPopupContent("<b>"+ ue.name +"</b><br />"+
                            // ue.description +"<br />"+
                            "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
-                           "Cell ID: " + ue.cell_id_hex +"<br />"+
+                           "Cell ID: " + ( (ue.cell_id_hex==null)? "-" : ue.cell_id_hex ) +"<br />"+
                            "External identifier: " + ue.external_identifier +"<br />"+
                            "Speed:"+ ue.speed);
+
+            if ( ue.cell_id_hex==null ) {
+                L.DomUtil.addClass(ue_markers[ue.supi]._icon, 'null-cell');
+            } else {
+                L.DomUtil.removeClass(ue_markers[ue.supi]._icon, 'null-cell');
+            }
         }
     }
     UEs_first_paint = false;   
@@ -647,9 +665,10 @@ function ui_generate_loop_btn_for( ue ) {
 
 
 
-// Add start/stop loop button for UE
-// It generates HTML based on the button template
-// and adds it to the ue-btn-area
+// Set status for the start/stop loop button for specific UE
+// It fetches the UE "running" status (true/false)
+// and adds the appropriate class.
+// It also updates the start-all/stop-all button in case all the UEs are moving
 // 
 function ui_set_loop_btn_status_for(ue) {
     var url = app.api_url + '/utils/state-loop/' + ue.supi;
@@ -784,45 +803,20 @@ function ui_add_select_listener_events_reload(){
 
 
 
-// Ajax request to get all monitoring events data
+// ===============================================
+//     How fetching events from the API works:
+// ===============================================
+//   - every event has a unique number / ID
+//   - the backend keeps on-the-fly a dictionary with the 100 latest events.
+//     (this way the frontend will be able after a page reload to show the latest 100 events)
+//   - on "page load/reload" the frontend asks the above list of events
+//   - on "polling for new events" the frontend provides the number / ID of the latest event that has already received to the backend
+//     the backend sends back the new events that may have been occurred.
 // 
-// 
-function api_get_all_monitoring_events() {
-    
-    var url = app.api_url + '/utils/monitoring/notifications?skip=0&limit=100';
+// Example: the frontend provides that it has received up to event 154
+//          the backend sends back events 155, 156 and 157 which have taken place in the meanwhile (time between two polling requests)
 
-    $.ajax({
-        type: 'GET',
-        url:  url,
-        contentType : 'application/json',
-        headers: {
-            "authorization": "Bearer " + app.auth_obj.access_token
-        },
-        processData:  false,
-        beforeSend: function() {
-            // 
-        },
-        success: function(data)
-        {
-            console.log(data);
-            events = data;
-            if ( events_first_fetch ) {
-                // initialize datatable
-                ui_init_datatable_events();
-                events_first_fetch = false;
-            }
-        },
-        error: function(err)
-        {
-            console.log(err);
-        },
-        complete: function()
-        {
-            // 
-        },
-        timeout: 5000
-    });
-}
+
 
 
 // Ajax request to get all monitoring events data
@@ -869,8 +863,11 @@ function api_get_all_monitoring_events() {
 
 
 
-// Ajax request to get all monitoring events data
-// 
+// Ajax request to get latest monitoring events data (if any)
+// 'latest_event_id_fetched' is used to inform the backend that
+// it should respond with newer events if they exist.
+// On success they are pushed to the 'events' table and the function
+// that appends them to Datatables is called.
 // 
 function api_get_last_monitoring_events() {
     
@@ -1031,4 +1028,15 @@ function get_event_details( event_id ) {
     for (const event of events) {
         if (event.id == event_id) return event;
     }
+}
+
+
+
+function helper_check_path_is_already_painted( path_id ) {
+    for (const item of paths_painted) {
+        if ( item == path_id ) {
+            return true
+        }
+    }
+    return false;
 }

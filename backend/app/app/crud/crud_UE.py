@@ -67,16 +67,7 @@ class CRUD_UE(CRUDBase[UE, UECreate, UEUpdate]):
             .filter(UE.external_identifier == externalId, UE.owner_id == owner_id)
             .first()
         )
-
-    def get_by_gNB(
-        self, db: Session, *, gNB_id: int
-    ) -> List[UE]:
-        return (
-            db.query(self.model)
-            .filter(UE.gNB_id == gNB_id)
-            .all()
-        )
-
+        
     def get_by_Cell(
         self, db: Session, *, cell_id: int
     ) -> List[UE]:

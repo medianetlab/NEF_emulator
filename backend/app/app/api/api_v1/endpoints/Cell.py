@@ -73,6 +73,15 @@ def update_Cell(
         raise HTTPException(status_code=404, detail="Cell not found")
     if not crud.user.is_superuser(current_user) and (Cell.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
+
+    
+    #check if the requested cell_id (hex) exists in db
+    if item_in.cell_id != cell_id:
+        cells = crud.cell.get_multi_by_owner(db=db, owner_id=current_user.id, skip=0, limit=100)
+        for cell_in in cells:
+            if item_in.cell_id == cell_in.cell_id:
+                raise HTTPException(status_code=409, detail=f"Cell with id {item_in.cell_id} already exists")
+        
     Cell = crud.cell.update(db=db, db_obj=Cell, obj_in=item_in)
     return Cell
 

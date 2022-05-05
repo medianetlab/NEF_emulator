@@ -1,14 +1,81 @@
 # Changelog
 
+## v1.4.0
+
+### Scenario `import` / `export`
+
+ - ⛔ breaking change: `json` data of exported scenarios from `v1.3.x` will not able to be imported to `v1.4.0`. Users will have to recreate them manually.
+
+
+### UI changes
+
+ - `/dashboard` js split (see issue: #35):
+     - `dashboard.js` keeps only the `document.ready` function + some helper ones
+     - `dashboard-gnbs.js` has the gNBs part
+     - `dashboard-cells.js` has the Cells part
+     - `dashboard-ues.js` has the UEs part
+     - `dashboard-paths.js` has the Paths part
+ - `/dashboard` split goals:
+    - ✅ use `beforeSend`, `complete` and spinners for making visible that reload takes place in the background. Locally this happens so fast that the user doesn't notice.
+    - ✅ change `api_get/put/delete/post()` functions to return to callbacks for UI actions
+    - ✅ introduce `ui_fetch_and_update()` functions that use the above API calls and after they fetch data, they update the UI. This helped us prevent some states with "stale" data
+    - ✅ add layers to maps to let the users choose what they want to see or not (Cells, UEs, Paths) when adding / editing
+- `/dashboard` fixes & improvements
+    - increase map 🗺️ height inside every modal from 300 to 600px
+    - `add_cell` modal: fix `NaN` errors when the user doesn't click on the map to generate X,Y for the new cell
+    - `ui_map_paint_path()` function can now take `opacity` argument
+    - 🪛 handle `cell_id_hex == null`: display `-` in Datatable cells
+- `/map`:
+    - 🪛 `map.js` minor fix: add a list of painted paths to first check and -if not already added on the map- continue painting it. (The problem appeared visually when multiple UEs had the same path assigned)
+    - ✅ handle `cell_id_hex == null` and display grey ⚪ UE-icon when not connected to any cell (this also applies to every UE just after an `import`)
+
+
+### NEF APIs / backend
+
+- Fix problem with `path_id` on import/export scenario. (e.g., if we export a scenario with UEs with path_ids 1,2,4, when the scenario is imported, the path with id 4 is added as path with 3. The UE is successfully correlated with the new path id 3)
+- 🙅‍♂️Forbid user to update (gnb/cell)'s `hex ids`, if they already exist
+- Add disconnected state functionality. 👉 When there is no radio coverage 📵 the UE disconnects from the cell that it's currently connected. 
+
+
+### Docker 🐳
+
+- 🔥 hotfix `make build` / `make build-no-cache`: add `--profile` option to `docker-compose`
+
+
+### Libraries
+
+- 🪛 Fix build error caused by `jinja2` newer version (lock to `v.3.0.3`)
+
+
+### Other
+
+- ✔ `make db-reset` : except for reseting the postgresql db, add functionality to also reset mongo db
+
+
+<br><br>
+
+
+
 ## v1.3.2
 
 - Fix UE-association-path selection with `path_id` 0 (no path selected) - both dashboard and backend
 - Fix bug in check_expiration_time function
 - The Monitoring Event subscription by external id is retrieved by additional filter `owner_id`
 
+
+<br><br>
+
 ## v1.3.1
 
 - Fix endpoints on MonitoringEvent API <kbd>{apiroot}/nef/api/v1/3gpp-monitoring-event/**v1**/{scsAsId}/subscriptions</kbd>
+
+
+<br><br>
+
+
+
+
+
 
 ## v1.3.0
 
@@ -71,9 +138,15 @@
 
  
 
+
+<br><br>
+
+
+
+
 ## v.1.2.0
 
-## Docker 🐳
+### Docker 🐳
 
  - ⚠ new containers added to the composition
    - `mongo:4.4.10`
@@ -87,7 +160,7 @@
        make db-init          #add data (optional)
 
 
-## NEF APIs / backend
+### NEF APIs / backend
 
  - new *"Session With QoS"* `endpoints`
      - <kbd style="background-color:#eff7ff;">GET</kbd> `/api/v1/3gpp-as-session-with-qos/v1/{scsAsId}/subscriptions` ✔ added
@@ -125,7 +198,7 @@
 
 
 
-## UI changes
+### UI changes
 
  - `/map` add search/filter option to datatables
  - the users can now generate their own scenarios on the map 🗺 more easily:
@@ -135,7 +208,7 @@
      - `/dashboard` add toastr js to display messages
 
 
-## Other
+### Other
 
  - ⛔ `make db-init-simple` is deprecated and replaced by `make db-init`
  - ✔ `make db-reinit` can now be used as a *shortcut* of: `make db-reset` -> `make db-init`
@@ -145,10 +218,14 @@
 
 
 
-## Libraries
+### Libraries
 
  - added `pymongo = "^3.12.1"`
 
+
+
+
+<br><br>
 
 
 

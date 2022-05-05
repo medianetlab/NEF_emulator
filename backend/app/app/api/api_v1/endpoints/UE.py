@@ -2,6 +2,7 @@ from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, Path
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+from sqlalchemy import null
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
@@ -33,12 +34,18 @@ def read_UEs(
     for json_UE in json_UEs:
         for UE in UEs:
             if UE.Cell_id == json_UE.get('Cell_id'):
-                json_UE.update({"cell_id_hex": UE.Cell.cell_id})
+                if UE.Cell_id != None:
+                    json_UE.update({"cell_id_hex": UE.Cell.cell_id})
+                    json_UE.update({"gNB_id" : UE.Cell.gNB_id})
+                else:
+                    json_UE.update({"cell_id_hex": None})
+                    json_UE.update({"gNB_id" : None})
 
-    return JSONResponse(content=json_UEs, status_code=200)
+
+    return json_UEs
 
 
-@router.post("", response_model=schemas.UEhex)
+@router.post("", response_model=schemas.UE)
 def create_UE(
     *,
     db: Session = Depends(deps.get_db),
@@ -65,27 +72,18 @@ def create_UE(
         raise HTTPException(
             status_code=409, detail=f"UE with external id {str(item_in.mac_address)} already exists")
 
-    gnb = crud.gnb.get(db=db, id=item_in.gNB_id)
-    cell = crud.cell.get(db=db, id=item_in.Cell_id)
-
-    if not gnb:
-        raise HTTPException(
-            status_code=409, detail="ERROR: This gNB_id you specified doesn't exist. Please create a new gNB with this gNB_id or use an existing gNB")
-    elif not cell:
-        raise HTTPException(
-            status_code=409, detail="ERROR: This Cell_id you specified doesn't exist. Please create a new Cell with this Cell_id or use an existing Cell")
-
     json_data = jsonable_encoder(item_in)
     json_data['ip_address_v4'] = str(item_in.ip_address_v4)
     json_data['ip_address_v6'] = str(item_in.ip_address_v6.exploded)
-    
+    json_data['Cell_id'] = None
+
     UE = crud.ue.create_with_owner(db=db, obj_in=json_data, owner_id=current_user.id)
-    json_data.update({"cell_id_hex": UE.Cell.cell_id, "path_id" : 0})
+    json_data.update({"path_id" : 0})
 
     return json_data
 
 
-@router.put("/{supi}", response_model=schemas.UEhex)
+@router.put("/{supi}", response_model=schemas.UE)
 def update_UE(
     *,
     db: Session = Depends(deps.get_db),
@@ -123,7 +121,7 @@ def update_UE(
     json_data['ip_address_v6'] = str(item_in.ip_address_v6.exploded)
 
     UE = crud.ue.update(db=db, db_obj=UE, obj_in=json_data)
-    json_data.update({"cell_id_hex": UE.Cell.cell_id, "supi": supi, "path_id" : UE.path_id})
+    json_data.update({"supi": supi, "path_id" : UE.path_id})
 
     return json_data
 
@@ -144,7 +142,14 @@ def read_UE(
         raise HTTPException(status_code=404, detail="UE not found")
     if not crud.user.is_superuser(current_user) and (UE.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
-    return UE
+
+    json_UE = jsonable_encoder(UE)
+    if UE.Cell_id != None:
+        json_UE.update({"gNB_id" : UE.Cell.gNB_id})
+    else:
+        json_UE.update({"gNB_id" : None})
+
+    return json_UE
 
 
 @router.delete("/{supi}", response_model=schemas.UE)
@@ -167,9 +172,14 @@ def delete_UE(
         raise HTTPException(
             status_code=400, detail=f"UE with SUPI {supi} is currently moving. You are not allowed to remove a UE while it's moving")
     else:
-        UE = crud.ue.remove_supi(db=db, supi=supi)
-        return UE
+        json_UE = jsonable_encoder(UE)
+        if UE.Cell_id != None:
+            json_UE.update({"gNB_id" : UE.Cell.gNB_id})
+        else:
+            json_UE.update({"gNB_id" : None})
 
+        crud.ue.remove_supi(db=db, supi=supi)
+        return json_UE
 
 ### Get list of UEs of specific gNB
 
@@ -191,13 +201,27 @@ def read_gNB_id(
     if not crud.user.is_superuser(current_user) and (gNB.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
 
-    UE = crud.ue.get_by_gNB(db=db, gNB_id=gNB.id)
-    if not UE:
+    cells = crud.cell.get_by_gNB_id(db=db, gNB_id=gNB.id)
+    ue_list = []
+
+    for cell in cells:
+        UEs = crud.ue.get_by_Cell(db=db, cell_id=cell.id)
+        json_UEs = jsonable_encoder(UEs)
+        for json_UE in json_UEs:
+            for UE in UEs:
+                if UE.Cell_id == json_UE.get('Cell_id'):
+                    if UE.Cell_id != None:
+                        json_UE.update({"gNB_id" : UE.Cell.gNB_id})
+                    else:
+                        json_UE.update({"gNB_id" : None})
+        ue_list.extend(json_UEs)
+
+    if not ue_list:
         raise HTTPException(
             status_code=404, detail="There are no UEs associated with this gNB")
-    if not crud.user.is_superuser(current_user) and (UE.owner_id != current_user.id):
+    if not crud.user.is_superuser(current_user):
         raise HTTPException(status_code=400, detail="Not enough permissions")
-    return UE
+    return ue_list
 
 
 ### Get list of UEs of Specific Cells
@@ -224,9 +248,19 @@ def read_UE_Cell(
     if not UEs:
         raise HTTPException(
             status_code=404, detail="There are no UEs associated with this cell")
-    if not crud.user.is_superuser(current_user) and (UEs.owner_id != current_user.id):
+    if not crud.user.is_superuser(current_user):
         raise HTTPException(status_code=400, detail="Not enough permissions")
-    return UEs
+
+    json_UEs = jsonable_encoder(UEs)
+    for json_UE in json_UEs:
+        for UE in UEs:
+            if UE.Cell_id == json_UE.get('Cell_id'):
+                if UE.Cell_id != None:
+                    json_UE.update({"gNB_id" : UE.Cell.gNB_id})
+                else:
+                    json_UE.update({"gNB_id" : None})
+
+    return json_UEs
 
 #Assign paths to UEs
 @router.post("/associate/path", response_model=schemas.ue_path)
