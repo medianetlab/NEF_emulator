@@ -7,7 +7,6 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import HTTPException
 from sqlalchemy.orm.session import Session
-from sqlalchemy.util.langhelpers import counter
 from app.db.session import SessionLocal
 from app import models, schemas, crud
 from app.api import deps
@@ -87,50 +86,53 @@ class BackgroundTasks(threading.Thread):
 
                     try:
                         UE = crud.ue.update_coordinates(db=db, lat=point["latitude"], long=point["longitude"], db_obj=UE)
-                        cell_now = check_distance(UE.latitude, UE.longitude, jsonable_encoder(UE.Cell), json_cells) #calculate the distance from all the cells
+                        cell_now = check_distance(UE.latitude, UE.longitude, json_cells) #calculate the distance from all the cells
                     except Exception as ex:
                         logging.warning("Failed to update coordinates")
                         logging.warning(ex)
                     
-                    if UE.Cell_id != cell_now.get('id'): #Cell has changed in the db "handover"
-                        logging.info(f"UE({UE.supi}) with ipv4 {UE.ip_address_v4} handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
-                        crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
-                        
-                        #Retrieve the subscription of the UE by external Id | This could be outside while true but then the user cannot subscribe when the loop runs
-                        sub = crud.monitoring.get_sub_externalId(db=db, externalId=UE.external_identifier, owner_id=current_user.id)
+                    if cell_now != None:
+                        if UE.Cell_id != cell_now.get('id'): #Cell has changed in the db "handover"
+                            logging.info(f"UE({UE.supi}) with ipv4 {UE.ip_address_v4} handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
+                            crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
+                            
+                            #Retrieve the subscription of the UE by external Id | This could be outside while true but then the user cannot subscribe when the loop runs
+                            sub = crud.monitoring.get_sub_externalId(db=db, externalId=UE.external_identifier, owner_id=current_user.id)
 
-                        #Validation of subscription
-                        if not sub:
-                            logging.warning("Subscription not found")
-                        elif not crud.user.is_superuser(current_user) and (sub.owner_id != current_user.id):
-                            logging.warning("Not enough permissions")
-                        else:
-                            sub_validate_time = tools.check_expiration_time(expire_time=sub.monitorExpireTime)
-                            if sub_validate_time:
-                                sub = tools.check_numberOfReports(db=db, item_in=sub)
-                                if sub: #return the callback request only if subscription is valid
-                                    try:
-                                        response = location_callback(UE, sub.notificationDestination, sub.link)
-                                        logging.info(response.json())
-                                    except requests.exceptions.ConnectionError as ex:
-                                        logging.warning("Failed to send the callback request")
-                                        logging.warning(ex)
-                                        crud.monitoring.remove(db=db, id=sub.id)
-                                        continue   
+                            #Validation of subscription
+                            if not sub:
+                                logging.warning("Subscription not found")
+                            elif not crud.user.is_superuser(current_user) and (sub.owner_id != current_user.id):
+                                logging.warning("Not enough permissions")
                             else:
-                                crud.monitoring.remove(db=db, id=sub.id)
-                                logging.warning("Subscription has expired (expiration date)")
+                                sub_validate_time = tools.check_expiration_time(expire_time=sub.monitorExpireTime)
+                                if sub_validate_time:
+                                    sub = tools.check_numberOfReports(db=db, item_in=sub)
+                                    if sub: #return the callback request only if subscription is valid
+                                        try:
+                                            response = location_callback(UE, sub.notificationDestination, sub.link)
+                                            logging.info(response.json())
+                                        except requests.exceptions.ConnectionError as ex:
+                                            logging.warning("Failed to send the callback request")
+                                            logging.warning(ex)
+                                            crud.monitoring.remove(db=db, id=sub.id)
+                                            continue   
+                                else:
+                                    crud.monitoring.remove(db=db, id=sub.id)
+                                    logging.warning("Subscription has expired (expiration date)")
 
-                        #QoS Monitoring Event (handover)
-                        ues_connected = crud.ue.get_by_Cell(db=db, cell_id=UE.Cell_id)
-                        if len(ues_connected) > 1:
-                            gbr = 'QOS_NOT_GUARANTEED'
-                        else:
-                            gbr = 'QOS_GUARANTEED'
+                            #QoS Monitoring Event (handover)
+                            ues_connected = crud.ue.get_by_Cell(db=db, cell_id=UE.Cell_id)
+                            if len(ues_connected) > 1:
+                                gbr = 'QOS_NOT_GUARANTEED'
+                            else:
+                                gbr = 'QOS_GUARANTEED'
 
-                        logging.critical(gbr)
-                        qos_notification_control(gbr ,current_user, UE.ip_address_v4)
-                        
+                            logging.critical(gbr)
+                            qos_notification_control(gbr ,current_user, UE.ip_address_v4)
+                    else:
+                            crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : None})
+
                     # logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
                     
                     if UE.speed == 'LOW':

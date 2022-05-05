@@ -295,19 +295,30 @@ function ui_init_datatable_UEs() {
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
         columnDefs: [
             {
-                "targets": 5,
+                "targets": 3, // cell id
+                "data": null,
+                "defaultContent": '',
+                "orderable" : true,
+                "searchable": true,
+                "render": function ( data, type, row ) {
+                    if (data == null) {return "-";}  // if null, display "-"
+                    else {return data;}
+                }
+            },
+            {
+                "targets": 5,  // path id
                 "data": null,
                 "defaultContent": '',
                 "orderable" : true,
                 "searchable": true,
                 "render": function ( data, type, row ) {
                     // return row.id;
-                    if (data == 0) {return "-";}
+                    if (data == 0) {return "-";}  // if null, display "-"
                     else {return data;}
                 }
             },
             {
-                "targets": 7,
+                "targets": 7,  // buttons
                 "data": null,
                 "defaultContent": '',
                 "orderable" : false,
