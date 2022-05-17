@@ -29,7 +29,7 @@ Where to look:
 
 
 
-<br>
+<br><br>
 
 ## First things first...
 
@@ -57,9 +57,13 @@ This simplicity also made us neglect the separate-container approach and go dire
 
 
 
-<br>
+<br><br>
 
 ## How the UI "consumes" the `API`
+
+💡 *This section contains information on how `fastapi` serves static files which work together with the REST API and a minimal UI for the `NEF_emulator` is  provided.*
+
+<br> 
 
 1️⃣ We add pure `HTML` files to [`/app/app/ui`](https://github.com/medianetlab/NEF_emulator/tree/main/backend/app/app/ui) and set new page routes to [`main.py`](https://github.com/medianetlab/NEF_emulator/blob/main/backend/app/app/main.py). For example, for the `/login` page:
 
@@ -124,9 +128,13 @@ when a page loads, app.js runs first to:
 
 
 
-<br>
+<br><br>
 
 ## Conventions
+
+💡 *This section mentions some of the major page routes and relevant information for each one on how they load / render / refresh their page components.*
+
+<br>
 
  1. **Files**: every `/page` most probably has an equivalent `page.css` and a `page.js` (inside `/static/css/` and `/static/js/` respectively).
  
@@ -139,3 +147,81 @@ when a page loads, app.js runs first to:
 
  4. **Callbacks**:
      - Most of the `api_` functions need a callback function. This makes them usable by different parts of the code which send requests to the same API endpoint but do slightly different things with a successful response.
+
+
+
+
+<br><br>
+
+## Page routes
+
+💡 *This section contains some of the major page routes and relevant information for each one on how they load / render / refresh their page components.*
+
+<br>
+
+### `/login`
+
+Simple `username` / `password` form for submiting credentials and getting back a valid access token. Successful submission triggers the creation of a `localStorage` item named `app_ath` inside the browser, which is later used by other pages.
+
+    localStorage.setItem('app_auth', ...)
+
+
+<br>
+
+### `/dashboard`
+
+#### Main goals:
+
+ - provide a tabular way of seeing what's inside a `NEF_emulator` database
+ - provide a way for adding/editing objects and generating custom *scenarios* with the guidance of a simple UI which uses:
+    - 📄 Forms: for managing text details and needed bindings (e.g. *UE-Path*, *Cell-gNB*)
+    - 🗺 Maps: for managing objects which have a location (Cells, UEs)
+    - 📍 Path-drawing: for generating UE paths on the map with just a few clicks
+
+#### Javascript split:
+
+This page has a lot of functionalities because it offers `CRUD` operations for all the entities of `NEF_emulator` (gNBs, Cells, UEs and Paths). Practically this means:
+
+ - 4 modal windows with their dedicated instance of `leaflet.js` map for **creating** new objects (**C**RUD)
+ - 4 instances of `Datatables` for displaying (**reading**) object details (C**R**UD)
+ - 4 modal windows with their dedicated instance of `leaflet.js` map for **updating** new objects (CR**U**D)
+ - buttons for **deleting** objects (CRU**D**)
+
+For this reason a split has been made:
+
+ - `dashboard.js`: contains the document ready() function with the basic code structure. Most function-calls use function definitions from the following files:
+     - `dashboard-gnbs.js`
+     - `dashboard-cells.js`
+     - `dashboard-ues.js`
+     - `dashboard-paths.js`
+
+#### Issues:
+
+See: #7 #35 
+
+
+
+
+<br>
+
+### `/map`
+
+#### Main goals:
+
+ - provide a way of seeing live the location of objects and observing their potential movement
+ - start / stop the movement of UEs
+ - provide a way of watching callback notifications to NetApps
+
+#### Polling mechanism:
+
+ - this page implements a polling approach to fetch the new locations of UEs every X seconds and update the map
+ - this also happens for the callback events in the following way:
+     - every event has a unique number/ID
+     - the backend keeps on-the-fly a dictionary with the 100 latest events. This way the frontend is able to show the latest 100 events after a page reload
+     - on "page load/reload" the frontend asks and displays the above list of events
+     - on "polling for new events" the frontend provides the number/ID of the latest event that has already received to the backend and the latter will send back the new events that may have been occurred. For example, the frontend provides that it has received up to event 154 and the backend sends back events 155, 156 and 157 which have taken place in the meanwhile (time between two polling requests)
+
+
+#### Issues:
+
+See: #8
