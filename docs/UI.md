@@ -225,3 +225,30 @@ See: #7 #35
 #### Issues:
 
 See: #8
+
+
+
+
+<br>
+
+### `/export`
+
+This page can be used to generate a `json` file with all the details of the scenario that is currently stored in `NEF_emulator`. The options provided are to either copy to clipboard or save to `.json` file. The structure of it is something like:
+
+```json
+{
+  "gNBs": [],
+  "cells": [],
+  "UEs": [],
+  "paths": [],
+  "ue_path_association": []
+}
+```
+
+<br>
+
+### `/import`
+
+This page can be used to quickly import an already saved scenario (product of the previous `/export` page). The user can paste the generated `json` or drag-n-drop the `.json` file in the textarea and import the data.
+
+⚠ this step overwrites any pre-existing data in the database and loads only what is provided in the textarea.
