@@ -151,7 +151,7 @@ when a page loads, app.js runs first to:
 
 ## Conventions
 
-💡 *This section mentions some of the major page routes and relevant information for each one on how they load / render / refresh their page components.*
+💡 *This section describes some of the practices followed regarding: naming files & functions, starting points of javascript execution and callbacks.*
 
 <br>
 
