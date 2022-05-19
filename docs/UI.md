@@ -16,7 +16,7 @@ Current library dependencies:
  - [`codemirror`](https://codemirror.net/) for formating `json` in a textarea
  - [`toastr`](https://codeseven.github.io/toastr/) for displaying notifications to the user
 
-Where to look:
+Where to look in the code:
 
 ```
 /app
@@ -26,6 +26,25 @@ Where to look:
 │
 └───/ui        ( folder with HTML templates)
 ```
+
+
+
+<br><br>
+
+## Contents
+
+ - [First things first...](#first-things-first)
+ - [How the UI "consumes" the `API`](#how-the-ui-consumes-the-api)
+ - [Conventions](#conventions)
+ - [Page routes](#page-routes)
+   - [`/login`](#login)
+   - [`/dashboard`](#dashboard)
+   - [`/map`](#map)
+   - [`/export`](#export)
+   - [`/import`](#import)
+
+
+
 
 
 
