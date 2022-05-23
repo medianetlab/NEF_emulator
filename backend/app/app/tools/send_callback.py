@@ -19,7 +19,7 @@ def location_callback(UE_model, callbackurl, subscription):
     'Content-Type': 'application/json'
     }
 
-    response = requests.request("POST", url, headers=headers, data=payload)
+    response = requests.request("POST", url, headers=headers, data=payload, timeout=5)
     
     return response
 
@@ -61,6 +61,6 @@ def qos_callback(callbackurl, resource, qos_status, ipv4):
     'Content-Type': 'application/json'
     }
 
-    response = requests.request("POST", url, headers=headers, data=payload)
+    response = requests.request("POST", url, headers=headers, data=payload, timeout=5)
     
     return response

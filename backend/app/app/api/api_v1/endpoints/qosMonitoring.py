@@ -94,7 +94,7 @@ def create_subscription(
     
     #Create the document in mongodb
 
-    send_qos_gnb(item_in.qosReference, db_mongo, UE) ##Validate if qos reference matches any of the standardized 5qi values and create/send the QoS Profile to NG-RAN
+    # send_qos_gnb(item_in.qosReference, db_mongo, UE) ##Validate if qos reference matches any of the standardized 5qi values and create/send the QoS Profile to NG-RAN
 
     json_data = jsonable_encoder(item_in.dict(exclude_unset=True))
     json_data.update({'owner_id' : current_user.id})
