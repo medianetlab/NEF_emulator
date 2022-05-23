@@ -1,11 +1,36 @@
 # Changelog
 
-## v1.4.1 (upcoming)
+## v1.4.1
+
+### Migration to Python 3.9
+
+(see commit: 2ef55ed)
+
+ - updated `tiangolo/uvicorn -gunicorn -fastapi:python3.9 (from 3.7)`
+ - updated `python  = "3.9.7"    (from 3.7)`
+ - updated `uvicorn = "^0.17.6"  (from 0.15.0)`
+ - updated `fastapi = "^0.78.0"  (from 0.54.1)`
+ - updated `pymongo = "^4.1.0"   (from 3.12.1)`
+ - updated `requests = "^2.27.0" (from 2.23.0)`
+ - updated `gunicorn = "^20.1.0" (from 20.0.4)`
+ - removed `celery = "^4.4.2"`
+ - removed `alembic = "^1.4.2"`
+ - removed `GeoAlchemy2 = "^0.9.4"`
+
+
 
 ### 📄 docs
 
- - add documentation for the UI
+ - add documentation for the UI (historical context, naming conventions, front-end libraries & approaches used etc...)
 
+
+
+### Backend
+
+- 🚫🤚 Forbid user to update cells while UEs are moving
+- Add timeout values in `requests.request` 👇 
+    - Timeout values according to https://docs.pythonrequests.org/en/master/user/advanced/#timeouts 
+    - Fixes "hanging" UEs problem: when subscribing to NEF APIs, specific IPs included in the `notificationDestination` URL caused timeouts. Since the default for Python Requests is `None` (wait until the connection is closed) the UE "freezes" until the request times out and the exception is finally caught.
 
 <br><br>
 

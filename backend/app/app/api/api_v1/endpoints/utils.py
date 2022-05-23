@@ -71,7 +71,7 @@ class BackgroundTasks(threading.Thread):
             
             
             flag = True
-
+            
             while True:
                 for point in points:
 
@@ -93,7 +93,7 @@ class BackgroundTasks(threading.Thread):
                     
                     if cell_now != None:
                         if UE.Cell_id != cell_now.get('id'): #Cell has changed in the db "handover"
-                            logging.info(f"UE({UE.supi}) with ipv4 {UE.ip_address_v4} handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
+                            logging.warning(f"UE({UE.supi}) with ipv4 {UE.ip_address_v4} handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
                             crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
                             
                             #Retrieve the subscription of the UE by external Id | This could be outside while true but then the user cannot subscribe when the loop runs
@@ -101,7 +101,7 @@ class BackgroundTasks(threading.Thread):
 
                             #Validation of subscription
                             if not sub:
-                                logging.warning("Subscription not found")
+                                logging.warning("Monitoring Event subscription not found")
                             elif not crud.user.is_superuser(current_user) and (sub.owner_id != current_user.id):
                                 logging.warning("Not enough permissions")
                             else:
@@ -128,8 +128,9 @@ class BackgroundTasks(threading.Thread):
                             else:
                                 gbr = 'QOS_GUARANTEED'
 
-                            logging.critical(gbr)
+                            logging.warning(gbr)
                             qos_notification_control(gbr ,current_user, UE.ip_address_v4)
+                            logging.critical("Bypassed qos notification control")
                     else:
                             crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : None})
 
@@ -208,7 +209,7 @@ def qos_notification_control(gbr_status: str, current_user, ipv4):
 
     #Check if the document exists
     if not doc:
-        logging.info("Subscription not found")
+        logging.warning("AsSessionWithQoS subscription not found")
         return
     #If the document exists then validate the owner
     if not crud.user.is_superuser(current_user) and (doc['owner_id'] != current_user.id):
@@ -220,11 +221,21 @@ def qos_notification_control(gbr_status: str, current_user, ipv4):
     logging.critical(qos_standardized)
     logging.critical(qos_standardized.get('type'))
 
+    logging.critical(doc.get('notificationDestination'))
+    logging.critical(doc.get('link'))
+
     if qos_standardized.get('type') == 'GBR' or qos_standardized.get('type') == 'DC-GBR':
         try:
+            logging.critical("Before response")
             response = qos_callback(doc.get('notificationDestination'), doc.get('link'), gbr_status, ipv4)
-            logging.critical(response.json())
-        except requests.exceptions.ConnectionError as ex:
+            logging.critical(f"Response from {doc.get('notificationDestination')}")
+        except requests.exceptions.Timeout as ex:
+            logging.critical("Failed to send the callback request")
+            logging.critical(ex) 
+        except requests.exceptions.TooManyRedirects as ex:
+            logging.critical("Failed to send the callback request")
+            logging.critical(ex) 
+        except requests.exceptions.RequestException as ex:
             logging.critical("Failed to send the callback request")
             logging.critical(ex) 
     else:
