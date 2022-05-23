@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.4.1 (upcoming)
+
+### 📄 docs
+
+ - add documentation for the UI
+
+
+<br><br>
+
 ## v1.4.0
 
 ### Scenario `import` / `export`
