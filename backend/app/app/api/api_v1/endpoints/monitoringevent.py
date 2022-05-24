@@ -79,23 +79,30 @@ def create_subscription(
     if not UE: 
         raise HTTPException(status_code=409, detail="UE with this external identifier doesn't exist")
     
-    if crud.monitoring.get_sub_externalId(db=db, externalId=item_in.externalId, owner_id=current_user.id):
-        raise HTTPException(status_code=409, detail=f"There is already an active subscription for UE with external id {item_in.externalId}")
     
+    #One time request
     if item_in.monitoringType == "LOCATION_REPORTING" and item_in.maximumNumberOfReports == 1:
         
         json_compatible_item_data = {}
         json_compatible_item_data["monitoringType"] = item_in.monitoringType
-        json_compatible_item_data["locationInfo"] = {'cellId' : UE.Cell.cell_id, 'gNBId' : UE.Cell.gNB.gNB_id}
         json_compatible_item_data["externalId"] = item_in.externalId
         json_compatible_item_data["ipv4Addr"] = UE.ip_address_v4
+
+        if UE.Cell != None:
+            json_compatible_item_data["locationInfo"] = {'cellId' : UE.Cell.cell_id, 'gNBId' : UE.Cell.gNB.gNB_id}
+        else:
+            json_compatible_item_data["locationInfo"] = {'cellId' : None, 'gNBId' : None}
         
         http_response = JSONResponse(content=json_compatible_item_data, status_code=200)
         add_notifications(http_request, http_response, False)
         
         return http_response 
+    #Subscription
     elif item_in.monitoringType == "LOCATION_REPORTING" and item_in.maximumNumberOfReports>1:
         
+        if crud.monitoring.get_sub_externalId(db=db, externalId=item_in.externalId, owner_id=current_user.id):
+            raise HTTPException(status_code=409, detail=f"There is already an active subscription for UE with external id {item_in.externalId}")
+
         response = crud.monitoring.create_with_owner(db=db, obj_in=item_in, owner_id=current_user.id)
         
         json_compatible_item_data = jsonable_encoder(response)
