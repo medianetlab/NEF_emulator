@@ -1,5 +1,16 @@
 # Changelog
 
+## upcoming release...
+
+### UI changes
+
+ - `dashboard-cells.js` minor fix to display error details correctly
+
+
+
+
+<br><br>
+
 ## v1.4.1
 
 ### Migration to Python 3.9
@@ -90,6 +101,8 @@
 
 
 
+
+
 ## v1.3.2
 
 - Fix UE-association-path selection with `path_id` 0 (no path selected) - both dashboard and backend
@@ -98,6 +111,11 @@
 
 
 <br><br>
+
+
+
+
+
 
 ## v1.3.1
 
