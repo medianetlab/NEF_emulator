@@ -378,10 +378,23 @@ function ui_map_paint_UEs() {
                            "External identifier: " + ue.external_identifier +"<br />"+
                            "Speed:"+ ue.speed);
 
-            if ( ue.cell_id_hex==null ) {
-                L.DomUtil.addClass(ue_markers[ue.supi]._icon, 'null-cell');
+
+            // update UE marker color
+            temp_icon = L.DomUtil.get(ue_markers[ue.supi]._icon);
+
+            if (temp_icon == null) {
+                // if the user has unchecked the UEs checkbox ✅ on the map settings
+                // temp_icon is null and triggers console errors
+                // if this is the case, continue...
+                continue;
             } else {
-                L.DomUtil.removeClass(ue_markers[ue.supi]._icon, 'null-cell');
+                if ( ue.cell_id_hex==null ) {
+                    // 'null-cell' class gives a grey color
+                    // to UEs that are not connected to a cell
+                    L.DomUtil.addClass(temp_icon, 'null-cell');
+                } else {
+                    L.DomUtil.removeClass(temp_icon, 'null-cell');
+                }
             }
         }
     }
