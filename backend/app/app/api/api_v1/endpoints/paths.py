@@ -67,7 +67,7 @@ def create_path(
         raise HTTPException(status_code=400, detail=f"Path with description \'{path_in.description}\' already exists")
     
     path = crud.path.create_with_owner(db=db, obj_in=path_in, owner_id=current_user.id)
-    crud.points.create(db=db, obj_in=path_in, path_id=path.id) 
+    crud.points.create_with_owner(db=db, obj_in=path_in, path_id=path.id, owner_id=current_user.id) 
     return path
 
 

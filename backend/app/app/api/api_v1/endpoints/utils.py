@@ -318,11 +318,16 @@ def create_scenario(
     paths = scenario_in.paths
     ue_path_association = scenario_in.ue_path_association
 
-    db.execute('TRUNCATE TABLE cell, gnb, monitoring, path, points, ue RESTART IDENTITY')
-    
+    # db.execute('TRUNCATE TABLE cell, gnb, path, points, ue RESTART IDENTITY')
+    db.execute(f'DELETE FROM cell WHERE owner_id = {current_user.id}')
+    db.execute(f'DELETE FROM gnB WHERE owner_id = {current_user.id}')
+    db.execute(f'DELETE FROM ue WHERE owner_id = {current_user.id}')
+    db.execute(f'DELETE FROM points WHERE path_id = {current_user.id}')
+    db.execute(f'DELETE FROM path WHERE id = {current_user.id}')
+
     for gNB_in in gNBs:
         gNB = crud.gnb.get_gNB_id(db=db, id=gNB_in.gNB_id)
-        if gNB:
+        if gNB and gNB.owner_id == current_user.id:
             print(f"ERROR: gNB with id {gNB_in.gNB_id} already exists")
             err.update({f"{gNB_in.name}" : f"ERROR: gNB with id {gNB_in.gNB_id} already exists"})
         else:
@@ -330,7 +335,7 @@ def create_scenario(
 
     for cell_in in cells:
         cell = crud.cell.get_Cell_id(db=db, id=cell_in.cell_id)
-        if cell:
+        if cell and cell.owner_id == current_user.id:
             print(f"ERROR: Cell with id {cell_in.cell_id} already exists")
             err.update({f"{cell_in.name}" : f"ERROR: Cell with id {cell_in.cell_id} already exists"})
             crud.cell.remove_all_by_owner(db=db, owner_id=current_user.id)
@@ -339,7 +344,7 @@ def create_scenario(
 
     for ue_in in ues:
         ue = crud.ue.get_supi(db=db, supi=ue_in.supi)
-        if ue:
+        if ue and ue.owner_id == current_user.id:
             print(f"ERROR: UE with supi {ue_in.supi} already exists")
             err.update({f"{ue.name}" : f"ERROR: UE with supi {ue_in.supi} already exists"})
         else:
@@ -349,12 +354,12 @@ def create_scenario(
         path_old_id = path_in.id
 
         path = crud.path.get_description(db=db, description = path_in.description)
-        if path:
+        if path and path.owner_id == current_user.id:
             print(f"ERROR: Path with description \'{path_in.description}\' already exists")
             err.update({f"{path_in.description}" : f"ERROR: Path with description \'{path_in.description}\' already exists"})
         else:
             path = crud.path.create_with_owner(db=db, obj_in=path_in, owner_id=current_user.id)
-            crud.points.create(db=db, obj_in=path_in, path_id=path.id) 
+            crud.points.create_with_owner(db=db, obj_in=path_in, path_id=path.id, owner_id=current_user.id) 
             
             for ue_path in ue_path_association:
                 if retrieve_ue_state(ue_path.supi, current_user.id):

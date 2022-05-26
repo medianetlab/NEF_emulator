@@ -41,14 +41,14 @@ class CRUD_Path(CRUDBase[Path, PathCreate, PathUpdate]):
         return db.query(self.model).filter(Path.description == description).first()
 
 class CRUD_Points(CRUDBase[Points, PathCreate, PathUpdate]):
-    def create(
-        self, db: Session, *, obj_in: PathCreate, path_id: int
+    def create_with_owner(
+        self, db: Session, *, obj_in: PathCreate, path_id: int, owner_id: int
     ) -> Points:
         obj_in_data = jsonable_encoder(obj_in.copy(include = {'points'}))
         
 
         for obj in obj_in_data["points"]:
-            db_obj = self.model(**obj, path_id=path_id)
+            db_obj = self.model(**obj, path_id=path_id, owner_id=owner_id)
             db.add(db_obj)
         
         db.commit()

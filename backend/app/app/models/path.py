@@ -30,3 +30,5 @@ class Points(Base):
 
     #Foreign Keys
     path_id = Column(Integer, ForeignKey("path.id"))
+    owner_id = Column(Integer, ForeignKey("user.id"))
+
