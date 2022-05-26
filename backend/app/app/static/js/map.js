@@ -86,6 +86,10 @@ $( document ).ready(function() {
             //  1. get and paint every path per UE
             //  2. create start/stop buttons
             for (const ue of ues) {
+
+                // if no path selected, skip map paint and creation of button
+                if (ue.path_id == 0) { continue; }
+
                 // if not already fetched and painted, do so
                 if ( !helper_check_path_is_already_painted( ue.path_id ) ) { 
                     api_get_specific_path(ue.path_id);
@@ -94,11 +98,18 @@ $( document ).ready(function() {
                 ui_generate_loop_btn_for( ue );
                 ui_set_loop_btn_status_for( ue );
             }
+
+
             if ( ues.length >0 ) {
                 ui_add_ue_btn_listeners();
                 ui_add_ue_all_btn_listener();
             }
             else {
+                $('#btn-start-all').removeClass("btn-success").addClass("btn-secondary").attr("disabled",true);
+            }
+
+            // edge case: UEs with no paths assigned --> disable button
+            if (paths_painted.length == 0) {
                 $('#btn-start-all').removeClass("btn-success").addClass("btn-secondary").attr("disabled",true);
             }
         }
