@@ -4,8 +4,16 @@
 
 ### UI changes
 
- - `dashboard-cells.js` minor fix to display error details correctly
+ - `dashboard-cells.js` minor fix to display error details correctly in the toast message
+ - 🪛 fix `/map` js console errors caused by the UEs layer-checkbox (access to `null` marker)
+ - 🪛 fix `/map` UEs buttons: handle case of UEs with no paths assigned
+ - `/dashboard` page change: instead of 2 consecutive API requests on UE `Save` 👇:
+   - 1 API request to assign path everytime the user selects something different
+   - 1 API request on `Save` button
 
+### Libraries
+
+ - upgrade `leaflet.js` (`1.7.1` to `1.8.0`)
 
 
 
