@@ -938,7 +938,7 @@ function ui_init_datatable_events() {
         paging: false,
         searching: true,
         info: false,
-        order: [[4, 'desc']],
+        order: [[5, 'desc']],
         pageLength: -1,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
         columnDefs: [
@@ -949,8 +949,24 @@ function ui_init_datatable_events() {
                 "orderable" : true,
                 "searchable": true,
             },
+            // {
+            //     "targets": 1,
+            //     "data": null,
+            //     "visible": true,
+            //     "orderable": true,
+            //     "searchable": true,
+            //     "render": function ( data, type, row ) {
+            //         details = helper_get_event_details( row.id );
+
+            //         if (details.request_body != null) {
+            //             return JSON.parse(details.request_body).monitoringType;
+            //         } else {
+            //             return "-";
+            //         }
+            //     }
+            // },
             {
-                "targets": 5,
+                "targets": 6,
                 "data": null,
                 "defaultContent": '',
                 "orderable" : false,
@@ -963,6 +979,7 @@ function ui_init_datatable_events() {
         ],
         columns: [
             { "data": "id", className: "dt-center" },
+            { "data": "serviceAPI" },
             { "data": "isNotification",
               "render": function(data) {
                 if (data) {
@@ -1009,6 +1026,7 @@ function ui_append_datatable_events(data) {
 
         events_datatbl.rows.add( [{
             id:             event.id,
+            serviceAPI:     event.serviceAPI,
             isNotification: event.isNotification,
             method:         event.method,
             status_code:    event.status_code,
@@ -1026,7 +1044,7 @@ function ui_append_datatable_events(data) {
 
 function show_details_modal( event_id ) {
 
-    details = get_event_details( event_id );
+    details = helper_get_event_details( event_id );
 
     // load event details
     $("#modal_srv").html( details.serviceAPI );
@@ -1048,7 +1066,7 @@ function show_details_modal( event_id ) {
 }
 
 
-function get_event_details( event_id ) {
+function helper_get_event_details( event_id ) {
     for (const event of events) {
         if (event.id == event_id) return event;
     }
