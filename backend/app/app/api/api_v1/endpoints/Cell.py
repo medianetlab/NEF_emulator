@@ -18,15 +18,12 @@ def read_Cells(
     """
     Retrieve Cells.
     """
-    # if crud.user.is_superuser(current_user):
-    #     Cells = crud.cell.get_multi(db, skip=skip, limit=limit)
-    # else:
-    #     Cells = crud.cell.get_multi_by_owner(
-    #         db=db, owner_id=current_user.id, skip=skip, limit=limit
-    #     )
-    Cells = crud.cell.get_multi_by_owner(
-        db=db, owner_id=current_user.id, skip=skip, limit=limit
-    )
+    if crud.user.is_superuser(current_user):
+        Cells = crud.cell.get_multi(db, skip=skip, limit=limit)
+    else:
+        Cells = crud.cell.get_multi_by_owner(
+            db=db, owner_id=current_user.id, skip=skip, limit=limit
+        )
     return Cells
 
 

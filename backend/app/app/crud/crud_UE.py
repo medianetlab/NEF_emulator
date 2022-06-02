@@ -29,8 +29,8 @@ class CRUD_UE(CRUDBase[UE, UECreate, UEUpdate]):
             .all()
         )
 
-    def get_supi(self, db: Session, supi: str) -> UE:
-        return db.query(self.model).filter(self.model.supi == supi).first()
+    def get_supi(self, db: Session, supi: str, owner_id: int) -> UE:
+        return db.query(self.model).filter(self.model.supi == supi, self.model.owner_id == owner_id).first()
 
     def get_ipv4(
         self, db: Session, *, ipv4: str, owner_id: int

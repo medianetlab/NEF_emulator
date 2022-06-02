@@ -41,7 +41,7 @@ class BackgroundTasks(threading.Thread):
             db = SessionLocal()
             
             #Initiate UE - if exists
-            UE = crud.ue.get_supi(db=db, supi=supi)
+            UE = crud.ue.get_supi(db=db, supi=supi, owner_id=current_user.id)
             if not UE:
                 logging.warning("UE not found")
                 threads.pop(f"{supi}")
@@ -343,7 +343,7 @@ def create_scenario(
             cell = crud.cell.create_with_owner(db=db, obj_in=cell_in, owner_id=current_user.id)
 
     for ue_in in ues:
-        ue = crud.ue.get_supi(db=db, supi=ue_in.supi)
+        ue = crud.ue.get_supi(db=db, supi=ue_in.supi, owner_id=current_user.id)
         if ue and ue.owner_id == current_user.id:
             print(f"ERROR: UE with supi {ue_in.supi} already exists")
             err.update({f"{ue.name}" : f"ERROR: UE with supi {ue_in.supi} already exists"})
@@ -366,7 +366,7 @@ def create_scenario(
                     err.update(f"UE with SUPI {ue_path.supi} is currently moving. You are not allowed to edit UE's path while it's moving")
                 else:
                     #Assign the coordinates
-                    UE = crud.ue.get_supi(db=db, supi=ue_path.supi)
+                    UE = crud.ue.get_supi(db=db, supi=ue_path.supi, owner_id=current_user.id)
                     json_data = jsonable_encoder(UE)
                     
                     #Check if the old path id or the new one is associated with one or more UEs store in ue_path_association dictionary

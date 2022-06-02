@@ -56,7 +56,7 @@ def create_UE(
     Create new UE.
     """
     #Validate Unique ids
-    if crud.ue.get_supi(db=db, supi=item_in.supi):
+    if crud.ue.get_supi(db=db, supi=item_in.supi, owner_id=current_user.id):
         raise HTTPException(
             status_code=409, detail=f"UE with supi {item_in.supi} already exists")
     elif crud.ue.get_ipv4(db=db, ipv4=str(item_in.ip_address_v4), owner_id=current_user.id):
@@ -94,7 +94,7 @@ def update_UE(
     """
     Update a UE.
     """
-    UE = crud.ue.get_supi(db=db, supi=supi)
+    UE = crud.ue.get_supi(db=db, supi=supi, owner_id=current_user.id)
     if not UE:
         raise HTTPException(status_code=404, detail="UE not found")
     if not crud.user.is_superuser(current_user) and (UE.owner_id != current_user.id):
@@ -137,7 +137,7 @@ def read_UE(
     """
     Get UE by supi.
     """
-    UE = crud.ue.get_supi(db=db, supi=supi)
+    UE = crud.ue.get_supi(db=db, supi=supi, owner_id=current_user.id)
     if not UE:
         raise HTTPException(status_code=404, detail="UE not found")
     if not crud.user.is_superuser(current_user) and (UE.owner_id != current_user.id):
@@ -162,7 +162,7 @@ def delete_UE(
     """
     Delete a UE.
     """
-    UE = crud.ue.get_supi(db=db, supi=supi)
+    UE = crud.ue.get_supi(db=db, supi=supi, owner_id=current_user.id)
     if not UE:
         raise HTTPException(status_code=404, detail="UE not found")
     if not crud.user.is_superuser(current_user) and (UE.owner_id != current_user.id):
@@ -276,7 +276,7 @@ def assign_predefined_path(
     if retrieve_ue_state(item_in.supi, current_user.id):
         raise HTTPException(status_code=400, detail=f"UE with SUPI {item_in.supi} is currently moving. You are not allowed to edit UE's path while it's moving")
 
-    UE = crud.ue.get_supi(db=db, supi=item_in.supi)
+    UE = crud.ue.get_supi(db=db, supi=item_in.supi, owner_id=current_user.id)
     if not UE:
         raise HTTPException(status_code=404, detail="UE not found")
     if not crud.user.is_superuser(current_user) and (UE.owner_id != current_user.id):
