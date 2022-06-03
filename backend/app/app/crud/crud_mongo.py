@@ -31,8 +31,12 @@ def create(db: Database, collection_name, json_data):
     return db[collection_name].insert_one(json_data)
 
 # DELETE
-def delete(db: Database, collection_name, uuId):
+def delete_by_uuid(db: Database, collection_name, uuId):
     result = db[collection_name].delete_one({"_id": ObjectId(uuId)})
+    return result
+
+def delete_by_item(db: Database, collection_name, key: str, value):
+    result = db[collection_name].delete_one({key: value})
     return result
 
 #Read all profiles by gNB id (QoSProfile)
