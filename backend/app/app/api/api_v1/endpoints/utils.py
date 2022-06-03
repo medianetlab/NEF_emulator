@@ -39,7 +39,9 @@ class BackgroundTasks(threading.Thread):
 
         try:
             db = SessionLocal()
-            
+            client = MongoClient("mongodb://mongo:27017", username='root', password='pass')
+            db_mongo = client.fastapi
+
             #Initiate UE - if exists
             UE = crud.ue.get_supi(db=db, supi=supi)
             if not UE:
@@ -97,28 +99,29 @@ class BackgroundTasks(threading.Thread):
                             crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
                             
                             #Retrieve the subscription of the UE by external Id | This could be outside while true but then the user cannot subscribe when the loop runs
-                            sub = crud.monitoring.get_sub_externalId(db=db, externalId=UE.external_identifier, owner_id=current_user.id)
-
+                            # sub = crud.monitoring.get_sub_externalId(db=db, externalId=UE.external_identifier, owner_id=current_user.id)
+                            sub = crud_mongo.read(db_mongo, "MonitoringEvent", "externalId", UE.external_identifier)
+                            
                             #Validation of subscription
                             if not sub:
                                 logging.warning("Monitoring Event subscription not found")
-                            elif not crud.user.is_superuser(current_user) and (sub.owner_id != current_user.id):
+                            elif not crud.user.is_superuser(current_user) and (sub.get("owner_id") != current_user.id):
                                 logging.warning("Not enough permissions")
                             else:
-                                sub_validate_time = tools.check_expiration_time(expire_time=sub.monitorExpireTime)
+                                sub_validate_time = tools.check_expiration_time(expire_time=sub.get("monitorExpireTime"))
                                 if sub_validate_time:
-                                    sub = tools.check_numberOfReports(db=db, item_in=sub)
+                                    sub = tools.check_numberOfReports(db_mongo, sub)
                                     if sub: #return the callback request only if subscription is valid
                                         try:
-                                            response = location_callback(UE, sub.notificationDestination, sub.link)
+                                            response = location_callback(UE, sub.get("notificationDestination"), sub.get("link"))
                                             logging.info(response.json())
                                         except requests.exceptions.ConnectionError as ex:
                                             logging.warning("Failed to send the callback request")
                                             logging.warning(ex)
-                                            crud.monitoring.remove(db=db, id=sub.id)
+                                            crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", sub.get("_id"))
                                             continue   
                                 else:
-                                    crud.monitoring.remove(db=db, id=sub.id)
+                                    crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", sub.get("_id"))
                                     logging.warning("Subscription has expired (expiration date)")
 
                             #QoS Monitoring Event (handover)
