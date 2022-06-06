@@ -11,6 +11,8 @@
    - 1 API request to assign path everytime the user selects something different
    - 1 API request on `Save` button
  - `/map` page: add type-of-service column to datatable (cells now display `Monitoring Event API` or `AsSession With QoS API`)
+ - `/login`: add "hit enter --> submit form" functionality
+ - `/register`: add "hit enter --> submit form" functionality
 
 ### Libraries
 
