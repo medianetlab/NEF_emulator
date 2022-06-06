@@ -13,36 +13,15 @@ var email    = "";
 
 $( document ).ready(function() {
 
+    // submit when button is clicked...
     $('#btn-register').on('click',function(){
-        username  = $('#input-user').val();
-        email     = $('#input-email').val();
-        password  = $('#input-pass').val();
-        password2 = $('#input-pass-repeat').val();
+        ui_submit_register();
+    });
 
-        // remove previous notifications when button is clicked
-        $('.register-notifications .text-secondary').text("");
-        $('.register-notifications .text-danger').text("");
 
-        // UI pre-checks
-        if (
-            (username == "") ||
-            (email    == "") ||
-            (password == "") ||
-            (password2== ""))
-        {
-            ui_show_precheck_error("Some input fields are empty.");
-            return;
-        }
-        if (password != password2) {
-            ui_show_precheck_error("Oups! The two passwords you typed don't match.");
-            return;
-        }
-        if (!validateEmail( email )) {
-            ui_show_precheck_error("Psst! The email you typed is not valid.");
-            return;
-        }
-
-        api_create_user_open();
+    // also submit when the user just hits "enter"
+    $(".card-body input").keypress(function(event) {
+        ui_submit_register();
     });
 });
 
@@ -79,6 +58,40 @@ function api_create_user_open() {
         },
         timeout: 5000
     });
+}
+
+
+
+function ui_submit_register() {
+    username  = $('#input-user').val();
+    email     = $('#input-email').val();
+    password  = $('#input-pass').val();
+    password2 = $('#input-pass-repeat').val();
+
+    // remove previous notifications when button is clicked
+    $('.register-notifications .text-secondary').text("");
+    $('.register-notifications .text-danger').text("");
+
+    // UI pre-checks
+    if (
+        (username == "") ||
+        (email    == "") ||
+        (password == "") ||
+        (password2== ""))
+    {
+        ui_show_precheck_error("Some input fields are empty.");
+        return;
+    }
+    if (password != password2) {
+        ui_show_precheck_error("Oups! The two passwords you typed don't match.");
+        return;
+    }
+    if (!validateEmail( email )) {
+        ui_show_precheck_error("Psst! The email you typed is not valid.");
+        return;
+    }
+
+    api_create_user_open();
 }
 
 

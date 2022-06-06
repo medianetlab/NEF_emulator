@@ -18,13 +18,26 @@ $( document ).ready(function() {
     browser_test_local_storage();
 
 
+    // submit when button is clicked...
     $('#btn-login').on('click',function(){
-        username = $('#input-user').val();
-        password = $('#input-pass').val();
+        ui_submit_login();
+    });
 
-        api_login_access_token( username , password );
+
+    // also submit when the user just hits "enter"
+    $(".card-body input").keypress(function(event) {
+        ui_submit_login();
     });
 });
+
+
+
+function ui_submit_login() {
+    username = $('#input-user').val();
+    password = $('#input-pass').val();
+
+    api_login_access_token( username , password );
+}
 
 
 function api_login_access_token(user , pass) {
