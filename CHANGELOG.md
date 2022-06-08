@@ -13,6 +13,7 @@
  - `/map` page: add type-of-service column to datatable (cells now display `Monitoring Event API` or `AsSession With QoS API`)
  - `/login`: add "hit enter --> submit form" functionality
  - `/register`: add "hit enter --> submit form" functionality
+ - add `NEF` logo
 
 ### Libraries
 
