@@ -1,5 +1,11 @@
 # NEF_emulator
 
+
+<p align="center">
+  <img src="./backend/app/app/static/NEF_logo_400x400_light.svg" />
+</p>
+
+
 ## ⚙ Setup locally
 
 **Host prerequisites**: `docker`, `docker-compose 1.29.2`, `build-essential`\*, `jq`\*\*
