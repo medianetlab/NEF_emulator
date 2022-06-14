@@ -14,6 +14,7 @@
  - `/login`: add "hit enter --> submit form" functionality
  - `/register`: add "hit enter --> submit form" functionality
  - add `NEF` logo
+ - move part of `login.js` code to `app.js` (more clean approach + added `app.default_redirect` variable)
 
 ### Libraries
 
