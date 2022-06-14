@@ -13,7 +13,8 @@
 var app = {
     local_storage_available: false,
     auth_obj:                null,
-    api_url: "/api/v1"
+    api_url: "/api/v1",
+    default_redirect: "/dashboard"
 };
 
 // ======================================================
@@ -25,15 +26,20 @@ $( document ).ready(function() {
     
     // check if local storage is available &
     // update `local_storage_available` variable
-    browser_test_local_storage();
+    app_test_browser_local_storage();
 
     // initialize auth_obj
     if (app.local_storage_available) {
         app.auth_obj = JSON.parse(localStorage.getItem('app_auth'));
 
         if ( app.auth_obj == null ) {
-            // if you can't find a token redirect to login page
-            window.location.href = [location.protocol, '//', location.host, "/login"].join('');
+            // if you the token is null
+            // check if you are already at the /login page
+            if (location.pathname != "/login") {
+                // if not, redirect to /login
+                window.location.href = [location.protocol, '//', location.host, "/login"].join('');    
+            }
+            
         } else {
             // use the API to test the token found
             // to check that it is valid
@@ -49,9 +55,9 @@ $( document ).ready(function() {
 
 
 
-// ================== Functions Area ==================
+// ================= App Functions Area =================
 // 
-function browser_test_local_storage(){
+function app_test_browser_local_storage(){
     var test = 'test';
     try {
         localStorage.setItem(test, test);
@@ -61,6 +67,17 @@ function browser_test_local_storage(){
         app.local_storage_available = false;
     }
 }
+
+
+
+
+function app_login( token_data ) {
+    // console.log(data);
+    if (app.local_storage_available) {
+        localStorage.setItem('app_auth', JSON.stringify(token_data));
+    }
+}
+
 
 
 
@@ -80,11 +97,54 @@ function api_test_token( token_str ){
         processData:  false,
         success: function(data)
         {
-            // 
+            if (location.pathname == "/login") {
+                window.location.href = [location.protocol, '//', location.host, app.default_redirect].join('');    
+            } 
         },
         error: function(err)
         {
             window.location.href = [location.protocol, '//', location.host, "/login"].join('');
+        },
+        timeout: 5000
+    });
+}
+
+
+
+
+function api_login_access_token(user , pass) {
+    var url = app.api_url + '/login/access-token';
+    var data = {
+        "grant_type"   : "",
+        "username"     : user,
+        "password"     : pass,
+        "scope"        : "",
+        "client_id"    : "",
+        "client_secret":""
+    };
+
+    $.ajax({
+        type: 'POST',
+        url:  url,
+        contentType : 'application/x-www-form-urlencoded; charset=UTF-8',
+        data:         data,
+        processData:  true,
+        beforeSend: function() {
+            $('.spinner-grow-sm').show();
+            $('.login-notifications .text-secondary').text("Checking user authentication...");
+        },
+        success: function(data)
+        {
+            app_login(data);
+            ui_show_login_success();
+        },
+        error: function(err)
+        {
+            ui_show_login_error(err);
+        },
+        complete: function()
+        {
+            $('.spinner-grow-sm').hide();
         },
         timeout: 5000
     });
