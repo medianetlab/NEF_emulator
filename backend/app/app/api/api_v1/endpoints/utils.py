@@ -70,87 +70,226 @@ class BackgroundTasks(threading.Thread):
             #Retrieve all the cells
             Cells = crud.cell.get_multi_by_owner(db=db, owner_id=current_user.id, skip=0, limit=100)
             json_cells = jsonable_encoder(Cells)
-            
-            
-            flag = True
-            
+
+
+            '''
+            ===================================================================
+                               2nd Approach for updating UEs position
+            ===================================================================
+
+            Summary: while(TRUE) --> keep increasing the moving index
+
+
+                points [ 1 2 3 4 5 6 7 8 9 10 ... ] . . . . . . .
+                         ^ current index
+                         ^  moving index                ^ moving can also reach here
+                 
+            current: shows where the UE is
+            moving : starts within the range of len(points) and keeps increasing.
+                     When it goes out of these bounds, the MOD( len(points) ) prevents
+                     the "index out of range" exception. It also starts the iteration
+                     of points from the begining, letting the UE moving in endless loops.
+
+            Sleep:   in both LOW / HIGH speed cases, the thread sleeps for 1 sec
+
+            Speed:   LOW : (moving_position_index += 1)  no points are skipped, this means 1m/sec
+                     HIGH: (moving_position_index += 10) skips 10 points, thus...        ~10m/sec
+
+            Pros:    + the UE position is updated once every sec (not very aggressive)
+                     + we can easily set speed this way (by skipping X points --> X m/sec)
+            Cons:    - skipping points and updating once every second decreases the event resolution
+
+            -------------------------------------------------------------------
+            '''
+
+            current_position_index = -1
+
+            # find the index of the point where the UE is located
+            for index, point in enumerate(points):
+                if (UE.latitude == point["latitude"]) and (UE.longitude == point["longitude"]):
+                    current_position_index = index
+
+            # start iterating from this index and keep increasing the moving_position_index...
+            moving_position_index = current_position_index
+
             while True:
-                for point in points:
-
-                    #Iteration to find the last known coordinates of the UE
-                    #Then the movements begins from the last known position (geo coordinates)
-                    if ((UE.latitude != point["latitude"]) or (UE.longitude != point["longitude"])) and flag == True:
-                        continue
-                    elif (UE.latitude == point["latitude"]) and (UE.longitude == point["longitude"]) and flag == True:
-                        flag = False
-                        continue
-                    
-
-                    try:
-                        UE = crud.ue.update_coordinates(db=db, lat=point["latitude"], long=point["longitude"], db_obj=UE)
-                        cell_now = check_distance(UE.latitude, UE.longitude, json_cells) #calculate the distance from all the cells
-                    except Exception as ex:
-                        logging.warning("Failed to update coordinates")
-                        logging.warning(ex)
-                    
-                    if cell_now != None:
-                        if UE.Cell_id != cell_now.get('id'): #Cell has changed in the db "handover"
-                            logging.warning(f"UE({UE.supi}) with ipv4 {UE.ip_address_v4} handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
-                            crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
-                            
-                            #Retrieve the subscription of the UE by external Id | This could be outside while true but then the user cannot subscribe when the loop runs
-                            # sub = crud.monitoring.get_sub_externalId(db=db, externalId=UE.external_identifier, owner_id=current_user.id)
-                            sub = crud_mongo.read(db_mongo, "MonitoringEvent", "externalId", UE.external_identifier)
-                            
-                            #Validation of subscription
-                            if not sub:
-                                logging.warning("Monitoring Event subscription not found")
-                            elif not crud.user.is_superuser(current_user) and (sub.get("owner_id") != current_user.id):
-                                logging.warning("Not enough permissions")
+                try:
+                    UE = crud.ue.update_coordinates(db=db, lat=points[current_position_index]["latitude"], long=points[current_position_index]["longitude"], db_obj=UE)
+                    cell_now = check_distance(UE.latitude, UE.longitude, json_cells) #calculate the distance from all the cells
+                except Exception as ex:
+                    logging.warning("Failed to update coordinates")
+                    logging.warning(ex)
+                
+                if cell_now != None:
+                    if UE.Cell_id != cell_now.get('id'): #Cell has changed in the db "handover"
+                        logging.warning(f"UE({UE.supi}) with ipv4 {UE.ip_address_v4} handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
+                        crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
+                        
+                        #Retrieve the subscription of the UE by external Id | This could be outside while true but then the user cannot subscribe when the loop runs
+                        # sub = crud.monitoring.get_sub_externalId(db=db, externalId=UE.external_identifier, owner_id=current_user.id)
+                        sub = crud_mongo.read(db_mongo, "MonitoringEvent", "externalId", UE.external_identifier)
+                        
+                        #Validation of subscription
+                        if not sub:
+                            logging.warning("Monitoring Event subscription not found")
+                        elif not crud.user.is_superuser(current_user) and (sub.get("owner_id") != current_user.id):
+                            logging.warning("Not enough permissions")
+                        else:
+                            sub_validate_time = tools.check_expiration_time(expire_time=sub.get("monitorExpireTime"))
+                            if sub_validate_time:
+                                sub = tools.check_numberOfReports(db_mongo, sub)
+                                if sub: #return the callback request only if subscription is valid
+                                    try:
+                                        response = location_callback(UE, sub.get("notificationDestination"), sub.get("link"))
+                                        logging.info(response.json())
+                                    except requests.exceptions.ConnectionError as ex:
+                                        logging.warning("Failed to send the callback request")
+                                        logging.warning(ex)
+                                        crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", sub.get("_id"))
+                                        continue   
                             else:
-                                sub_validate_time = tools.check_expiration_time(expire_time=sub.get("monitorExpireTime"))
-                                if sub_validate_time:
-                                    sub = tools.check_numberOfReports(db_mongo, sub)
-                                    if sub: #return the callback request only if subscription is valid
-                                        try:
-                                            response = location_callback(UE, sub.get("notificationDestination"), sub.get("link"))
-                                            logging.info(response.json())
-                                        except requests.exceptions.ConnectionError as ex:
-                                            logging.warning("Failed to send the callback request")
-                                            logging.warning(ex)
-                                            crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", sub.get("_id"))
-                                            continue   
-                                else:
-                                    crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", sub.get("_id"))
-                                    logging.warning("Subscription has expired (expiration date)")
+                                crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", sub.get("_id"))
+                                logging.warning("Subscription has expired (expiration date)")
 
-                            #QoS Monitoring Event (handover)
-                            ues_connected = crud.ue.get_by_Cell(db=db, cell_id=UE.Cell_id)
-                            if len(ues_connected) > 1:
-                                gbr = 'QOS_NOT_GUARANTEED'
-                            else:
-                                gbr = 'QOS_GUARANTEED'
+                        #QoS Monitoring Event (handover)
+                        ues_connected = crud.ue.get_by_Cell(db=db, cell_id=UE.Cell_id)
+                        if len(ues_connected) > 1:
+                            gbr = 'QOS_NOT_GUARANTEED'
+                        else:
+                            gbr = 'QOS_GUARANTEED'
 
-                            logging.warning(gbr)
-                            qos_notification_control(gbr ,current_user, UE.ip_address_v4)
-                            logging.critical("Bypassed qos notification control")
-                    else:
-                            crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : None})
+                        logging.warning(gbr)
+                        qos_notification_control(gbr ,current_user, UE.ip_address_v4)
+                        logging.critical("Bypassed qos notification control")
+                else:
+                        crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : None})
 
-                    # logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
-                    
-                    if UE.speed == 'LOW':
-                        time.sleep(1)
-                    elif UE.speed == 'HIGH':
-                        time.sleep(0.1)
-        
-                    if self._stop_threads:
-                        print("Stop moving...")
-                        break       
+                # logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
+                
+                if UE.speed == 'LOW':
+                    # don't skip any points, keep default speed 1m /sec
+                    moving_position_index += 1
+                elif UE.speed == 'HIGH':
+                    # skip 10 points --> 10m / sec
+                    moving_position_index += 10
 
+                time.sleep(1)
+
+                current_position_index = moving_position_index%(len(points))
+
+                
                 if self._stop_threads:
-                        print("Terminating thread...")
-                        break       
+                    print("Terminating thread...")
+                    break
+            
+            # End of 2nd Approach for updating UEs position
+
+
+
+            '''
+            ===================================================================
+                             1st Approach for updating UEs position
+            ===================================================================
+
+            Summary: while(TRUE) --> keep iterating the points list again and again
+
+
+                points [ 1 2 3 4 5 6 7 8 9 10 ... ] . . . . . . .
+                               ^ point
+                           ^ flag
+                 
+            flag:    it is used once to find the current UE position and then is
+                     set to False
+            
+            Sleep/   
+            Speed:   LOW : sleeps   1 sec and goes to the next point  (1m/sec)
+                     HIGH: sleeps 0.1 sec and goes to the next point (10m/sec)
+
+            Pros:    + the UEs goes over every point and never skips any
+            Cons:    - updating the UE position every 0.1 sec is a more aggressive approach
+
+            -------------------------------------------------------------------
+            '''
+
+            # flag = True
+            
+            # while True:
+            #     for point in points:
+
+            #         #Iteration to find the last known coordinates of the UE
+            #         #Then the movements begins from the last known position (geo coordinates)
+            #         if ((UE.latitude != point["latitude"]) or (UE.longitude != point["longitude"])) and flag == True:
+            #             continue
+            #         elif (UE.latitude == point["latitude"]) and (UE.longitude == point["longitude"]) and flag == True:
+            #             flag = False
+            #             continue
+                    
+
+            #         try:
+            #             UE = crud.ue.update_coordinates(db=db, lat=point["latitude"], long=point["longitude"], db_obj=UE)
+            #             cell_now = check_distance(UE.latitude, UE.longitude, json_cells) #calculate the distance from all the cells
+            #         except Exception as ex:
+            #             logging.warning("Failed to update coordinates")
+            #             logging.warning(ex)
+                    
+            #         if cell_now != None:
+            #             if UE.Cell_id != cell_now.get('id'): #Cell has changed in the db "handover"
+            #                 logging.warning(f"UE({UE.supi}) with ipv4 {UE.ip_address_v4} handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
+            #                 crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
+                            
+            #                 #Retrieve the subscription of the UE by external Id | This could be outside while true but then the user cannot subscribe when the loop runs
+            #                 # sub = crud.monitoring.get_sub_externalId(db=db, externalId=UE.external_identifier, owner_id=current_user.id)
+            #                 sub = crud_mongo.read(db_mongo, "MonitoringEvent", "externalId", UE.external_identifier)
+                            
+            #                 #Validation of subscription
+            #                 if not sub:
+            #                     logging.warning("Monitoring Event subscription not found")
+            #                 elif not crud.user.is_superuser(current_user) and (sub.get("owner_id") != current_user.id):
+            #                     logging.warning("Not enough permissions")
+            #                 else:
+            #                     sub_validate_time = tools.check_expiration_time(expire_time=sub.get("monitorExpireTime"))
+            #                     if sub_validate_time:
+            #                         sub = tools.check_numberOfReports(db_mongo, sub)
+            #                         if sub: #return the callback request only if subscription is valid
+            #                             try:
+            #                                 response = location_callback(UE, sub.get("notificationDestination"), sub.get("link"))
+            #                                 logging.info(response.json())
+            #                             except requests.exceptions.ConnectionError as ex:
+            #                                 logging.warning("Failed to send the callback request")
+            #                                 logging.warning(ex)
+            #                                 crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", sub.get("_id"))
+            #                                 continue   
+            #                     else:
+            #                         crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", sub.get("_id"))
+            #                         logging.warning("Subscription has expired (expiration date)")
+
+            #                 #QoS Monitoring Event (handover)
+            #                 ues_connected = crud.ue.get_by_Cell(db=db, cell_id=UE.Cell_id)
+            #                 if len(ues_connected) > 1:
+            #                     gbr = 'QOS_NOT_GUARANTEED'
+            #                 else:
+            #                     gbr = 'QOS_GUARANTEED'
+
+            #                 logging.warning(gbr)
+            #                 qos_notification_control(gbr ,current_user, UE.ip_address_v4)
+            #                 logging.critical("Bypassed qos notification control")
+            #         else:
+            #                 crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : None})
+
+            #         # logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
+                    
+            #         if UE.speed == 'LOW':
+            #             time.sleep(1)
+            #         elif UE.speed == 'HIGH':
+            #             time.sleep(0.1)
+        
+            #         if self._stop_threads:
+            #             print("Stop moving...")
+            #             break       
+
+            #     if self._stop_threads:
+            #             print("Terminating thread...")
+            #             break       
         finally:
             db.close()
             return
