@@ -338,7 +338,7 @@ function api_get_UEs() {
         {
             // 
         },
-        timeout: 5000
+        timeout: 60000
     });
 }
 
@@ -445,7 +445,7 @@ function api_get_Cells() {
         {
             // 
         },
-        timeout: 5000
+        timeout: 60000
     });
 }
 
@@ -533,7 +533,7 @@ function api_get_specific_path( id ) {
         {
             // 
         },
-        timeout: 5000
+        timeout: 60000
     });
 }
 
@@ -618,7 +618,7 @@ function api_start_loop( ue ) {
         {
             // 
         },
-        timeout: 5000
+        timeout: 60000
     });
 }
 
@@ -668,7 +668,7 @@ function api_stop_loop( ue ) {
         {
             // 
         },
-        timeout: 5000
+        timeout: 60000
     });
 }
 
@@ -733,7 +733,7 @@ function ui_set_loop_btn_status_for(ue) {
         {
             // 
         },
-        timeout: 5000
+        timeout: 60000
     });
 }
 
@@ -879,7 +879,7 @@ function api_get_all_monitoring_events() {
         {
             // 
         },
-        timeout: 5000
+        timeout: 60000
     });
 }
 
@@ -923,7 +923,7 @@ function api_get_last_monitoring_events() {
         {
             // 
         },
-        timeout: 5000
+        timeout: 60000
     });
 }
 

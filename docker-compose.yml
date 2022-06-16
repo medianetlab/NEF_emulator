@@ -4,6 +4,7 @@ services:
 
   db:
     image: postgres:12
+    command: -c shared_buffers=256MB -c max_connections=200
     profiles: ["debug", "dev"]
     volumes:
       - app-db-data:/var/lib/postgresql/data/pgdata
