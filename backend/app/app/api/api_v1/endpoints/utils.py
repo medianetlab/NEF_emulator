@@ -22,6 +22,8 @@ from app.api.api_v1.endpoints.paths import get_random_point
 #Dictionary holding threads that are running per user id.
 threads = {}
 
+#Dictionary holding UEs' information
+ues = {}
 
 class BackgroundTasks(threading.Thread):
 
@@ -53,6 +55,12 @@ class BackgroundTasks(threading.Thread):
                 threads.pop(f"{supi}")
                 return
             
+            global ues
+            ues[f"{supi}"] = jsonable_encoder(UE)
+            ues[f"{supi}"]["cell_id_hex"] = UE.Cell.cell_id
+            ues[f"{supi}"].pop("id")
+
+
             #Retrieve paths & points
             path = crud.path.get(db=db, id=UE.path_id)
             if not path:
@@ -114,17 +122,24 @@ class BackgroundTasks(threading.Thread):
 
             while True:
                 try:
-                    UE = crud.ue.update_coordinates(db=db, lat=points[current_position_index]["latitude"], long=points[current_position_index]["longitude"], db_obj=UE)
-                    cell_now = check_distance(UE.latitude, UE.longitude, json_cells) #calculate the distance from all the cells
+                    # UE = crud.ue.update_coordinates(db=db, lat=points[current_position_index]["latitude"], long=points[current_position_index]["longitude"], db_obj=UE)
+                    # cell_now = check_distance(UE.latitude, UE.longitude, json_cells) #calculate the distance from all the cells
+                    ues[f"{supi}"]["latitude"] = points[current_position_index]["latitude"]
+                    ues[f"{supi}"]["longitude"] = points[current_position_index]["longitude"]
+                    cell_now = check_distance(ues[f"{supi}"]["latitude"], ues[f"{supi}"]["longitude"], json_cells) #calculate the distance from all the cells
                 except Exception as ex:
                     logging.warning("Failed to update coordinates")
                     logging.warning(ex)
                 
                 if cell_now != None:
-                    if UE.Cell_id != cell_now.get('id'): #Cell has changed in the db "handover"
+                    # if UE.Cell_id != cell_now.get('id'): #Cell has changed in the db "handover"
+                    if ues[f"{supi}"]["Cell_id"] != cell_now.get('id'): #Cell has changed in the db "handover"
                         logging.warning(f"UE({UE.supi}) with ipv4 {UE.ip_address_v4} handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
-                        crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
-                        
+                        # crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
+                        ues[f"{supi}"]["Cell_id"] = cell_now.get('id')
+                        ues[f"{supi}"]["cell_id_hex"] = cell_now.get('cell_id')
+                        # ues[f"{supi}"]["gNB_id_hex"] = Cells .gNB.gNB_id
+
                         #Retrieve the subscription of the UE by external Id | This could be outside while true but then the user cannot subscribe when the loop runs
                         # sub = crud.monitoring.get_sub_externalId(db=db, externalId=UE.external_identifier, owner_id=current_user.id)
                         sub = crud_mongo.read(db_mongo, "MonitoringEvent", "externalId", UE.external_identifier)
@@ -140,7 +155,7 @@ class BackgroundTasks(threading.Thread):
                                 sub = tools.check_numberOfReports(db_mongo, sub)
                                 if sub: #return the callback request only if subscription is valid
                                     try:
-                                        response = location_callback(UE, sub.get("notificationDestination"), sub.get("link"))
+                                        response = location_callback(ues[f"{supi}"], sub.get("notificationDestination"), sub.get("link"))
                                         logging.info(response.json())
                                     except requests.exceptions.ConnectionError as ex:
                                         logging.warning("Failed to send the callback request")
@@ -152,17 +167,30 @@ class BackgroundTasks(threading.Thread):
                                 logging.warning("Subscription has expired (expiration date)")
 
                         #QoS Monitoring Event (handover)
-                        ues_connected = crud.ue.get_by_Cell(db=db, cell_id=UE.Cell_id)
-                        if len(ues_connected) > 1:
+                        # ues_connected = crud.ue.get_by_Cell(db=db, cell_id=UE.Cell_id)
+                        ues_connected = 0
+                        temp_ues = ues.copy()
+                        for ue in temp_ues:
+                            print(ue)
+                            if ues[ue]["Cell_id"] == ues[f"{supi}"]["Cell_id"]:
+                                ues_connected += 1
+
+                        #subtract 1 for the UE that is currently running. We are looking for other ues that are currently connected in the same cell
+                        ues_connected -= 1
+
+                        if ues_connected > 1:
                             gbr = 'QOS_NOT_GUARANTEED'
                         else:
                             gbr = 'QOS_GUARANTEED'
 
                         logging.warning(gbr)
-                        qos_notification_control(gbr ,current_user, UE.ip_address_v4)
+                        # qos_notification_control(gbr ,current_user, UE.ip_address_v4)
+                        qos_notification_control(gbr ,current_user, ues[f"{supi}"]["ip_address_v4"])
                         logging.critical("Bypassed qos notification control")
                 else:
-                        crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : None})
+                    # crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : None})
+                    ues[f"{supi}"]["Cell_id"] = None
+                    ues[f"{supi}"]["cell_id_hex"] = None
 
                 # logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
                 
@@ -180,6 +208,8 @@ class BackgroundTasks(threading.Thread):
                 
                 if self._stop_threads:
                     print("Terminating thread...")
+                    crud.ue.update_coordinates(db=db, lat=ues[f"{supi}"]["latitude"], long=ues[f"{supi}"]["longitude"], db_obj=UE)
+                    crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : ues[f"{supi}"]["Cell_id"]})
                     break
             
             # End of 2nd Approach for updating UEs position
@@ -666,3 +696,12 @@ def retrieve_ue_state(supi: str, user_id: int) -> bool:
     except KeyError as ke:
         print('Key Not Found in Threads Dictionary:', ke)
         return False
+
+@router.get("/state-ues", status_code=200)
+def state_ues(
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Get the state
+    """
+    return ues
