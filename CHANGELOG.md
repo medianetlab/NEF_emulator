@@ -16,6 +16,10 @@
  - add `NEF` logo
  - move part of `login.js` code to `app.js` (more clean approach + added `app.default_redirect` variable)
 
+### Backend
+
+ - `utils.py`: add a 2nd approach for making the UEs move within their path and control their speed (see #2eb19f8)
+
 ### Libraries
 
  - upgrade `leaflet.js` (`1.7.1` to `1.8.0`)
