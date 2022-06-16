@@ -57,8 +57,12 @@ class BackgroundTasks(threading.Thread):
             
             global ues
             ues[f"{supi}"] = jsonable_encoder(UE)
-            ues[f"{supi}"]["cell_id_hex"] = UE.Cell.cell_id
             ues[f"{supi}"].pop("id")
+
+            if UE.Cell_id != None:
+                ues[f"{supi}"]["cell_id_hex"] = UE.Cell.cell_id
+            else:
+                ues[f"{supi}"]["cell_id_hex"] = None
 
 
             #Retrieve paths & points
@@ -207,9 +211,10 @@ class BackgroundTasks(threading.Thread):
 
                 
                 if self._stop_threads:
-                    print("Terminating thread...")
+                    logging.critical("Terminating thread...")
                     crud.ue.update_coordinates(db=db, lat=ues[f"{supi}"]["latitude"], long=ues[f"{supi}"]["longitude"], db_obj=UE)
                     crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : ues[f"{supi}"]["Cell_id"]})
+                    ues.pop(f"{supi}")
                     break
             
             # End of 2nd Approach for updating UEs position
