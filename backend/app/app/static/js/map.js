@@ -166,7 +166,7 @@ function start_map_refresh_interval() {
 
         // start updating
         UE_refresh_interval = setInterval(function(){ 
-            api_get_UEs();
+            api_get_UEs_from_memory();
         }, UE_refresh_sec);
 
         // enable the select button
@@ -311,7 +311,7 @@ function ui_initialize_map() {
 // 
 function api_get_UEs() {
     
-    var url = app.api_url + '/UEs?skip=0&limit=100';
+    var url = app.api_url + '/UEs?skip=0&limit=1000';
 
     $.ajax({
         type: 'GET',
@@ -343,10 +343,55 @@ function api_get_UEs() {
 }
 
 
+
+// Ajax request to get UEs data
+// on success: paint the UE marks on the map
+// 
+function api_get_UEs_from_memory() {
+    
+    var url = app.api_url + '/utils/state-ues';
+
+    $.ajax({
+        type: 'GET',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            // console.log(data);
+            ues_memory = data;
+            ues = [];
+            for(var key in ues_memory) {
+               ues.push(ues_memory[key]);
+            }
+            ui_map_paint_UEs();
+        },
+        error: function(err)
+        {
+            console.log(err);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 60000
+    });
+}
+
+
+
 // 1. At first Ajax call, UE marks are generated and painted on the map
 // 2. At later Ajax calls, the marks are just updated (coordinates and popup content)
 // 
 function ui_map_paint_UEs() {
+
+    console.log(ues);
 
     for (const ue of ues) {
         if (UEs_first_paint) { 
