@@ -349,7 +349,7 @@ function api_get_UEs() {
 // 
 function api_get_UEs_from_memory() {
     
-    var url = app.api_url + '/utils/state-ues';
+    var url = app.api_url + '/ue_movement/state-ues';
 
     $.ajax({
         type: 'GET',
@@ -626,7 +626,7 @@ function fix_points_format( datapoints ) {
 // 
 function api_start_loop( ue ) {
 
-    var url = app.api_url + '/utils/start-loop';
+    var url = app.api_url + '/ue_movement/start-loop';
     var data = {
         "supi": ue.supi
     };
@@ -675,7 +675,7 @@ function api_start_loop( ue ) {
 // 
 function api_stop_loop( ue ) {
 
-    var url = app.api_url + '/utils/stop-loop';
+    var url = app.api_url + '/ue_movement/stop-loop';
     var data = {
         "supi": ue.supi
     };
@@ -740,7 +740,7 @@ function ui_generate_loop_btn_for( ue ) {
 // It also updates the start-all/stop-all button in case all the UEs are moving
 // 
 function ui_set_loop_btn_status_for(ue) {
-    var url = app.api_url + '/utils/state-loop/' + ue.supi;
+    var url = app.api_url + '/ue_movement/state-loop/' + ue.supi;
 
     $.ajax({
         type: 'GET',

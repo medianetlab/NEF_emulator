@@ -242,7 +242,7 @@ function api_post_UE_callback( UE_obj, callback ) {
 // 
 // 
 function api_get_state_loop_for( UE_supi ) {
-    var url = app.api_url + '/utils/state-loop/' + UE_supi;
+    var url = app.api_url + '/ue_movement/state-loop/' + UE_supi;
 
     $.ajax({
         type: 'GET',
