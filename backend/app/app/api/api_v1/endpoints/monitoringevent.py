@@ -9,6 +9,7 @@ from app.crud import crud_mongo, user, ue
 from app.api import deps
 from app import tools
 from app.api.api_v1.endpoints.utils import add_notifications
+from .ue_movement import retrieve_ue_state, retrieve_ue
 
 router = APIRouter()
 db_collection= 'MonitoringEvent'
@@ -79,7 +80,13 @@ def create_subscription(
         json_compatible_item_data["ipv4Addr"] = UE.ip_address_v4
 
         if UE.Cell != None:
-            json_compatible_item_data["locationInfo"] = {'cellId' : UE.Cell.cell_id, 'gNBId' : UE.Cell.gNB.gNB_id}
+            #If ue is moving retieve ue's information from memory else retrieve info from db
+            if retrieve_ue_state(supi=UE.supi, user_id=current_user.id):
+                cell_id_hex = retrieve_ue(UE.supi).get("cell_id_hex")
+                gnb_id_hex = retrieve_ue(UE.supi).get("gnb_id_hex")
+                json_compatible_item_data["locationInfo"] = {'cellId' : cell_id_hex, 'gNBId' : gnb_id_hex}
+            else:
+                json_compatible_item_data["locationInfo"] = {'cellId' : UE.Cell.cell_id, 'gNBId' : UE.Cell.gNB.gNB_id}
         else:
             json_compatible_item_data["locationInfo"] = {'cellId' : None, 'gNBId' : None}
         

@@ -47,14 +47,18 @@ class BackgroundTasks(threading.Thread):
                 threads.pop(f"{supi}")
                 return
             
+            #Insert running UE in the dictionary
+
             global ues
             ues[f"{supi}"] = jsonable_encoder(UE)
             ues[f"{supi}"].pop("id")
 
             if UE.Cell_id != None:
                 ues[f"{supi}"]["cell_id_hex"] = UE.Cell.cell_id
+                ues[f"{supi}"]["gnb_id_hex"] = UE.Cell.gNB.gNB_id
             else:
                 ues[f"{supi}"]["cell_id_hex"] = None
+                ues[f"{supi}"]["gnb_id_hex"] = None
 
 
             #Retrieve paths & points
@@ -134,7 +138,8 @@ class BackgroundTasks(threading.Thread):
                         # crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
                         ues[f"{supi}"]["Cell_id"] = cell_now.get('id')
                         ues[f"{supi}"]["cell_id_hex"] = cell_now.get('cell_id')
-                        # ues[f"{supi}"]["gNB_id_hex"] = Cells .gNB.gNB_id
+                        gnb = crud.gnb.get(db=db, id=cell_now.get("gNB_id"))
+                        ues[f"{supi}"]["gnb_id_hex"] = gnb.gNB_id
 
                         #Retrieve the subscription of the UE by external Id | This could be outside while true but then the user cannot subscribe when the loop runs
                         # sub = crud.monitoring.get_sub_externalId(db=db, externalId=UE.external_identifier, owner_id=current_user.id)
@@ -189,6 +194,7 @@ class BackgroundTasks(threading.Thread):
                     # crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : None})
                     ues[f"{supi}"]["Cell_id"] = None
                     ues[f"{supi}"]["cell_id_hex"] = None
+                    ues[f"{supi}"]["gnb_id_hex"] = None
 
                 # logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
                 
@@ -326,6 +332,7 @@ class BackgroundTasks(threading.Thread):
     def stop(self):
         self._stop_threads = True
 
+#API
 router = APIRouter()
 
 @router.post("/start-loop", status_code=200)
@@ -375,13 +382,6 @@ def state_movement(
     """
     return {"running": retrieve_ue_state(supi, current_user.id)}
 
-def retrieve_ue_state(supi: str, user_id: int) -> bool: 
-    try:
-        return threads[f"{supi}"][f"{user_id}"].is_alive()
-    except KeyError as ke:
-        print('Key Not Found in Threads Dictionary:', ke)
-        return False
-
 @router.get("/state-ues", status_code=200)
 def state_ues(
     current_user: models.User = Depends(deps.get_current_active_user),
@@ -390,3 +390,19 @@ def state_ues(
     Get the state
     """
     return ues
+
+#Functions
+def retrieve_ue_state(supi: str, user_id: int) -> bool: 
+    try:
+        return threads[f"{supi}"][f"{user_id}"].is_alive()
+    except KeyError as ke:
+        print('Key Not Found in Threads Dictionary:', ke)
+        return False
+
+def retrieve_ues() -> dict:
+    return ues
+
+def retrieve_ue(supi: str) -> dict:
+    return ues.get(supi)
+
+
