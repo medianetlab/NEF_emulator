@@ -103,7 +103,12 @@ function api_test_token( token_str ){
         },
         error: function(err)
         {
-            window.location.href = [location.protocol, '//', location.host, "/login"].join('');
+            if (location.pathname == "/login") {
+                // $('.login-notifications .text-danger').text("Session has expired, login again.");
+                ui_show_login_error(err);
+                return;
+            } 
+            window.location.href = [location.protocol, '//', location.host, "/err401"].join('');
         },
         timeout: 5000
     });
