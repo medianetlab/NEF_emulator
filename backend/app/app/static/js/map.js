@@ -30,7 +30,7 @@ var UE_refresh_sec_default = 1000; // 1 sec
 var UE_refresh_sec         = -1;   // when select = "off" AND disabled = true
 
 // template for UE buttons
-var ue_btn_tpl = `<button class="btn btn-success btn-sm px-4 btn-ue" type="button" id="btn-ue-{{id}}" data-supi={{supi}} data-running=false>{{name}}</button> `
+var ue_btn_tpl = `<button class="btn btn-success btn-sm px-4 btn-ue" type="button" id="btn-ue-{{supi}}" data-supi={{supi}} data-running=false>{{name}}</button> `
 
 var looping_UEs = 0;
 
@@ -646,8 +646,8 @@ function api_start_loop( ue ) {
         success: function(data)
         {
             // console.log(data);
-            $("#btn-ue-"+ue.id).data("running",true);
-            $("#btn-ue-"+ue.id).removeClass('btn-success').addClass('btn-danger');
+            $("#btn-ue-"+ue.supi).data("running",true);
+            $("#btn-ue-"+ue.supi).removeClass('btn-success').addClass('btn-danger');
             looping_UEs++;
 
             if (looping_UEs == ues.length) {
@@ -695,8 +695,8 @@ function api_stop_loop( ue ) {
         success: function(data)
         {
             // console.log(data);
-            $("#btn-ue-"+ue.id).data("running",false);
-            $("#btn-ue-"+ue.id).addClass('btn-success').removeClass('btn-danger');
+            $("#btn-ue-"+ue.supi).data("running",false);
+            $("#btn-ue-"+ue.supi).addClass('btn-success').removeClass('btn-danger');
             looping_UEs--;
 
             if (looping_UEs == 0) {
@@ -726,7 +726,7 @@ function api_stop_loop( ue ) {
 // and adds it to the ue-btn-area
 // 
 function ui_generate_loop_btn_for( ue ) {
-    var html_str = ue_btn_tpl.replaceAll("{{id}}", ue.id).replace("{{name}}",ue.name).replace("{{supi}}",ue.supi);
+    var html_str = ue_btn_tpl.replaceAll("{{supi}}", ue.supi).replaceAll("{{name}}",ue.name);
     $(".ue-btn-area").append(html_str);
 }
 
@@ -758,8 +758,8 @@ function ui_set_loop_btn_status_for(ue) {
         {
             // console.log(data);
             if ( data.running ) {
-                $('#btn-ue-'+ue.id).removeClass('btn-success').addClass('btn-danger');
-                $('#btn-ue-'+ue.id).data("running",data.running);
+                $('#btn-ue-'+ue.supi).removeClass('btn-success').addClass('btn-danger');
+                $('#btn-ue-'+ue.supi).data("running",data.running);
                 
                 looping_UEs++;
                 if (looping_UEs == ues.length) {
