@@ -6,7 +6,7 @@ from typing import Any
 from app import crud, tools, models
 from app.crud import crud_mongo
 from app.tools.distance import check_distance
-from app.tools.send_callback import location_callback, qos_notification_control
+from app.tools import location_callback, qos_callback
 from app.db.session import SessionLocal
 from app.api import deps
 from app.schemas import Msg
@@ -79,7 +79,7 @@ class BackgroundTasks(threading.Thread):
             Cells = crud.cell.get_multi_by_owner(db=db, owner_id=current_user.id, skip=0, limit=100)
             json_cells = jsonable_encoder(Cells)
 
-
+            is_superuser = crud.user.is_superuser(current_user)
             '''
             ===================================================================
                                2nd Approach for updating UEs position
@@ -149,7 +149,7 @@ class BackgroundTasks(threading.Thread):
                         if not sub:
                             # logging.warning("Monitoring Event subscription not found")
                             pass
-                        elif not crud.user.is_superuser(current_user) and (sub.get("owner_id") != current_user.id):
+                        elif not is_superuser and (sub.get("owner_id") != current_user.id):
                             # logging.warning("Not enough permissions")
                             pass
                         else:
@@ -158,7 +158,7 @@ class BackgroundTasks(threading.Thread):
                                 sub = tools.check_numberOfReports(db_mongo, sub)
                                 if sub: #return the callback request only if subscription is valid
                                     try:
-                                        response = location_callback(ues[f"{supi}"], sub.get("notificationDestination"), sub.get("link"))
+                                        response = location_callback.location_callback(ues[f"{supi}"], sub.get("notificationDestination"), sub.get("link"))
                                         # logging.info(response.json())
                                     except requests.exceptions.ConnectionError as ex:
                                         logging.warning("Failed to send the callback request")
@@ -188,7 +188,7 @@ class BackgroundTasks(threading.Thread):
 
                         # logging.warning(gbr)
                         # qos_notification_control(gbr ,current_user, UE.ip_address_v4)
-                        qos_notification_control(gbr ,current_user, ues[f"{supi}"]["ip_address_v4"])
+                        qos_callback.qos_notification_control(gbr ,current_user, ues[f"{supi}"]["ip_address_v4"])
                     
                 else:
                     # crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : None})
