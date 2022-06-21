@@ -161,6 +161,6 @@ function ui_initialize_btn_listeners() {
     $('#logout-btn').on("click",function(event){
         event.preventDefault();
         localStorage.removeItem('app_auth');
-        window.location.href = [location.protocol, '//', location.host].join('');
+        window.location.href = [location.protocol, '//', location.host, "/login"].join('');
     });
 }
