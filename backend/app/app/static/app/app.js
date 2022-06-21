@@ -20,32 +20,31 @@ var app = {
 // ======================================================
 
 
+// check if local storage is available &
+// update `local_storage_available` variable
+app_test_browser_local_storage();
+
+// initialize auth_obj
+if (app.local_storage_available) {
+    app.auth_obj = JSON.parse(localStorage.getItem('app_auth'));
+
+    if ( app.auth_obj == null ) {
+        // if you the token is null
+        // check if you are already at the /login page
+        if (location.pathname != "/login") {
+            // if not, redirect to /err401
+            window.location.href = [location.protocol, '//', location.host, "/err401"].join('');    
+        }
+        
+    } else {
+        // use the API to test the token found
+        // to check that it is valid
+        api_test_token( app.auth_obj.access_token );
+    }
+}
 
 
 $( document ).ready(function() {
-    
-    // check if local storage is available &
-    // update `local_storage_available` variable
-    app_test_browser_local_storage();
-
-    // initialize auth_obj
-    if (app.local_storage_available) {
-        app.auth_obj = JSON.parse(localStorage.getItem('app_auth'));
-
-        if ( app.auth_obj == null ) {
-            // if you the token is null
-            // check if you are already at the /login page
-            if (location.pathname != "/login") {
-                // if not, redirect to /login
-                window.location.href = [location.protocol, '//', location.host, "/login"].join('');    
-            }
-            
-        } else {
-            // use the API to test the token found
-            // to check that it is valid
-            api_test_token( app.auth_obj.access_token );
-        }
-    }
 
     ui_initialize_btn_listeners();
 
@@ -162,6 +161,6 @@ function ui_initialize_btn_listeners() {
     $('#logout-btn').on("click",function(event){
         event.preventDefault();
         localStorage.removeItem('app_auth');
-        window.location.href = [location.protocol, '//', location.host].join('');
+        window.location.href = [location.protocol, '//', location.host, "/login"].join('');
     });
 }
