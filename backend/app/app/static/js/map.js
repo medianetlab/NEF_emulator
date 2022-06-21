@@ -23,8 +23,7 @@ var cells_lg         = L.layerGroup(),
 var ue_markers   = {};
 var cell_markers = {};
 var map_bounds   = [];
-// helper var for correct initialization
-var UEs_first_paint = true;
+
 
 // for UE & map refresh
 var UE_refresh_interval    = null;
@@ -95,7 +94,7 @@ $( document ).ready(function() {
                 // if not already fetched and painted, do so
                 if ( !helper_check_path_is_already_painted( ue.path_id ) ) { 
                     api_get_specific_path(ue.path_id);
-                    paths_painted.push(ue.path_id);
+                    paths_painted[ue.path_id] = true;
                 }
                 ui_generate_loop_btn_for( ue );
                 ui_set_loop_btn_status_for( ue );
@@ -168,7 +167,7 @@ function start_map_refresh_interval() {
 
         // start updating
         UE_refresh_interval = setInterval(function(){ 
-            api_get_UEs_from_memory();
+            api_get_moving_UEs();
         }, UE_refresh_sec);
 
         // enable the select button
@@ -349,7 +348,7 @@ function api_get_UEs() {
 // Ajax request to get UEs data
 // on success: paint the UE marks on the map
 // 
-function api_get_UEs_from_memory() {
+function api_get_moving_UEs() {
     
     var url = app.api_url + '/ue_movement/state-ues';
 
@@ -388,8 +387,9 @@ function api_get_UEs_from_memory() {
 
 
 
-// 1. At first Ajax call, UE marks are generated and painted on the map
-// 2. At later Ajax calls, the marks are just updated (coordinates and popup content)
+// Function used after api_get_UEs() is called.
+// All the UE marks are generated and painted on the map (both moving & stationary)
+// At later Ajax calls, only the moving UEs are fetched and re-painted (check the following function)
 // 
 function ui_map_paint_UEs() {
 
@@ -429,10 +429,10 @@ function ui_map_paint_UEs() {
 
 
 
-
+// Function used after api_get_moving_UEs() is called.
+// It re-paints those marks (UEs) that are currently moving.
+// 
 function ui_map_paint_moving_UEs() {
-
-    console.log(moving_ues);
 
     for (const ue of moving_ues) {
         
@@ -1131,10 +1131,8 @@ function helper_get_event_details( event_id ) {
 
 
 function helper_check_path_is_already_painted( path_id ) {
-    for (const item of paths_painted) {
-        if ( item == path_id ) {
-            return true
-        }
+    if ( paths_painted[ path_id ] != true) {
+        return false;
     }
-    return false;
+    return true;
 }
