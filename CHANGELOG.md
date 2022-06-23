@@ -15,10 +15,23 @@
  - `/register`: add "hit enter --> submit form" functionality
  - add `NEF` logo
  - move part of `login.js` code to `app.js` (more clean approach + added `app.default_redirect` variable)
+ - `maps.js`: increase timeouts to 60 sec (edge case with >200 UEs, start/stop takes time)
+ - `maps.js`: add `api_get_moving_UEs()` to only retrieve moving UEs ➡ move part of `ui_map_paint_UEs()` to `ui_map_paint_moving_UEs()`
 
 ### Backend
 
+ - ⛔ for optimization purposes, the UEs movement is handled in memory (no more intensive read/writes to Postgres) 👇
+ - ➕ `api/v1/ue_movement/state-ues` now returns moving UEs information only. It helps with the edge cases of having many UEs and only a few of them actually moving around
+ - ⛔ `/utils/state-loop/{{supi}}` ➡ `/ue_movement/state-loop/{{supi}}`
+ - ⛔ `/utils/start-loop` ➡ `/ue_movement/start-loop`
+ - ⛔ `/utils/stop-loop` ➡ `/ue_movement/stop-loop`
  - `utils.py`: add a 2nd approach for making the UEs move within their path and control their speed (see #2eb19f8)
+ - `SQLAlchemy`: add `pool_size=150, max_overflow=20` to `create_engine( ... )`
+
+### Postgres
+
+ - add `command: -c shared_buffers=256MB -c max_connections=200` to `docker-compose`
+
 
 ### Libraries
 
