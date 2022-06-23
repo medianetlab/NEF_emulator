@@ -2,7 +2,14 @@
 
 ## upcoming release...
 
-*Summary: This release includes changes and optimizations for making NEF_emulator capable of running bigger scenarios*
+***Summary:***
+
+> - *changes and optimizations for making NEF_emulator capable of running bigger scenarios*
+> - *UE movement approach change:*
+>   - *old: iterate over all path-points and simulate speed by using sleep() (LOW=1sec HIGH=0.1sec)*
+>   - *new: constantly use sleep(1sec) and simulate speed by skipping (or not) path-points*
+>   - *more on the pros/cons of this approach can be found at the relative source code section, the old one is commented out*
+> - *update of `leaflet.js` to version `1.8.0` (we've indetified a bug when closing mark tooltips, it's supposed to be fixed by the maintainers of the project at the upcoming release)*
 
 
 ### UI changes
