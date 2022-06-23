@@ -20,7 +20,7 @@
  - move part of `login.js` code to `app.js` (more clean approach + added `app.default_redirect` variable)
  - `maps.js`: increase timeouts to 60 sec (edge case with >200 UEs, start/stop takes time)
  - `maps.js`: add `api_get_moving_UEs()` to only retrieve moving UEs ➡ move part of `ui_map_paint_UEs()` to `ui_map_paint_moving_UEs()`
- - `app.js`: move `api_test_token()` outside document.ready() for 
+ - `app.js`: move `api_test_token()` outside document.ready() for quicker user auth checks
  - `401` page redirect: when the token can't be validated the user is redirected to a 401 Unauthorized page and after a few seconds is redirected to `/login`. Previously, the user was redirected to login without being notified.
  - `map.js`: optimize `helper_check_path_is_already_painted( path_id )` by replacing the simple array of painted paths with a key-value object
 
