@@ -21,7 +21,9 @@ $( document ).ready(function() {
 
     // also submit when the user just hits "enter"
     $(".card-body input").keypress(function(event) {
-        ui_submit_register();
+        if(event && event.keyCode == 13) {
+            ui_submit_register();
+        }
     });
 });
 
