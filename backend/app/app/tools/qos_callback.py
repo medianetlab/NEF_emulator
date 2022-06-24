@@ -1,7 +1,10 @@
 import requests, json, logging
 from pymongo import MongoClient
-from app.crud import crud_mongo, user
+from app.crud import crud_mongo, user, ue
 from app.api.api_v1.endpoints.qosInformation import qos_reference_match
+from app.db.session import SessionLocal
+from fastapi.encoders import jsonable_encoder
+
 
 def qos_callback(callbackurl, resource, qos_status, ipv4):
     url = callbackurl
@@ -49,7 +52,7 @@ def qos_callback(callbackurl, resource, qos_status, ipv4):
     
     return response
 
-def qos_notification_control(gbr_status: str, current_user, ipv4):
+def qos_notification_control(current_user, ipv4, ues: dict, current_ue: dict):
     client = MongoClient("mongodb://mongo:27017", username='root', password='pass')
     db = client.fastapi
 
@@ -63,7 +66,14 @@ def qos_notification_control(gbr_status: str, current_user, ipv4):
     if not user.is_superuser(current_user) and (doc['owner_id'] != current_user.id):
         logging.info("Not enough permissions")
         return
-    
+
+    number_of_ues_in_cell = ues_in_cell(ues, current_ue)
+
+    if number_of_ues_in_cell > 1:
+      gbr_status = 'QOS_NOT_GUARANTEED' 
+    else: 
+      gbr_status= 'QOS_GUARANTEED'
+
     qos_standardized = qos_reference_match(doc.get('qosReference'))
 
     if qos_standardized.get('type') == 'GBR' or qos_standardized.get('type') == 'DC-GBR':
@@ -85,5 +95,25 @@ def qos_notification_control(gbr_status: str, current_user, ipv4):
 
     return
 
-def ues_in_cell(ues: dict):
-  pass
+def ues_in_cell(ues: dict, current_ue: dict):
+  ues_connected = 0
+ 
+  # Find running UEs belong in the same cell
+  for single_ue in ues:
+      if ues[single_ue]["Cell_id"] == current_ue["Cell_id"]:
+          ues_connected += 1
+
+  # Find stationary UEs belong in the same cell
+  db = SessionLocal()
+  
+  ues_list = ue.get_by_Cell(db=db, cell_id=current_ue["Cell_id"])
+  
+  for ue_in_db in ues_list:
+    #This means that we are searching only for ues that are not running
+    #In db the last known location (cell_id) is valid only for UEs that are not running
+    if jsonable_encoder(ue_in_db).get('supi') not in ues: 
+      ues_connected += 1
+   
+  db.close()
+  
+  return ues_connected

@@ -138,7 +138,8 @@ class BackgroundTasks(threading.Thread):
                     try:
                         t.stop()
                     except timer.TimerError as ex:
-                        logging.critical(ex)
+                        # logging.critical(ex)
+                        pass
 
                     # if UE.Cell_id != cell_now.get('id'): #Cell has changed in the db "handover"
                     if ues[f"{supi}"]["Cell_id"] != cell_now.get('id'): #Cell has changed in the db "handover"
@@ -196,14 +197,15 @@ class BackgroundTasks(threading.Thread):
 
                         # logging.warning(gbr)
                         # qos_notification_control(gbr ,current_user, UE.ip_address_v4)
-                        qos_callback.qos_notification_control(gbr ,current_user, ues[f"{supi}"]["ip_address_v4"])
+                        qos_callback.qos_notification_control(current_user, ues[f"{supi}"]["ip_address_v4"], ues.copy(),  ues[f"{supi}"])
                     
                 else:
                     # crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : None})
                     try:
                         t.start()
                     except timer.TimerError as ex:
-                        logging.critical(ex)
+                        # logging.critical(ex)
+                        pass
                     
                     ues[f"{supi}"]["Cell_id"] = None
                     ues[f"{supi}"]["cell_id_hex"] = None

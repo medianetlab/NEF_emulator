@@ -21,7 +21,7 @@ def qos_reference_match(qos_reference):
     for q in qos_5qi:
         if q.get('value') == qos_reference:
             qos_characteristics = q.copy()
-            print(f"Inside qos_reference_match at qosInformation.py {qos_characteristics}")
+            # print(f"Inside qos_reference_match at qosInformation.py {qos_characteristics}")
     
     if not qos_characteristics:
         raise HTTPException(status_code=400, detail=f"The 5QI (qosReference) {qos_reference} does not exist")
