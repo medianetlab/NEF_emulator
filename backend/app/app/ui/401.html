@@ -36,7 +36,9 @@
             <div class="clearfix">
               <h1 class="float-start display-3 me-4">401</h1>
               <h4 class="pt-3">Oops!</h4>
-              <p class="text-medium-emphasis">You're not allowed to access this page.</p>
+              <p class="text-medium-emphasis">You're not allowed to access this page.<br />
+                                              Redirecting to <a href="/login">login</a> in <span id="seconds"></span> seconds</p>
+              
             </div>
             <!-- <div class="input-group"><span class="input-group-text">
                 <svg class="icon">
@@ -50,8 +52,28 @@
       </div>
     </div>
     <!-- CoreUI and necessary plugins-->
-    <script src="static/vendors/@coreui/coreui/js/coreui.bundle.min.js"></script>
-    <script src="static/vendors/simplebar/js/simplebar.min.js"></script>
+    <!-- <script src="static/vendors/@coreui/coreui/js/coreui.bundle.min.js"></script> -->
+    <!-- <script src="static/vendors/simplebar/js/simplebar.min.js"></script> -->
+
+    <script type="text/javascript">
+
+      var redirect_countdown_seconds = 5;
+      var seconds_obj                = document.getElementById("seconds");
+          seconds_obj.innerHTML      = redirect_countdown_seconds;
+
+      
+      setInterval(function () {
+        
+        --redirect_countdown_seconds;
+        if (redirect_countdown_seconds == 0) {
+          window.location.href = [location.protocol, '//', location.host, "/login"].join('');
+        }
+        seconds_obj.innerHTML = redirect_countdown_seconds;
+        
+      }, 1000);
+
+    </script>
+
 
   </body>
 </html>

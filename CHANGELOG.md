@@ -1,5 +1,68 @@
 # Changelog
 
+## v1.5.0
+
+***Summary:***
+
+> - *changes and optimizations for making NEF_emulator capable of running bigger scenarios*
+> - *UE movement approach change:*
+>   - *old: iterate over all path-points and simulate speed by using sleep() (LOW=1sec HIGH=0.1sec)*
+>   - *new: constantly use sleep(1sec) and simulate speed by skipping (or not) path-points*
+>   - *more on the pros/cons of this approach can be found at the relative source code section, the old one is commented out*
+> - *update of `leaflet.js` to version `1.8.0` (we've indetified a bug when closing mark tooltips, it's supposed to be fixed by the maintainers of the project at the upcoming release)*
+
+
+### UI changes
+
+ - `dashboard-cells.js` minor fix to display error details correctly in the toast message
+ - 🪛 fix `/map` js console errors caused by the UEs layer-checkbox (access to `null` marker)
+ - 🪛 fix `/map` UEs buttons: handle case of UEs with no paths assigned
+ - `/dashboard` page change: instead of 2 consecutive API requests on UE `Save` 👇:
+   - 1 API request to assign path everytime the user selects something different
+   - 1 API request on `Save` button
+ - `/map` page: add type-of-service column to datatable (cells now display `Monitoring Event API` or `AsSession With QoS API`)
+ - `/login`: add "hit enter --> submit form" functionality
+ - `/register`: add "hit enter --> submit form" functionality
+ - add `NEF` logo
+ - move part of `login.js` code to `app.js` (more clean approach + added `app.default_redirect` variable)
+ - `maps.js`: increase timeouts to 60 sec (edge case with >200 UEs, start/stop takes time)
+ - `maps.js`: add `api_get_moving_UEs()` to only retrieve moving UEs ➡ move part of `ui_map_paint_UEs()` to `ui_map_paint_moving_UEs()`
+ - `app.js`: move `api_test_token()` outside document.ready() for quicker user auth checks
+ - `401` page redirect: when the token can't be validated the user is redirected to a 401 Unauthorized page and after a few seconds is redirected to `/login`. Previously, the user was redirected to login without being notified.
+ - `map.js`: optimize `helper_check_path_is_already_painted( path_id )` by replacing the simple array of painted paths with a key-value object
+
+
+### Backend
+
+ - ⛔ for optimization purposes, the UEs movement is handled in memory (no more intensive read/writes to Postgres) 👇
+ - ➕ `api/v1/ue_movement/state-ues` now returns moving UEs information only. It helps with the edge cases of having many UEs and only a few of them actually moving around
+ - create new module/file for threads `utils.py` ➡ `ue_movement.py`
+     - ⛔ `/utils/state-loop/{{supi}}` ➡ `/ue_movement/state-loop/{{supi}}`
+     - ⛔ `/utils/start-loop` ➡ `/ue_movement/start-loop`
+     - ⛔ `/utils/stop-loop` ➡ `/ue_movement/stop-loop`
+ - `utils.py`: add a 2nd approach for making the UEs move within their path and control their speed (see #2eb19f8)
+ - `SQLAlchemy`: add `pool_size=150, max_overflow=20` to `create_engine( ... )`
+ - fix `NoneType` exception on MonitoringEvent one time request when cell is None
+ - Add middleware to return custom response header `X-Process-Time` that counts request-response proccesing time 
+ - Split callbacks in two files 👉 From `send_callback.py` ➡ `monitoring_callbacks.py` + `qos_callback.py`
+ - fix callback notification for QoS after the transition from db to memory
+
+
+### Database
+
+ - postgreSQL add `command: -c shared_buffers=256MB -c max_connections=200` to `docker-compose`
+ - MonitoringEvent: migration from postgreSQL to MongoDB 👇
+     - fix `check_numberOfReports` function accordingly
+
+
+### Libraries
+
+ - upgrade `leaflet.js` (`1.7.1` to `1.8.0`)
+
+
+
+<br><br>
+
 ## v1.4.1
 
 ### Migration to Python 3.9
@@ -90,6 +153,8 @@
 
 
 
+
+
 ## v1.3.2
 
 - Fix UE-association-path selection with `path_id` 0 (no path selected) - both dashboard and backend
@@ -98,6 +163,11 @@
 
 
 <br><br>
+
+
+
+
+
 
 ## v1.3.1
 
