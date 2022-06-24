@@ -2,6 +2,16 @@
 
 ## upcoming release...
 
+***Summary:***
+
+> - *changes and optimizations for making NEF_emulator capable of running bigger scenarios*
+> - *UE movement approach change:*
+>   - *old: iterate over all path-points and simulate speed by using sleep() (LOW=1sec HIGH=0.1sec)*
+>   - *new: constantly use sleep(1sec) and simulate speed by skipping (or not) path-points*
+>   - *more on the pros/cons of this approach can be found at the relative source code section, the old one is commented out*
+> - *update of `leaflet.js` to version `1.8.0` (we've indetified a bug when closing mark tooltips, it's supposed to be fixed by the maintainers of the project at the upcoming release)*
+
+
 ### UI changes
 
  - `dashboard-cells.js` minor fix to display error details correctly in the toast message
@@ -15,10 +25,28 @@
  - `/register`: add "hit enter --> submit form" functionality
  - add `NEF` logo
  - move part of `login.js` code to `app.js` (more clean approach + added `app.default_redirect` variable)
+ - `maps.js`: increase timeouts to 60 sec (edge case with >200 UEs, start/stop takes time)
+ - `maps.js`: add `api_get_moving_UEs()` to only retrieve moving UEs ➡ move part of `ui_map_paint_UEs()` to `ui_map_paint_moving_UEs()`
+ - `app.js`: move `api_test_token()` outside document.ready() for quicker user auth checks
+ - `401` page redirect: when the token can't be validated the user is redirected to a 401 Unauthorized page and after a few seconds is redirected to `/login`. Previously, the user was redirected to login without being notified.
+ - `map.js`: optimize `helper_check_path_is_already_painted( path_id )` by replacing the simple array of painted paths with a key-value object
+
 
 ### Backend
 
+ - ⛔ for optimization purposes, the UEs movement is handled in memory (no more intensive read/writes to Postgres) 👇
+ - ➕ `api/v1/ue_movement/state-ues` now returns moving UEs information only. It helps with the edge cases of having many UEs and only a few of them actually moving around
+ - ⛔ `/utils/state-loop/{{supi}}` ➡ `/ue_movement/state-loop/{{supi}}`
+ - ⛔ `/utils/start-loop` ➡ `/ue_movement/start-loop`
+ - ⛔ `/utils/stop-loop` ➡ `/ue_movement/stop-loop`
  - `utils.py`: add a 2nd approach for making the UEs move within their path and control their speed (see #2eb19f8)
+ - `SQLAlchemy`: add `pool_size=150, max_overflow=20` to `create_engine( ... )`
+
+
+### Postgres
+
+ - add `command: -c shared_buffers=256MB -c max_connections=200` to `docker-compose`
+
 
 ### Libraries
 

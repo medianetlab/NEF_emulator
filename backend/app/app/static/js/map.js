@@ -366,11 +366,7 @@ function api_get_moving_UEs() {
         success: function(data)
         {
             // console.log(data);
-            ues_memory = data;
-            moving_ues = [];
-            for(var key in ues_memory) {
-               moving_ues.push(ues_memory[key]);
-            }
+            moving_ues = data;
             ui_map_paint_moving_UEs();
         },
         error: function(err)
@@ -393,7 +389,7 @@ function api_get_moving_UEs() {
 // 
 function ui_map_paint_UEs() {
 
-    console.log(ues);
+    // console.log(ues);
 
     for (const ue of ues) {
         // create markers - this will be executed only once!
@@ -434,8 +430,12 @@ function ui_map_paint_UEs() {
 // 
 function ui_map_paint_moving_UEs() {
 
-    for (const ue of moving_ues) {
-        
+    // moving_ues is returned from the backend as a key-value dict
+
+    for(var key in moving_ues) {
+    
+        var ue = moving_ues[key];
+            
         // move existing markers
         var newLatLng = [ue.latitude,ue.longitude];
         ue_markers[ue.supi].setLatLng(newLatLng);
