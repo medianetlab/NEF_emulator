@@ -242,7 +242,7 @@ function api_post_UE_callback( UE_obj, callback ) {
 // 
 // 
 function api_get_state_loop_for( UE_supi ) {
-    var url = app.api_url + '/utils/state-loop/' + UE_supi;
+    var url = app.api_url + '/ue_movement/state-loop/' + UE_supi;
 
     $.ajax({
         type: 'GET',
@@ -454,8 +454,8 @@ function ui_add_btn_listeners_for_UEs_CUD_operations() {
 
         // api calls
         api_put_UE_callback( edit_UE_tmp_obj, function(UE_obj){
-            // on success, assign path (if selected)
-            api_post_assign_path( UE_obj.supi, assign_path_id );
+            // // on success, assign path (if selected)
+            // api_post_assign_path( UE_obj.supi, assign_path_id );
             ui_fetch_and_update_ues_data();
         });
     });
@@ -695,6 +695,8 @@ function ui_edit_UE_modal_add_listeners() {
                 edit_UE_selected_path_lg .clearLayers();
                 ui_map_paint_path(data, edit_UE_map, edit_UE_selected_path_lg, 0.75);
             });
+
+            api_post_assign_path( edit_UE_tmp_obj.supi, selected_path_id );
         }
         else {
             edit_UE_selected_path_lg.clearLayers();

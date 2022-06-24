@@ -28,7 +28,8 @@ class MonitoringEventReport(BaseModel):
     externalId: Optional[str] = Field("123456789@domain.com", description="Globally unique identifier containing a Domain Identifier and a Local Identifier. \<Local Identifier\>@\<Domain Identifier\>")
     monitoringType: MonitoringType
     locationInfo: Optional[LocationInfo] = None
-    ipv4Addr: Optional[IPvAnyAddress] = Field(None, description="String identifying an Ipv4 address") 
+    ipv4Addr: Optional[IPvAnyAddress] = Field(None, description="String identifying an Ipv4 address")
+    
 
 class MonitoringEventSubscriptionCreate(BaseModel):
     # mtcProviderId: Optional[str] = Field(None, description="Identifies the MTC Service Provider and/or MTC Application")
@@ -43,6 +44,7 @@ class MonitoringEventSubscriptionCreate(BaseModel):
     monitoringType: MonitoringType
     maximumNumberOfReports: Optional[int] = Field(None, description="Identifies the maximum number of event reports to be generated. Value 1 makes the Monitoring Request a One-time Request", ge=1)
     monitorExpireTime: Optional[datetime] = Field(None, description="Identifies the absolute time at which the related monitoring event request is considered to expire")
+    maximumDetectionTime: Optional[int] = Field(None, description="If monitoringType is \"LOSS_OF_CONNECTIVITY\", this parameter may be included to identify the maximum period of time after which the UE is considered to be unreachable.", gt=0)
     # monitoringEventReport: Optional[MonitoringEventReport] = None
 
 class MonitoringEventSubscription(MonitoringEventSubscriptionCreate):
@@ -53,6 +55,7 @@ class MonitoringEventSubscription(MonitoringEventSubscriptionCreate):
 
 class MonitoringNotification(MonitoringEventReport):
     subscription: AnyHttpUrl
+    lossOfConnectReason: Optional[int] = Field(None, description= "According to 3GPP TS 29.522 the lossOfConnectReason attribute shall be set to 6 if the UE is deregistered, 7 if the maximum detection timer expires or 8 if the UE is purged")
 
 class MonitoringEventReportReceived(BaseModel):
     ok: bool

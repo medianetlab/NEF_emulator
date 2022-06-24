@@ -1,17 +1,16 @@
-import requests
-import json
+import requests, json
 
-def location_callback(UE_model, callbackurl, subscription):
+def location_callback(ue, callbackurl, subscription):
     url = callbackurl
 
     payload = json.dumps({
-    "externalId" : UE_model.external_identifier,
-    "ipv4Addr" : UE_model.ip_address_v4,
+    "externalId" : ue.get("external_identifier"),
+    "ipv4Addr" : ue.get("ip_address_v4"),
     "subscription" : subscription,
     "monitoringType": "LOCATION_REPORTING",
     "locationInfo": {
-        "cellId": str(UE_model.Cell.cell_id),
-        "enodeBId": str(UE_model.Cell.gNB.gNB_id)
+        "cellId": ue.get("cell_id_hex"),
+        "enodeBId": ue.get("gnb_id_hex")
     }
     })
     headers = {
@@ -27,39 +26,16 @@ def location_callback(UE_model, callbackurl, subscription):
     
     return response
 
-def qos_callback(callbackurl, resource, qos_status, ipv4):
+def loss_of_connectivity_callaback(ue, callbackurl, subscription):
     url = callbackurl
 
     payload = json.dumps({
-    "transaction" : resource,
-    "ipv4Addr" : ipv4,
-    "eventReports": [
-    {
-      "event": qos_status,
-      "accumulatedUsage": {
-        "duration": None,
-        "totalVolume": None,
-        "downlinkVolume": None,
-        "uplinkVolume": None
-      },
-      "appliedQosRef": None,
-      "qosMonReports": [
-        {
-          "ulDelays": [
-            0
-          ],
-          "dlDelays": [
-            0
-          ],
-          "rtDelays": [
-            0
-          ]
-        }
-      ]
-    }]
-    })    
-    
-    
+    "externalId" : ue.get("external_identifier"),
+    "ipv4Addr" : ue.get("ip_address_v4"),
+    "subscription" : subscription,
+    "monitoringType": "LOSS_OF_CONNECTIVITY",
+    "lossOfConnectReason": 8
+    })
     headers = {
     'accept': 'application/json',
     'Content-Type': 'application/json'

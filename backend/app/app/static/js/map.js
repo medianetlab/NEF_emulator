@@ -10,6 +10,8 @@ var cells = null;
 var ues   = null;
 var paths = null;
 
+var moving_ues = null;
+
 
 // variables used for painting / updating the map
 //  map layer groups
@@ -21,8 +23,7 @@ var cells_lg         = L.layerGroup(),
 var ue_markers   = {};
 var cell_markers = {};
 var map_bounds   = [];
-// helper var for correct initialization
-var UEs_first_paint = true;
+
 
 // for UE & map refresh
 var UE_refresh_interval    = null;
@@ -30,7 +31,7 @@ var UE_refresh_sec_default = 1000; // 1 sec
 var UE_refresh_sec         = -1;   // when select = "off" AND disabled = true
 
 // template for UE buttons
-var ue_btn_tpl = `<button class="btn btn-success btn-sm px-4 btn-ue" type="button" id="btn-ue-{{id}}" data-supi={{supi}} data-running=false>{{name}}</button> `
+var ue_btn_tpl = `<button class="btn btn-success btn-sm px-4 btn-ue" type="button" id="btn-ue-{{supi}}" data-supi={{supi}} data-running=false>{{name}}</button> `
 
 var looping_UEs = 0;
 
@@ -86,19 +87,30 @@ $( document ).ready(function() {
             //  1. get and paint every path per UE
             //  2. create start/stop buttons
             for (const ue of ues) {
+
+                // if no path selected, skip map paint and creation of button
+                if (ue.path_id == 0) { continue; }
+
                 // if not already fetched and painted, do so
                 if ( !helper_check_path_is_already_painted( ue.path_id ) ) { 
                     api_get_specific_path(ue.path_id);
-                    paths_painted.push(ue.path_id);
+                    paths_painted[ue.path_id] = true;
                 }
                 ui_generate_loop_btn_for( ue );
                 ui_set_loop_btn_status_for( ue );
             }
+
+
             if ( ues.length >0 ) {
                 ui_add_ue_btn_listeners();
                 ui_add_ue_all_btn_listener();
             }
             else {
+                $('#btn-start-all').removeClass("btn-success").addClass("btn-secondary").attr("disabled",true);
+            }
+
+            // edge case: UEs with no paths assigned --> disable button
+            if (paths_painted.length == 0) {
                 $('#btn-start-all').removeClass("btn-success").addClass("btn-secondary").attr("disabled",true);
             }
         }
@@ -155,7 +167,7 @@ function start_map_refresh_interval() {
 
         // start updating
         UE_refresh_interval = setInterval(function(){ 
-            api_get_UEs();
+            api_get_moving_UEs();
         }, UE_refresh_sec);
 
         // enable the select button
@@ -300,7 +312,7 @@ function ui_initialize_map() {
 // 
 function api_get_UEs() {
     
-    var url = app.api_url + '/UEs?skip=0&limit=100';
+    var url = app.api_url + '/UEs?skip=0&limit=1000';
 
     $.ajax({
         type: 'GET',
@@ -327,66 +339,134 @@ function api_get_UEs() {
         {
             // 
         },
-        timeout: 5000
+        timeout: 60000
     });
 }
 
 
-// 1. At first Ajax call, UE marks are generated and painted on the map
-// 2. At later Ajax calls, the marks are just updated (coordinates and popup content)
+
+// Ajax request to get UEs data
+// on success: paint the UE marks on the map
+// 
+function api_get_moving_UEs() {
+    
+    var url = app.api_url + '/ue_movement/state-ues';
+
+    $.ajax({
+        type: 'GET',
+        url:  url,
+        contentType : 'application/json',
+        headers: {
+            "authorization": "Bearer " + app.auth_obj.access_token
+        },
+        processData:  false,
+        beforeSend: function() {
+            // 
+        },
+        success: function(data)
+        {
+            // console.log(data);
+            moving_ues = data;
+            ui_map_paint_moving_UEs();
+        },
+        error: function(err)
+        {
+            console.log(err);
+        },
+        complete: function()
+        {
+            // 
+        },
+        timeout: 60000
+    });
+}
+
+
+
+// Function used after api_get_UEs() is called.
+// All the UE marks are generated and painted on the map (both moving & stationary)
+// At later Ajax calls, only the moving UEs are fetched and re-painted (check the following function)
 // 
 function ui_map_paint_UEs() {
 
+    // console.log(ues);
+
     for (const ue of ues) {
-        if (UEs_first_paint) { 
-            // create markers - this will be executed only once!
-            var walk_icon = L.divIcon({
-                className: 'emu-pin-box',
-                iconSize: L.point(30,42),
-                iconAnchor: L.point(15,42),
-                popupAnchor: L.point(0,-38),
-                tooltipAnchor: L.point(0,0),
-                html: '<div class="pin-bg pin-bg-walk"></div>\
-                       <div class="pin-icon ion-md-walk"></div>'
-            });
-            
-            ue_markers[ue.supi] = L.marker([ue.latitude,ue.longitude], {icon: walk_icon}).addTo(mymap)
-                .bindTooltip(ue.ip_address_v4)
-                .bindPopup("<b>"+ ue.name +"</b><br />"+
-                           // ue.description +"<br />"+
-                           "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
-                           "Cell ID: " + ( (ue.cell_id_hex==null)? "-" : ue.cell_id_hex ) +"<br />"+
-                           "External identifier: " + ue.external_identifier +"<br />"+
-                           "Speed:"+ ue.speed)
-                .addTo(ues_lg); // add to layer group
+        // create markers - this will be executed only once!
+        var walk_icon = L.divIcon({
+            className: 'emu-pin-box',
+            iconSize: L.point(30,42),
+            iconAnchor: L.point(15,42),
+            popupAnchor: L.point(0,-38),
+            tooltipAnchor: L.point(0,0),
+            html: '<div class="pin-bg pin-bg-walk"></div>\
+                   <div class="pin-icon ion-md-walk"></div>'
+        });
+        
+        ue_markers[ue.supi] = L.marker([ue.latitude,ue.longitude], {icon: walk_icon}).addTo(mymap)
+            .bindTooltip(ue.ip_address_v4)
+            .bindPopup("<b>"+ ue.name +"</b><br />"+
+                       // ue.description +"<br />"+
+                       "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
+                       "Cell ID: " + ( (ue.cell_id_hex==null)? "-" : ue.cell_id_hex ) +"<br />"+
+                       "External identifier: " + ue.external_identifier +"<br />"+
+                       "Speed:"+ ue.speed)
+            .addTo(ues_lg); // add to layer group
 
-            if ( ue.cell_id_hex==null ) {
-                L.DomUtil.addClass(ue_markers[ue.supi]._icon, 'null-cell');
-            } else {
-                L.DomUtil.removeClass(ue_markers[ue.supi]._icon, 'null-cell');
-            }
-
+        if ( ue.cell_id_hex==null ) {
+            L.DomUtil.addClass(ue_markers[ue.supi]._icon, 'null-cell');
+        } else {
+            L.DomUtil.removeClass(ue_markers[ue.supi]._icon, 'null-cell');
         }
-        else {
-            // move existing markers
-            var newLatLng = [ue.latitude,ue.longitude];
-            ue_markers[ue.supi].setLatLng(newLatLng);
-            ue_markers[ue.supi].setPopupContent("<b>"+ ue.name +"</b><br />"+
-                           // ue.description +"<br />"+
-                           "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
-                           "Cell ID: " + ( (ue.cell_id_hex==null)? "-" : ue.cell_id_hex ) +"<br />"+
-                           "External identifier: " + ue.external_identifier +"<br />"+
-                           "Speed:"+ ue.speed);
+    }
+}
 
+
+
+
+
+// Function used after api_get_moving_UEs() is called.
+// It re-paints those marks (UEs) that are currently moving.
+// 
+function ui_map_paint_moving_UEs() {
+
+    // moving_ues is returned from the backend as a key-value dict
+
+    for(var key in moving_ues) {
+    
+        var ue = moving_ues[key];
+            
+        // move existing markers
+        var newLatLng = [ue.latitude,ue.longitude];
+        ue_markers[ue.supi].setLatLng(newLatLng);
+        ue_markers[ue.supi].setPopupContent("<b>"+ ue.name +"</b><br />"+
+                       // ue.description +"<br />"+
+                       "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
+                       "Cell ID: " + ( (ue.cell_id_hex==null)? "-" : ue.cell_id_hex ) +"<br />"+
+                       "External identifier: " + ue.external_identifier +"<br />"+
+                       "Speed:"+ ue.speed);
+
+
+        // update UE marker color
+        temp_icon = L.DomUtil.get(ue_markers[ue.supi]._icon);
+
+        if (temp_icon == null) {
+            // if the user has unchecked the UEs checkbox ✅ on the map settings
+            // temp_icon is null and triggers console errors
+            // if this is the case, continue...
+            continue;
+        } else {
             if ( ue.cell_id_hex==null ) {
-                L.DomUtil.addClass(ue_markers[ue.supi]._icon, 'null-cell');
+                // 'null-cell' class gives a grey color
+                // to UEs that are not connected to a cell
+                L.DomUtil.addClass(temp_icon, 'null-cell');
             } else {
-                L.DomUtil.removeClass(ue_markers[ue.supi]._icon, 'null-cell');
+                L.DomUtil.removeClass(temp_icon, 'null-cell');
             }
         }
     }
-    UEs_first_paint = false;   
 }
+
 
 
 
@@ -421,7 +501,7 @@ function api_get_Cells() {
         {
             // 
         },
-        timeout: 5000
+        timeout: 60000
     });
 }
 
@@ -509,7 +589,7 @@ function api_get_specific_path( id ) {
         {
             // 
         },
-        timeout: 5000
+        timeout: 60000
     });
 }
 
@@ -557,7 +637,7 @@ function fix_points_format( datapoints ) {
 // 
 function api_start_loop( ue ) {
 
-    var url = app.api_url + '/utils/start-loop';
+    var url = app.api_url + '/ue_movement/start-loop';
     var data = {
         "supi": ue.supi
     };
@@ -577,8 +657,8 @@ function api_start_loop( ue ) {
         success: function(data)
         {
             // console.log(data);
-            $("#btn-ue-"+ue.id).data("running",true);
-            $("#btn-ue-"+ue.id).removeClass('btn-success').addClass('btn-danger');
+            $("#btn-ue-"+ue.supi).data("running",true);
+            $("#btn-ue-"+ue.supi).removeClass('btn-success').addClass('btn-danger');
             looping_UEs++;
 
             if (looping_UEs == ues.length) {
@@ -594,7 +674,7 @@ function api_start_loop( ue ) {
         {
             // 
         },
-        timeout: 5000
+        timeout: 60000
     });
 }
 
@@ -606,7 +686,7 @@ function api_start_loop( ue ) {
 // 
 function api_stop_loop( ue ) {
 
-    var url = app.api_url + '/utils/stop-loop';
+    var url = app.api_url + '/ue_movement/stop-loop';
     var data = {
         "supi": ue.supi
     };
@@ -626,8 +706,8 @@ function api_stop_loop( ue ) {
         success: function(data)
         {
             // console.log(data);
-            $("#btn-ue-"+ue.id).data("running",false);
-            $("#btn-ue-"+ue.id).addClass('btn-success').removeClass('btn-danger');
+            $("#btn-ue-"+ue.supi).data("running",false);
+            $("#btn-ue-"+ue.supi).addClass('btn-success').removeClass('btn-danger');
             looping_UEs--;
 
             if (looping_UEs == 0) {
@@ -644,7 +724,7 @@ function api_stop_loop( ue ) {
         {
             // 
         },
-        timeout: 5000
+        timeout: 60000
     });
 }
 
@@ -657,7 +737,7 @@ function api_stop_loop( ue ) {
 // and adds it to the ue-btn-area
 // 
 function ui_generate_loop_btn_for( ue ) {
-    var html_str = ue_btn_tpl.replaceAll("{{id}}", ue.id).replace("{{name}}",ue.name).replace("{{supi}}",ue.supi);
+    var html_str = ue_btn_tpl.replaceAll("{{supi}}", ue.supi).replaceAll("{{name}}",ue.name);
     $(".ue-btn-area").append(html_str);
 }
 
@@ -671,7 +751,7 @@ function ui_generate_loop_btn_for( ue ) {
 // It also updates the start-all/stop-all button in case all the UEs are moving
 // 
 function ui_set_loop_btn_status_for(ue) {
-    var url = app.api_url + '/utils/state-loop/' + ue.supi;
+    var url = app.api_url + '/ue_movement/state-loop/' + ue.supi;
 
     $.ajax({
         type: 'GET',
@@ -689,8 +769,8 @@ function ui_set_loop_btn_status_for(ue) {
         {
             // console.log(data);
             if ( data.running ) {
-                $('#btn-ue-'+ue.id).removeClass('btn-success').addClass('btn-danger');
-                $('#btn-ue-'+ue.id).data("running",data.running);
+                $('#btn-ue-'+ue.supi).removeClass('btn-success').addClass('btn-danger');
+                $('#btn-ue-'+ue.supi).data("running",data.running);
                 
                 looping_UEs++;
                 if (looping_UEs == ues.length) {
@@ -709,7 +789,7 @@ function ui_set_loop_btn_status_for(ue) {
         {
             // 
         },
-        timeout: 5000
+        timeout: 60000
     });
 }
 
@@ -855,7 +935,7 @@ function api_get_all_monitoring_events() {
         {
             // 
         },
-        timeout: 5000
+        timeout: 60000
     });
 }
 
@@ -899,7 +979,7 @@ function api_get_last_monitoring_events() {
         {
             // 
         },
-        timeout: 5000
+        timeout: 60000
     });
 }
 
@@ -914,7 +994,7 @@ function ui_init_datatable_events() {
         paging: false,
         searching: true,
         info: false,
-        order: [[4, 'desc']],
+        order: [[5, 'desc']],
         pageLength: -1,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
         columnDefs: [
@@ -925,8 +1005,24 @@ function ui_init_datatable_events() {
                 "orderable" : true,
                 "searchable": true,
             },
+            // {
+            //     "targets": 1,
+            //     "data": null,
+            //     "visible": true,
+            //     "orderable": true,
+            //     "searchable": true,
+            //     "render": function ( data, type, row ) {
+            //         details = helper_get_event_details( row.id );
+
+            //         if (details.request_body != null) {
+            //             return JSON.parse(details.request_body).monitoringType;
+            //         } else {
+            //             return "-";
+            //         }
+            //     }
+            // },
             {
-                "targets": 5,
+                "targets": 6,
                 "data": null,
                 "defaultContent": '',
                 "orderable" : false,
@@ -939,6 +1035,7 @@ function ui_init_datatable_events() {
         ],
         columns: [
             { "data": "id", className: "dt-center" },
+            { "data": "serviceAPI" },
             { "data": "isNotification",
               "render": function(data) {
                 if (data) {
@@ -985,6 +1082,7 @@ function ui_append_datatable_events(data) {
 
         events_datatbl.rows.add( [{
             id:             event.id,
+            serviceAPI:     event.serviceAPI,
             isNotification: event.isNotification,
             method:         event.method,
             status_code:    event.status_code,
@@ -1002,7 +1100,7 @@ function ui_append_datatable_events(data) {
 
 function show_details_modal( event_id ) {
 
-    details = get_event_details( event_id );
+    details = helper_get_event_details( event_id );
 
     // load event details
     $("#modal_srv").html( details.serviceAPI );
@@ -1024,7 +1122,7 @@ function show_details_modal( event_id ) {
 }
 
 
-function get_event_details( event_id ) {
+function helper_get_event_details( event_id ) {
     for (const event of events) {
         if (event.id == event_id) return event;
     }
@@ -1033,10 +1131,8 @@ function get_event_details( event_id ) {
 
 
 function helper_check_path_is_already_painted( path_id ) {
-    for (const item of paths_painted) {
-        if ( item == path_id ) {
-            return true
-        }
+    if ( paths_painted[ path_id ] != true) {
+        return false;
     }
-    return false;
+    return true;
 }

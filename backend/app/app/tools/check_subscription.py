@@ -1,8 +1,6 @@
 import logging
 import time
-from app.models.monitoringevent import Monitoring
-from app.crud.crud_monitoringevent import monitoring
-from sqlalchemy.orm import Session
+from app.crud import crud_mongo
 
 def check_expiration_time(expire_time):
     year = int(expire_time[0:4])
@@ -54,16 +52,17 @@ def check_expiration_time(expire_time):
     else:
         return False
 
-def check_numberOfReports(db: Session, item_in: Monitoring)-> Monitoring:
-    if item_in.maximumNumberOfReports>1:
-        item_in.maximumNumberOfReports -= 1
-        db.add(item_in)
-        db.commit()
-        db.refresh(item_in)
-        return item_in
-    elif item_in.maximumNumberOfReports==1:
-        item_in.maximumNumberOfReports -= 1
-        monitoring.remove(db=db, id=item_in.id)
-        return item_in
+def check_numberOfReports(db, sub):
+    if sub.get("maximumNumberOfReports")>1:
+        newNumberOfReports = sub.get("maximumNumberOfReports") - 1
+        sub.update({"maximumNumberOfReports" : newNumberOfReports})
+        crud_mongo.update(db, "MonitoringEvent", sub.get("_id"), sub)
+        return sub
+    elif sub.get("maximumNumberOfReports") == 1:
+        newNumberOfReports = sub.get("maximumNumberOfReports") - 1
+        sub.update({"maximumNumberOfReports" : newNumberOfReports})
+        # monitoring.remove(db=db, id=item_in.id)
+        crud_mongo.delete_by_uuid(db, "MonitoringEvent", sub.get("_id"))
+        return sub
     else:
         logging.warning("Subscription has expired (maximum number of reports")
