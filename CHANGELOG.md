@@ -1,6 +1,6 @@
 # Changelog
 
-## upcoming release...
+## v1.5.0
 
 ***Summary:***
 
