@@ -36,16 +36,23 @@
 
  - ⛔ for optimization purposes, the UEs movement is handled in memory (no more intensive read/writes to Postgres) 👇
  - ➕ `api/v1/ue_movement/state-ues` now returns moving UEs information only. It helps with the edge cases of having many UEs and only a few of them actually moving around
- - ⛔ `/utils/state-loop/{{supi}}` ➡ `/ue_movement/state-loop/{{supi}}`
- - ⛔ `/utils/start-loop` ➡ `/ue_movement/start-loop`
- - ⛔ `/utils/stop-loop` ➡ `/ue_movement/stop-loop`
+ - create new module/file for threads `utils.py` ➡ `ue_movement.py`
+     - ⛔ `/utils/state-loop/{{supi}}` ➡ `/ue_movement/state-loop/{{supi}}`
+     - ⛔ `/utils/start-loop` ➡ `/ue_movement/start-loop`
+     - ⛔ `/utils/stop-loop` ➡ `/ue_movement/stop-loop`
  - `utils.py`: add a 2nd approach for making the UEs move within their path and control their speed (see #2eb19f8)
  - `SQLAlchemy`: add `pool_size=150, max_overflow=20` to `create_engine( ... )`
+ - fix `NoneType` exception on MonitoringEvent one time request when cell is None
+ - Add middleware to return custom response header `X-Process-Time` that counts request-response proccesing time 
+ - Split callbacks in two files 👉 From `send_callback.py` ➡ `monitoring_callbacks.py` + `qos_callback.py`
+ - fix callback notification for QoS after the transition from db to memory
 
 
-### Postgres
+### Database
 
- - add `command: -c shared_buffers=256MB -c max_connections=200` to `docker-compose`
+ - postgreSQL add `command: -c shared_buffers=256MB -c max_connections=200` to `docker-compose`
+ - MonitoringEvent: migration from postgreSQL to MongoDB 👇
+     - fix `check_numberOfReports` function accordingly
 
 
 ### Libraries
