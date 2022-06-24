@@ -6,10 +6,11 @@ from typing import Any
 from app import crud, tools, models
 from app.crud import crud_mongo
 from app.tools.distance import check_distance
-from app.tools import location_callback, qos_callback
+from app.tools import qos_callback
 from app.db.session import SessionLocal
 from app.api import deps
 from app.schemas import Msg
+from app.tools import monitoring_callbacks, timer
 
 #Dictionary holding threads that are running per user id.
 threads = {}
@@ -80,6 +81,8 @@ class BackgroundTasks(threading.Thread):
             json_cells = jsonable_encoder(Cells)
 
             is_superuser = crud.user.is_superuser(current_user)
+
+            t = timer.Timer()
             '''
             ===================================================================
                                2nd Approach for updating UEs position
@@ -132,6 +135,11 @@ class BackgroundTasks(threading.Thread):
                     logging.warning(ex)
                 
                 if cell_now != None:
+                    try:
+                        t.stop()
+                    except timer.TimerError as ex:
+                        logging.critical(ex)
+
                     # if UE.Cell_id != cell_now.get('id'): #Cell has changed in the db "handover"
                     if ues[f"{supi}"]["Cell_id"] != cell_now.get('id'): #Cell has changed in the db "handover"
                         # logging.warning(f"UE({UE.supi}) with ipv4 {UE.ip_address_v4} handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
@@ -158,7 +166,7 @@ class BackgroundTasks(threading.Thread):
                                 sub = tools.check_numberOfReports(db_mongo, sub)
                                 if sub: #return the callback request only if subscription is valid
                                     try:
-                                        response = location_callback.location_callback(ues[f"{supi}"], sub.get("notificationDestination"), sub.get("link"))
+                                        response = monitoring_callbacks.location_callback(ues[f"{supi}"], sub.get("notificationDestination"), sub.get("link"))
                                         # logging.info(response.json())
                                     except requests.exceptions.ConnectionError as ex:
                                         logging.warning("Failed to send the callback request")
@@ -192,6 +200,11 @@ class BackgroundTasks(threading.Thread):
                     
                 else:
                     # crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : None})
+                    try:
+                        t.start()
+                    except timer.TimerError as ex:
+                        logging.critical(ex)
+                    
                     ues[f"{supi}"]["Cell_id"] = None
                     ues[f"{supi}"]["cell_id_hex"] = None
                     ues[f"{supi}"]["gnb_id_hex"] = None

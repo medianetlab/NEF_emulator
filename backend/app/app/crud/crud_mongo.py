@@ -18,6 +18,10 @@ def read(db : Database, collection_name : str, key : str, value):
     collection = db[collection_name]
     return collection.find_one({ key : value })
 
+def read_by_multiple_pairs(db : Database, collection_name : str, **kwargs):
+    collection = db[collection_name]
+    return collection.find_one({ **kwargs })
+
 # PUT
 def update(db: Database, collection_name, uuId, json_data):
     return db[collection_name].replace_one({"_id": ObjectId(uuId)}, json_data)

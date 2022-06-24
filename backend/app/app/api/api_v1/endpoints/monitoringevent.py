@@ -89,7 +89,7 @@ def create_subscription(
                 json_compatible_item_data["locationInfo"] = {'cellId' : UE.Cell.cell_id, 'gNBId' : UE.Cell.gNB.gNB_id}
         else:
             json_compatible_item_data["locationInfo"] = {'cellId' : None, 'gNBId' : None}
-        
+
         http_response = JSONResponse(content=json_compatible_item_data, status_code=200)
         add_notifications(http_request, http_response, False)
         
@@ -98,8 +98,8 @@ def create_subscription(
     elif item_in.monitoringType == "LOCATION_REPORTING" and item_in.maximumNumberOfReports>1:
         
         #Check if subscription with externalid exists
-        if crud_mongo.read(db_mongo, db_collection, "externalId", item_in.externalId):
-            raise HTTPException(status_code=409, detail=f"There is already an active subscription for UE with external id {item_in.externalId}")
+        if crud_mongo.read_by_multiple_pairs(db_mongo, db_collection, externalId = item_in.externalId, monitoringType = item_in.monitoringType):
+            raise HTTPException(status_code=409, detail=f"There is already an active subscription for UE with external id {item_in.externalId} - Monitoring Type = {item_in.monitoringType}")
    
         json_data = jsonable_encoder(item_in.dict(exclude_unset=True))
         json_data.update({'owner_id' : current_user.id, "ipv4Addr" : UE.ip_address_v4})
@@ -122,7 +122,42 @@ def create_subscription(
         add_notifications(http_request, http_response, False)
         
         return http_response
+    elif item_in.monitoringType == "LOSS_OF_CONNECTIVITY" and item_in.maximumNumberOfReports == 1:
+        return JSONResponse(content=jsonable_encoder(
+            {
+                "title" : "The requested parameters are out of range",
+                "invalidParams" : {
+                    "param" : "maximumNumberOfReports",
+                    "reason" : "\"maximumNumberOfReports\" should be greater than 1 in case of LOSS_OF_CONNECTIVITY event"
+                }
+            }
+        ), status_code=403)
+    elif item_in.monitoringType == "LOSS_OF_CONNECTIVITY" and item_in.maximumNumberOfReports > 1:
+        #Check if subscription with externalid && monitoringType exists
+        if crud_mongo.read_by_multiple_pairs(db_mongo, db_collection, externalId = item_in.externalId, monitoringType = item_in.monitoringType):
+            raise HTTPException(status_code=409, detail=f"There is already an active subscription for UE with external id {item_in.externalId} - Monitoring Type = {item_in.monitoringType}")
+   
+        json_data = jsonable_encoder(item_in.dict(exclude_unset=True))
+        json_data.update({'owner_id' : current_user.id, "ipv4Addr" : UE.ip_address_v4})
 
+        inserted_doc = crud_mongo.create(db_mongo, db_collection, json_data) 
+        
+        #Create the reference resource and location header
+        link = str(http_request.url) + '/' + str(inserted_doc.inserted_id)
+        response_header = {"location" : link}
+        
+        #Update the subscription with the new resource (link) and return the response (+response header)
+        crud_mongo.update_new_field(db_mongo, db_collection, inserted_doc.inserted_id, {"link" : link})
+
+        #Retrieve the updated document | UpdateResult is not a dict
+        updated_doc = crud_mongo.read_uuid(db_mongo, db_collection, inserted_doc.inserted_id)
+        updated_doc.pop("owner_id")
+
+
+        http_response = JSONResponse(content=updated_doc, status_code=201, headers=response_header)
+        add_notifications(http_request, http_response, False)
+
+        return http_response
 
 
 @router.put("/{scsAsId}/subscriptions/{subscriptionId}", response_model=schemas.MonitoringEventSubscription)
