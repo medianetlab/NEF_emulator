@@ -77,7 +77,7 @@ var paths_datatable = null;
 // 
 function api_get_paths( callback ) {
     
-    var url = app.api_url + '/paths?skip=0&limit=100';
+    var url = app.api_url + '/paths?skip=0&limit=1000';
 
     $.ajax({
         type: 'GET',
