@@ -31,7 +31,7 @@ var UE_refresh_sec_default = 1000; // 1 sec
 var UE_refresh_sec         = -1;   // when select = "off" AND disabled = true
 
 // template for UE buttons
-var ue_btn_tpl = `<button class="btn btn-success btn-sm px-4 btn-ue" type="button" id="btn-ue-{{supi}}" data-supi={{supi}} data-running=false>{{name}}</button> `
+var ue_btn_tpl = `<button class="btn btn-success btn-sm px-4 mb-1 btn-ue" type="button" id="btn-ue-{{supi}}" data-supi={{supi}} data-running=false>{{name}}</button> `
 
 var looping_UEs = 0;
 
