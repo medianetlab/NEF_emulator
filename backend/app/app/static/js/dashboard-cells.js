@@ -75,7 +75,7 @@ var cells_datatable = null;
 // 
 function api_get_Cells( callback ) {
     
-    var url = app.api_url + '/Cells?skip=0&limit=100';
+    var url = app.api_url + '/Cells?skip=0&limit=1000';
 
     $.ajax({
         type: 'GET',
