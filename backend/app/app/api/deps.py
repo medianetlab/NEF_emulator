@@ -1,5 +1,4 @@
 from typing import Generator
-from pymongo import MongoClient
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
@@ -22,14 +21,6 @@ def get_db() -> Generator:
         yield db            #The yielded value is what is injected into path operations and other dependencies
     finally:
         db.close()          #The code following the yield statement is executed after the response has been delivered
-
-#Dependency for mongoDB
-
-def get_mongo_db():
-    client = MongoClient("mongodb://mongo:27017", username='root', password='pass')
-    db = client.fastapi
-    return db
-
 
 def get_current_user(
     db: Session = Depends(get_db), token: str = Depends(reusable_oauth2)

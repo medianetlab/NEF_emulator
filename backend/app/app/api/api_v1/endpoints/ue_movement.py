@@ -7,10 +7,11 @@ from app import crud, tools, models
 from app.crud import crud_mongo
 from app.tools.distance import check_distance
 from app.tools import qos_callback
-from app.db.session import SessionLocal
+from app.db.session import SessionLocal, client
 from app.api import deps
 from app.schemas import Msg
 from app.tools import monitoring_callbacks, timer
+from sqlalchemy.orm import Session
 
 #Dictionary holding threads that are running per user id.
 threads = {}
@@ -25,6 +26,7 @@ class BackgroundTasks(threading.Thread):
         self._args = args
         self._kwargs = kwargs
         self._stop_threads = False
+        self._db = SessionLocal()
         return
 
     def run(self):
@@ -33,12 +35,10 @@ class BackgroundTasks(threading.Thread):
         supi = self._args[1]
 
         try:
-            db = SessionLocal()
-            client = MongoClient("mongodb://mongo:27017", username='root', password='pass')
             db_mongo = client.fastapi
 
             #Initiate UE - if exists
-            UE = crud.ue.get_supi(db=db, supi=supi)
+            UE = crud.ue.get_supi(db=self._db, supi=supi)
             if not UE:
                 logging.warning("UE not found")
                 threads.pop(f"{supi}")
@@ -63,7 +63,7 @@ class BackgroundTasks(threading.Thread):
 
 
             #Retrieve paths & points
-            path = crud.path.get(db=db, id=UE.path_id)
+            path = crud.path.get(db=self._db, id=UE.path_id)
             if not path:
                 logging.warning("Path not found")
                 threads.pop(f"{supi}")
@@ -73,11 +73,11 @@ class BackgroundTasks(threading.Thread):
                 threads.pop(f"{supi}")
                 return
 
-            points = crud.points.get_points(db=db, path_id=UE.path_id)
+            points = crud.points.get_points(db=self._db, path_id=UE.path_id)
             points = jsonable_encoder(points)
 
             #Retrieve all the cells
-            Cells = crud.cell.get_multi_by_owner(db=db, owner_id=current_user.id, skip=0, limit=100)
+            Cells = crud.cell.get_multi_by_owner(db=self._db, owner_id=current_user.id, skip=0, limit=100)
             json_cells = jsonable_encoder(Cells)
 
             is_superuser = crud.user.is_superuser(current_user)
@@ -147,7 +147,7 @@ class BackgroundTasks(threading.Thread):
                         # crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
                         ues[f"{supi}"]["Cell_id"] = cell_now.get('id')
                         ues[f"{supi}"]["cell_id_hex"] = cell_now.get('cell_id')
-                        gnb = crud.gnb.get(db=db, id=cell_now.get("gNB_id"))
+                        gnb = crud.gnb.get(db=self._db, id=cell_now.get("gNB_id"))
                         ues[f"{supi}"]["gnb_id_hex"] = gnb.gNB_id
 
                         #Retrieve the subscription of the UE by external Id | This could be outside while true but then the user cannot subscribe when the loop runs
@@ -227,9 +227,10 @@ class BackgroundTasks(threading.Thread):
                 
                 if self._stop_threads:
                     logging.critical("Terminating thread...")
-                    crud.ue.update_coordinates(db=db, lat=ues[f"{supi}"]["latitude"], long=ues[f"{supi}"]["longitude"], db_obj=UE)
-                    crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : ues[f"{supi}"]["Cell_id"]})
+                    crud.ue.update_coordinates(db=self._db, lat=ues[f"{supi}"]["latitude"], long=ues[f"{supi}"]["longitude"], db_obj=UE)
+                    crud.ue.update(db=self._db, db_obj=UE, obj_in={"Cell_id" : ues[f"{supi}"]["Cell_id"]})
                     ues.pop(f"{supi}")
+                    self._db.close()
                     break
             
             # End of 2nd Approach for updating UEs position
@@ -340,9 +341,8 @@ class BackgroundTasks(threading.Thread):
             #     if self._stop_threads:
             #             print("Terminating thread...")
             #             break       
-        finally:
-            db.close()
-            return
+        except Exception as ex:
+            logging.critical(ex)
 
     def stop(self):
         self._stop_threads = True

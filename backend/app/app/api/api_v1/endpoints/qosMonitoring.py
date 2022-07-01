@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app import models, schemas
 from app.api import deps
 from app.crud import crud_mongo, user, ue
+from app.db.session import client
 from .utils import add_notifications
 from .qosInformation import qos_reference_match
 
@@ -18,13 +19,13 @@ db_collection= 'QoSMonitoring'
 def read_active_subscriptions(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
-    db_mongo: Database = Depends(deps.get_mongo_db),
     current_user: models.User = Depends(deps.get_current_active_user),
     http_request: Request
 ) -> Any:
     """
     Get subscription by id
     """
+    db_mongo = client.fastapi
     retrieved_docs = crud_mongo.read_all(db_mongo, db_collection, current_user.id)
 
     #Check if there are any active subscriptions
@@ -47,13 +48,14 @@ def monitoring_notification(body: schemas.UserPlaneNotificationData):
 def create_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
-    db_mongo: Database = Depends(deps.get_mongo_db),
     db: Session = Depends(deps.get_db),
     item_in: schemas.AsSessionWithQoSSubscriptionCreate,
     current_user: models.User = Depends(deps.get_current_active_user),
     http_request: Request
 ) -> Any:
     
+    db_mongo = client.fastapi
+
     json_request = jsonable_encoder(item_in)
     #Currently only EVENT_TRIGGERED is supported
     fiveG_qi = qos_reference_match(item_in.qosReference)
@@ -134,13 +136,13 @@ def read_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     subscriptionId: str = Path(..., title="Identifier of the subscription resource"),
-    db_mongo: Database = Depends(deps.get_mongo_db),
     current_user: models.User = Depends(deps.get_current_active_user),
     http_request: Request
 ) -> Any:
     """
     Get subscription by id
     """
+    db_mongo = client.fastapi
 
     try:
         retrieved_doc = crud_mongo.read_uuid(db_mongo, db_collection, subscriptionId)
@@ -165,13 +167,13 @@ def update_subscription(
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     subscriptionId: str = Path(..., title="Identifier of the subscription resource"),
     item_in: schemas.AsSessionWithQoSSubscriptionCreate,
-    db_mongo: Database = Depends(deps.get_mongo_db),
     current_user: models.User = Depends(deps.get_current_active_user),
     http_request: Request
 ) -> Any:
     """
     Update subscription by id
     """
+    db_mongo = client.fastapi
 
     try:
         retrieved_doc = crud_mongo.read_uuid(db_mongo, db_collection, subscriptionId)
@@ -201,13 +203,14 @@ def delete_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     subscriptionId: str = Path(..., title="Identifier of the subscription resource"),
-    db_mongo: Database = Depends(deps.get_mongo_db),
     current_user: models.User = Depends(deps.get_current_active_user),
     http_request: Request
 ) -> Any:
     """
     Delete a subscription
     """
+    db_mongo = client.fastapi
+
     try:
         retrieved_doc = crud_mongo.read_uuid(db_mongo, db_collection, subscriptionId)
     except Exception as ex:

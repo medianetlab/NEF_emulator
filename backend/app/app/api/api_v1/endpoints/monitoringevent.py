@@ -8,6 +8,7 @@ from app import models, schemas
 from app.crud import crud_mongo, user, ue
 from app.api import deps
 from app import tools
+from app.db.session import client
 from app.api.api_v1.endpoints.utils import add_notifications
 from .ue_movement import retrieve_ue_state, retrieve_ue
 
@@ -18,13 +19,14 @@ db_collection= 'MonitoringEvent'
 def read_active_subscriptions(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that read all the subscriptions", example="myNetapp"),
-    db_mongo: Database = Depends(deps.get_mongo_db),
     current_user: models.User = Depends(deps.get_current_active_user),
     http_request: Request
 ) -> Any:
     """
     Read all active subscriptions
     """    
+    db_mongo = client.fastapi
+
     retrieved_docs = crud_mongo.read_all(db_mongo, db_collection, current_user.id)
     temp_json_subs = retrieved_docs.copy() #Create copy of the list (json_subs) -> you cannot remove items from a list while you iterating the list.
 
@@ -58,7 +60,6 @@ def create_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     db: Session = Depends(deps.get_db),
-    db_mongo: Database = Depends(deps.get_mongo_db),
     item_in: schemas.MonitoringEventSubscriptionCreate,
     current_user: models.User = Depends(deps.get_current_active_user),
     http_request: Request
@@ -66,6 +67,8 @@ def create_subscription(
     """
     Create new subscription.
     """
+    db_mongo = client.fastapi
+
     UE = ue.get_externalId(db=db, externalId=str(item_in.externalId), owner_id=current_user.id)
     if not UE: 
         raise HTTPException(status_code=409, detail="UE with this external identifier doesn't exist")
@@ -165,7 +168,6 @@ def update_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     subscriptionId: str = Path(..., title="Identifier of the subscription resource"),
-    db_mongo: Database = Depends(deps.get_mongo_db),
     item_in: schemas.MonitoringEventSubscriptionCreate,
     current_user: models.User = Depends(deps.get_current_active_user),
     http_request: Request
@@ -173,6 +175,8 @@ def update_subscription(
     """
     Update/Replace an existing subscription resource
     """
+    db_mongo = client.fastapi
+
     try:
         retrieved_doc = crud_mongo.read_uuid(db_mongo, db_collection, subscriptionId)
     except Exception as ex:
@@ -209,13 +213,14 @@ def read_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     subscriptionId: str = Path(..., title="Identifier of the subscription resource"),
-    db_mongo: Database = Depends(deps.get_mongo_db),
     current_user: models.User = Depends(deps.get_current_active_user),
     http_request: Request
 ) -> Any:
     """
     Get subscription by id
     """
+    db_mongo = client.fastapi
+
     try:
         retrieved_doc = crud_mongo.read_uuid(db_mongo, db_collection, subscriptionId)
     except Exception as ex:
@@ -245,13 +250,14 @@ def delete_subscription(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that creates a subscription", example="myNetapp"),
     subscriptionId: str = Path(..., title="Identifier of the subscription resource"),
-    db_mongo: Database = Depends(deps.get_mongo_db),
     current_user: models.User = Depends(deps.get_current_active_user),
     http_request: Request
 ) -> Any:
     """
     Delete a subscription
     """
+    db_mongo = client.fastapi
+    
     try:
         retrieved_doc = crud_mongo.read_uuid(db_mongo, db_collection, subscriptionId)
     except Exception as ex:
