@@ -38,6 +38,12 @@ build-no-cache:
 logs:
 	docker-compose logs -f
 
+logs-backend:
+	docker-compose logs -f backend
+
+logs-mongo:
+	docker-compose logs -f mongo
+
 ps:
 	docker ps -a
 
