@@ -474,7 +474,7 @@ function ui_map_paint_moving_UEs() {
 
 function api_get_Cells() {
     
-    var url = app.api_url + '/Cells/?skip=0&limit=100';
+    var url = app.api_url + '/Cells?skip=0&limit=1000';
 
     $.ajax({
         type: 'GET',
