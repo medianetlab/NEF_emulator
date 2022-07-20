@@ -125,7 +125,7 @@ def create_subscription(
         add_notifications(http_request, http_response, False)
         
         return http_response
-    elif item_in.monitoringType == "LOSS_OF_CONNECTIVITY" and item_in.maximumNumberOfReports == 1:
+    elif (item_in.monitoringType == "LOSS_OF_CONNECTIVITY" or item_in.monitoringType == "UE_REACHABILITY") and item_in.maximumNumberOfReports == 1:
         return JSONResponse(content=jsonable_encoder(
             {
                 "title" : "The requested parameters are out of range",
@@ -135,7 +135,7 @@ def create_subscription(
                 }
             }
         ), status_code=403)
-    elif item_in.monitoringType == "LOSS_OF_CONNECTIVITY" and item_in.maximumNumberOfReports > 1:
+    elif (item_in.monitoringType == "LOSS_OF_CONNECTIVITY" or item_in.monitoringType == "UE_REACHABILITY") and item_in.maximumNumberOfReports > 1:
         #Check if subscription with externalid && monitoringType exists
         if crud_mongo.read_by_multiple_pairs(db_mongo, db_collection, externalId = item_in.externalId, monitoringType = item_in.monitoringType):
             raise HTTPException(status_code=409, detail=f"There is already an active subscription for UE with external id {item_in.externalId} - Monitoring Type = {item_in.monitoringType}")

@@ -21,7 +21,11 @@ class LocationInfo(BaseModel):
 class MonitoringType(str, Enum):
     locationReporting = "LOCATION_REPORTING"
     lossOfConnectivity = "LOSS_OF_CONNECTIVITY"
+    ueReachability = "UE_REACHABILITY"
     
+class ReachabilityType(str, Enum):
+    sms = "SMS"
+    data = "DATA"
 
 class MonitoringEventReport(BaseModel):
 #    msisdn: Optional[str] = None
@@ -44,8 +48,8 @@ class MonitoringEventSubscriptionCreate(BaseModel):
     monitoringType: MonitoringType
     maximumNumberOfReports: Optional[int] = Field(None, description="Identifies the maximum number of event reports to be generated. Value 1 makes the Monitoring Request a One-time Request", ge=1)
     monitorExpireTime: Optional[datetime] = Field(None, description="Identifies the absolute time at which the related monitoring event request is considered to expire")
-    maximumDetectionTime: Optional[int] = Field(None, description="If monitoringType is \"LOSS_OF_CONNECTIVITY\", this parameter may be included to identify the maximum period of time after which the UE is considered to be unreachable.", gt=0)
-    # monitoringEventReport: Optional[MonitoringEventReport] = None
+    maximumDetectionTime: Optional[int] = Field(1, description="If monitoringType is \"LOSS_OF_CONNECTIVITY\", this parameter may be included to identify the maximum period of time after which the UE is considered to be unreachable.", gt=0)
+    reachabilityType: Optional[ReachabilityType] = Field("DATA", description="If monitoringType is \"UE_REACHABILITY\", this parameter shall be included to identify whether the request is for \"Reachability for SMS\" or \"Reachability for Data\"")
 
 class MonitoringEventSubscription(MonitoringEventSubscriptionCreate):
     link: Optional[AnyHttpUrl] = Field("https://myresource.com", description="String identifying a referenced resource. This is also returned as a location header in 201 Created Response")

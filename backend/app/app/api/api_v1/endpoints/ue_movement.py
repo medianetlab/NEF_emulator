@@ -177,6 +177,37 @@ class BackgroundTasks(threading.Thread):
 
                     # if UE.Cell_id != cell_now.get('id'): #Cell has changed in the db "handover"
                     if ues[f"{supi}"]["Cell_id"] != cell_now.get('id'): #Cell has changed in the db "handover"
+                        
+                        #Monitoring Event API - UE reachability 
+                        if ues[f"{supi}"]["Cell_id"] == None:
+                            ue_reachability_sub = crud_mongo.read_by_multiple_pairs(db_mongo, "MonitoringEvent", externalId = UE.external_identifier, monitoringType = "UE_REACHABILITY")
+                        
+                            #Validation of subscription
+                            if not ue_reachability_sub:
+                                # logging.warning("Monitoring Event subscription not found")
+                                pass
+                            elif not is_superuser and (ue_reachability_sub.get("owner_id") != current_user.id):
+                                # logging.warning("Not enough permissions")
+                                pass
+                            else:
+                                sub_validate_time = tools.check_expiration_time(expire_time=ue_reachability_sub.get("monitorExpireTime"))
+                                if sub_validate_time:
+                                    ue_reachability_sub = tools.check_numberOfReports(db_mongo, ue_reachability_sub)
+                                    if ue_reachability_sub: #return the callback request only if subscription is valid
+                                        try:
+                                            monitoring_callbacks.ue_reachability_callback(ues[f"{supi}"], ue_reachability_sub.get("notificationDestination"), ue_reachability_sub.get("link"), ue_reachability_sub.get("reachabilityType"))
+                                            # logging.info(response.json())
+                                        except requests.exceptions.ConnectionError as ex:
+                                            logging.warning("Failed to send the callback request")
+                                            logging.warning(ex)
+                                            crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", ue_reachability_sub.get("_id"))
+                                            continue   
+                                else:
+                                    crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", ue_reachability_sub.get("_id"))
+                                    logging.warning("Subscription has expired (expiration date)")
+                        
+                        
+                        
                         # logging.warning(f"UE({UE.supi}) with ipv4 {UE.ip_address_v4} handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
                         ues[f"{supi}"]["Cell_id"] = cell_now.get('id')
                         ues[f"{supi}"]["cell_id_hex"] = cell_now.get('cell_id')
