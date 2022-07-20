@@ -82,7 +82,7 @@ class BackgroundTasks(threading.Thread):
 
             is_superuser = crud.user.is_superuser(current_user)
 
-            t = timer.Timer()
+            t = timer.Timer(logger=logging.critical)
             '''
             ===================================================================
                                2nd Approach for updating UEs position
@@ -134,6 +134,40 @@ class BackgroundTasks(threading.Thread):
                     logging.warning("Failed to update coordinates")
                     logging.warning(ex)
                 
+                
+                #MonitoringEvent API - Loss of connectivity
+                loss_of_connectivity_sub = crud_mongo.read_by_multiple_pairs(db_mongo, "MonitoringEvent", externalId = UE.external_identifier, monitoringType = "LOSS_OF_CONNECTIVITY")
+                        
+                #Validation of subscription
+                if not loss_of_connectivity_sub:
+                    # logging.warning("Monitoring Event subscription not found")
+                    pass
+                elif not is_superuser and (loss_of_connectivity_sub.get("owner_id") != current_user.id):
+                    # logging.warning("Not enough permissions")
+                    pass
+                else:
+                    sub_validate_time = tools.check_expiration_time(expire_time=loss_of_connectivity_sub.get("monitorExpireTime"))
+                    if sub_validate_time:
+                        loss_of_connectivity_sub = tools.check_numberOfReports(db_mongo, loss_of_connectivity_sub)
+                        if loss_of_connectivity_sub: #return the callback request only if subscription is valid
+                            try:
+                                try:
+                                    elapsed_time = t.status()
+                                    if elapsed_time > loss_of_connectivity_sub.get("maximumDetectionTime"):
+                                        monitoring_callbacks.loss_of_connectivity_callback(ues[f"{supi}"], loss_of_connectivity_sub.get("notificationDestination"), loss_of_connectivity_sub.get("link"))
+                                        # logging.info(response.json())
+                                except timer.TimerError as ex:
+                                    # logging.critical(ex)
+                                    pass
+                            except requests.exceptions.ConnectionError as ex:
+                                logging.warning("Failed to send the callback request")
+                                logging.warning(ex)
+                                crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", loss_of_connectivity_sub.get("_id"))
+                                continue   
+                    else:
+                        crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", loss_of_connectivity_sub.get("_id"))
+                        logging.warning("Subscription has expired (expiration date)")
+
                 if cell_now != None:
                     try:
                         t.stop()
@@ -144,59 +178,42 @@ class BackgroundTasks(threading.Thread):
                     # if UE.Cell_id != cell_now.get('id'): #Cell has changed in the db "handover"
                     if ues[f"{supi}"]["Cell_id"] != cell_now.get('id'): #Cell has changed in the db "handover"
                         # logging.warning(f"UE({UE.supi}) with ipv4 {UE.ip_address_v4} handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
-                        # crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
                         ues[f"{supi}"]["Cell_id"] = cell_now.get('id')
                         ues[f"{supi}"]["cell_id_hex"] = cell_now.get('cell_id')
                         gnb = crud.gnb.get(db=self._db, id=cell_now.get("gNB_id"))
                         ues[f"{supi}"]["gnb_id_hex"] = gnb.gNB_id
 
+                        
+                        #Monitoring Event API - Location Reporting
                         #Retrieve the subscription of the UE by external Id | This could be outside while true but then the user cannot subscribe when the loop runs
-                        # sub = crud.monitoring.get_sub_externalId(db=db, externalId=UE.external_identifier, owner_id=current_user.id)
-                        sub = crud_mongo.read(db_mongo, "MonitoringEvent", "externalId", UE.external_identifier)
+                        
+                        location_sub = crud_mongo.read_by_multiple_pairs(db_mongo, "MonitoringEvent", externalId = UE.external_identifier, monitoringType = "LOCATION_REPORTING")
                         
                         #Validation of subscription
-                        if not sub:
+                        if not location_sub:
                             # logging.warning("Monitoring Event subscription not found")
                             pass
-                        elif not is_superuser and (sub.get("owner_id") != current_user.id):
+                        elif not is_superuser and (location_sub.get("owner_id") != current_user.id):
                             # logging.warning("Not enough permissions")
                             pass
                         else:
-                            sub_validate_time = tools.check_expiration_time(expire_time=sub.get("monitorExpireTime"))
+                            sub_validate_time = tools.check_expiration_time(expire_time=location_sub.get("monitorExpireTime"))
                             if sub_validate_time:
-                                sub = tools.check_numberOfReports(db_mongo, sub)
-                                if sub: #return the callback request only if subscription is valid
+                                location_sub = tools.check_numberOfReports(db_mongo, location_sub)
+                                if location_sub: #return the callback request only if subscription is valid
                                     try:
-                                        response = monitoring_callbacks.location_callback(ues[f"{supi}"], sub.get("notificationDestination"), sub.get("link"))
+                                        monitoring_callbacks.location_callback(ues[f"{supi}"], location_sub.get("notificationDestination"), location_sub.get("link"))
                                         # logging.info(response.json())
                                     except requests.exceptions.ConnectionError as ex:
                                         logging.warning("Failed to send the callback request")
                                         logging.warning(ex)
-                                        crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", sub.get("_id"))
+                                        crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", location_sub.get("_id"))
                                         continue   
                             else:
-                                crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", sub.get("_id"))
+                                crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", location_sub.get("_id"))
                                 logging.warning("Subscription has expired (expiration date)")
 
-                        #QoS Monitoring Event (handover)
-                        # ues_connected = crud.ue.get_by_Cell(db=db, cell_id=UE.Cell_id)
-                        ues_connected = 0
-                        # temp_ues = ues.copy()
-                        # for ue in temp_ues:
-                        #     # print(ue)
-                        #     if ues[ue]["Cell_id"] == ues[f"{supi}"]["Cell_id"]:
-                        #         ues_connected += 1
-
-                        #subtract 1 for the UE that is currently running. We are looking for other ues that are currently connected in the same cell
-                        ues_connected -= 1
-
-                        if ues_connected > 1:
-                            gbr = 'QOS_NOT_GUARANTEED'
-                        else:
-                            gbr = 'QOS_GUARANTEED'
-
-                        # logging.warning(gbr)
-                        # qos_notification_control(gbr ,current_user, UE.ip_address_v4)
+                        
                         qos_callback.qos_notification_control(current_user, ues[f"{supi}"]["ip_address_v4"], ues.copy(),  ues[f"{supi}"])
                     
                 else:

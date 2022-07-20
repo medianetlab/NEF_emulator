@@ -26,7 +26,7 @@ def location_callback(ue, callbackurl, subscription):
     
     return response
 
-def loss_of_connectivity_callaback(ue, callbackurl, subscription):
+def loss_of_connectivity_callback(ue, callbackurl, subscription):
     url = callbackurl
 
     payload = json.dumps({
@@ -34,7 +34,7 @@ def loss_of_connectivity_callaback(ue, callbackurl, subscription):
     "ipv4Addr" : ue.get("ip_address_v4"),
     "subscription" : subscription,
     "monitoringType": "LOSS_OF_CONNECTIVITY",
-    "lossOfConnectReason": 8
+    "lossOfConnectReason": 7
     })
     headers = {
     'accept': 'application/json',
