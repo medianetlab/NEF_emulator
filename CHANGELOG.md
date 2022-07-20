@@ -1,5 +1,16 @@
 # Changelog
 
+## (upcoming release)
+
+### UI changes
+
+ - replace common html blocks with reusable Jinja2 templates (header, sidebar, footer)
+
+
+
+<br><br>
+
+
 ## v1.5.0
 
 ***Summary:***

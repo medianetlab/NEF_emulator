@@ -1,0 +1,69 @@
+    <div class="sidebar sidebar-dark sidebar-fixed" id="sidebar">
+      <div class="sidebar-brand d-none d-md-flex">
+        <!-- <svg class="sidebar-brand-full" width="118" height="46" alt="CoreUI Logo">
+          <use xlink:href="assets/brand/coreui.svg#full"></use>
+        </svg>
+        <svg class="sidebar-brand-narrow" width="46" height="46" alt="CoreUI Logo">
+          <use xlink:href="assets/brand/coreui.svg#signet"></use>
+        </svg> -->
+        <img class="sidebar-brand-full" width="auto" height="64" alt="NEF Logo" src="static/NEF_logo_400x160.svg"></img>
+        <img class="sidebar-brand-narrow" width="64" height="64" alt="NEF Logo" src="static/NEF_logo_400x400.svg"></img>
+      </div>
+      <ul class="sidebar-nav" data-coreui="navigation" data-simplebar="">
+        <li class="nav-item"><a class="nav-link" href="/dashboard">
+            <svg class="nav-icon">
+              <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-speedometer"></use>
+            </svg> Dashboard</a>
+        </li>
+        
+
+        <li class="nav-title">Emulator</li>
+        <li class="nav-item"><a class="nav-link" href="/map">
+          <svg class="nav-icon">
+            <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-location-pin"></use>
+          </svg> Map</a>
+        </li>
+        <li class="nav-item"><a class="nav-link" href="/export">
+          <svg class="nav-icon">
+            <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-data-transfer-down"></use>
+          </svg> Export</a>
+        </li>
+        <li class="nav-item"><a class="nav-link" href="/import">
+          <svg class="nav-icon">
+            <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-data-transfer-up"></use>
+          </svg> Import</a>
+        </li>
+
+
+        <li class="nav-title">API TOOLS</li>
+        <li class="nav-group" aria-expanded="false"><a class="nav-link nav-group-toggle" href="#">
+          <svg class="nav-icon">
+            <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-description"></use>
+          </svg> Swagger UI</a>
+          <ul class="nav-group-items" style="height: auto;">
+            <li class="nav-item"><a class="nav-link" href="/nef/docs" target="_blank">
+              Northbound APIs</a>
+            </li>
+            <li class="nav-item"><a class="nav-link" href="/docs" target="_blank">
+              NEF_Emulator</a>
+            </li>
+          </ul>
+        </li>
+        <li class="nav-group" aria-expanded="false"><a class="nav-link nav-group-toggle" href="#">
+          <svg class="nav-icon">
+            <use xlink:href="static/vendors/@coreui/icons/svg/free.svg#cil-file"></use>
+          </svg> ReDoc</a>
+          <ul class="nav-group-items" style="height: auto;">
+            <li class="nav-item"><a class="nav-link" href="/nef/redoc" target="_blank">
+              Northbound APIs</a>
+            </li>
+            <li class="nav-item"><a class="nav-link" href="/redoc" target="_blank">
+              NEF_Emulator</a>
+            </li>
+          </ul>
+        </li>
+        
+        <li class="nav-divider"></li>
+      </ul>
+      <button class="sidebar-toggler" type="button" data-coreui-toggle="unfoldable"></button>
+    </div>
