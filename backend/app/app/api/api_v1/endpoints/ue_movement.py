@@ -90,6 +90,9 @@ class BackgroundTasks(threading.Thread):
             is_superuser = crud.user.is_superuser(current_user)
 
             t = timer.Timer(logger=logging.critical)
+
+            # global loss_of_connectivity_ack
+            loss_of_connectivity_ack = "FALSE"
             '''
             ===================================================================
                                2nd Approach for updating UEs position
@@ -145,17 +148,24 @@ class BackgroundTasks(threading.Thread):
                 #MonitoringEvent API - Loss of connectivity
                 if not active_subscriptions.get("loss_of_connectivity"):
                     loss_of_connectivity_sub = crud_mongo.read_by_multiple_pairs(db_mongo, "MonitoringEvent", externalId = UE.external_identifier, monitoringType = "LOSS_OF_CONNECTIVITY")
-                    active_subscriptions.update({"loss_of_connectivity" : True})
+                    if loss_of_connectivity_sub:
+                        active_subscriptions.update({"loss_of_connectivity" : True})
+                    
 
                 #Validation of subscription
-                if active_subscriptions.get("loss_of_connectivity"):
+                if active_subscriptions.get("loss_of_connectivity") and loss_of_connectivity_ack == "FALSE":
                     sub_is_valid = monitoring_event_sub_validation(loss_of_connectivity_sub, is_superuser, current_user.id, loss_of_connectivity_sub.get("owner_id"))    
                     if sub_is_valid:
                         try:
                             try:
                                 elapsed_time = t.status()
                                 if elapsed_time > loss_of_connectivity_sub.get("maximumDetectionTime"):
-                                    monitoring_callbacks.loss_of_connectivity_callback(ues[f"{supi}"], loss_of_connectivity_sub.get("notificationDestination"), loss_of_connectivity_sub.get("link"))
+                                    response = monitoring_callbacks.loss_of_connectivity_callback(ues[f"{supi}"], loss_of_connectivity_sub.get("notificationDestination"), loss_of_connectivity_sub.get("link"))
+                                    
+                                    logging.critical(response.json())
+                                    #This ack will be used to send one time the loss of connectivity callback
+                                    loss_of_connectivity_ack = response.json().get("ack")
+                                    
                                     loss_of_connectivity_sub.update({"maximumNumberOfReports" : loss_of_connectivity_sub.get("maximumNumberOfReports") - 1})
                                     crud_mongo.update(db_mongo, "MonitoringEvent", loss_of_connectivity_sub.get("_id"), loss_of_connectivity_sub)
                             except timer.TimerError as ex:
@@ -176,6 +186,7 @@ class BackgroundTasks(threading.Thread):
                 if cell_now != None:
                     try:
                         t.stop()
+                        loss_of_connectivity_ack = "FALSE"
                     except timer.TimerError as ex:
                         # logging.critical(ex)
                         pass
@@ -189,7 +200,8 @@ class BackgroundTasks(threading.Thread):
                             
                             if not active_subscriptions.get("ue_reachability"):
                                 ue_reachability_sub = crud_mongo.read_by_multiple_pairs(db_mongo, "MonitoringEvent", externalId = UE.external_identifier, monitoringType = "UE_REACHABILITY")
-                                active_subscriptions.update({"ue_reachability" : True})
+                                if ue_reachability_sub:
+                                    active_subscriptions.update({"ue_reachability" : True})
 
                             #Validation of subscription    
                              
@@ -228,7 +240,8 @@ class BackgroundTasks(threading.Thread):
                         #Retrieve the subscription of the UE by external Id | This could be outside while true but then the user cannot subscribe when the loop runs
                         if not active_subscriptions.get("location_reporting"):
                             location_reporting_sub = crud_mongo.read_by_multiple_pairs(db_mongo, "MonitoringEvent", externalId = UE.external_identifier, monitoringType = "LOCATION_REPORTING")
-                            active_subscriptions.update({"location_reporting" : True})
+                            if location_reporting_sub:
+                                active_subscriptions.update({"location_reporting" : True})
 
                         #Validation of subscription    
                         if active_subscriptions.get("location_reporting"): 
@@ -430,10 +443,7 @@ def retrieve_ue(supi: str) -> dict:
 
 def monitoring_event_sub_validation(sub: dict, is_superuser: bool, current_user_id: int, owner_id) -> bool:
     
-    if not sub:
-    # logging.warning("Monitoring Event subscription not found")
-        return False
-    elif not is_superuser and (owner_id != current_user_id):
+    if not is_superuser and (owner_id != current_user_id):
         # logging.warning("Not enough permissions")
         return False
     else:
