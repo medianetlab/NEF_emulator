@@ -33,6 +33,13 @@ class BackgroundTasks(threading.Thread):
         
         current_user = self._args[0]
         supi = self._args[1]
+        
+        active_subscriptions = {
+            "location_reporting" : False,
+            "ue_reachability" : False,
+            "loss_of_connectivity" : False,
+            "as_session_with_qos" : False
+        }
 
         try:
             db_mongo = client.fastapi
@@ -136,37 +143,35 @@ class BackgroundTasks(threading.Thread):
                 
                 
                 #MonitoringEvent API - Loss of connectivity
-                loss_of_connectivity_sub = crud_mongo.read_by_multiple_pairs(db_mongo, "MonitoringEvent", externalId = UE.external_identifier, monitoringType = "LOSS_OF_CONNECTIVITY")
-                        
+                if not active_subscriptions.get("loss_of_connectivity"):
+                    loss_of_connectivity_sub = crud_mongo.read_by_multiple_pairs(db_mongo, "MonitoringEvent", externalId = UE.external_identifier, monitoringType = "LOSS_OF_CONNECTIVITY")
+                    active_subscriptions.update({"loss_of_connectivity" : True})
+
                 #Validation of subscription
-                if not loss_of_connectivity_sub:
-                    # logging.warning("Monitoring Event subscription not found")
-                    pass
-                elif not is_superuser and (loss_of_connectivity_sub.get("owner_id") != current_user.id):
-                    # logging.warning("Not enough permissions")
-                    pass
-                else:
-                    sub_validate_time = tools.check_expiration_time(expire_time=loss_of_connectivity_sub.get("monitorExpireTime"))
-                    if sub_validate_time:
-                        loss_of_connectivity_sub = tools.check_numberOfReports(db_mongo, loss_of_connectivity_sub)
-                        if loss_of_connectivity_sub: #return the callback request only if subscription is valid
+                if active_subscriptions.get("loss_of_connectivity"):
+                    sub_is_valid = monitoring_event_sub_validation(loss_of_connectivity_sub, is_superuser, current_user.id, loss_of_connectivity_sub.get("owner_id"))    
+                    if sub_is_valid:
+                        try:
                             try:
-                                try:
-                                    elapsed_time = t.status()
-                                    if elapsed_time > loss_of_connectivity_sub.get("maximumDetectionTime"):
-                                        monitoring_callbacks.loss_of_connectivity_callback(ues[f"{supi}"], loss_of_connectivity_sub.get("notificationDestination"), loss_of_connectivity_sub.get("link"))
-                                        # logging.info(response.json())
-                                except timer.TimerError as ex:
-                                    # logging.critical(ex)
-                                    pass
-                            except requests.exceptions.ConnectionError as ex:
-                                logging.warning("Failed to send the callback request")
-                                logging.warning(ex)
-                                crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", loss_of_connectivity_sub.get("_id"))
-                                continue   
+                                elapsed_time = t.status()
+                                if elapsed_time > loss_of_connectivity_sub.get("maximumDetectionTime"):
+                                    monitoring_callbacks.loss_of_connectivity_callback(ues[f"{supi}"], loss_of_connectivity_sub.get("notificationDestination"), loss_of_connectivity_sub.get("link"))
+                                    loss_of_connectivity_sub.update({"maximumNumberOfReports" : loss_of_connectivity_sub.get("maximumNumberOfReports") - 1})
+                                    crud_mongo.update(db_mongo, "MonitoringEvent", loss_of_connectivity_sub.get("_id"), loss_of_connectivity_sub)
+                            except timer.TimerError as ex:
+                                # logging.critical(ex)
+                                pass
+                        except requests.exceptions.ConnectionError as ex:
+                            logging.warning("Failed to send the callback request")
+                            logging.warning(ex)
+                            crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", loss_of_connectivity_sub.get("_id"))
+                            active_subscriptions.update({"loss_of_connectivity" : False})
+                            continue
                     else:
                         crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", loss_of_connectivity_sub.get("_id"))
-                        logging.warning("Subscription has expired (expiration date)")
+                        active_subscriptions.update({"loss_of_connectivity" : False})
+                        logging.warning("Subscription has expired")
+                #MonitoringEvent API - Loss of connectivity
 
                 if cell_now != None:
                     try:
@@ -179,33 +184,37 @@ class BackgroundTasks(threading.Thread):
                     if ues[f"{supi}"]["Cell_id"] != cell_now.get('id'): #Cell has changed in the db "handover"
                         
                         #Monitoring Event API - UE reachability 
+                        #check if the ue was disconnected before
                         if ues[f"{supi}"]["Cell_id"] == None:
-                            ue_reachability_sub = crud_mongo.read_by_multiple_pairs(db_mongo, "MonitoringEvent", externalId = UE.external_identifier, monitoringType = "UE_REACHABILITY")
-                        
-                            #Validation of subscription
-                            if not ue_reachability_sub:
-                                # logging.warning("Monitoring Event subscription not found")
-                                pass
-                            elif not is_superuser and (ue_reachability_sub.get("owner_id") != current_user.id):
-                                # logging.warning("Not enough permissions")
-                                pass
-                            else:
-                                sub_validate_time = tools.check_expiration_time(expire_time=ue_reachability_sub.get("monitorExpireTime"))
-                                if sub_validate_time:
-                                    ue_reachability_sub = tools.check_numberOfReports(db_mongo, ue_reachability_sub)
-                                    if ue_reachability_sub: #return the callback request only if subscription is valid
+                            
+                            if not active_subscriptions.get("ue_reachability"):
+                                ue_reachability_sub = crud_mongo.read_by_multiple_pairs(db_mongo, "MonitoringEvent", externalId = UE.external_identifier, monitoringType = "UE_REACHABILITY")
+                                active_subscriptions.update({"ue_reachability" : True})
+
+                            #Validation of subscription    
+                             
+                            if active_subscriptions.get("ue_reachability"):
+                                sub_is_valid = monitoring_event_sub_validation(ue_reachability_sub, is_superuser, current_user.id, ue_reachability_sub.get("owner_id"))   
+                                if sub_is_valid:
+                                    try:
                                         try:
                                             monitoring_callbacks.ue_reachability_callback(ues[f"{supi}"], ue_reachability_sub.get("notificationDestination"), ue_reachability_sub.get("link"), ue_reachability_sub.get("reachabilityType"))
-                                            # logging.info(response.json())
-                                        except requests.exceptions.ConnectionError as ex:
-                                            logging.warning("Failed to send the callback request")
-                                            logging.warning(ex)
-                                            crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", ue_reachability_sub.get("_id"))
-                                            continue   
+                                            ue_reachability_sub.update({"maximumNumberOfReports" : ue_reachability_sub.get("maximumNumberOfReports") - 1})
+                                            crud_mongo.update(db_mongo, "MonitoringEvent", ue_reachability_sub.get("_id"), ue_reachability_sub)
+                                        except timer.TimerError as ex:
+                                            # logging.critical(ex)
+                                            pass
+                                    except requests.exceptions.ConnectionError as ex:
+                                        logging.warning("Failed to send the callback request")
+                                        logging.warning(ex)
+                                        crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", ue_reachability_sub.get("_id"))
+                                        active_subscriptions.update({"ue_reachability" : False})
+                                        continue
                                 else:
                                     crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", ue_reachability_sub.get("_id"))
-                                    logging.warning("Subscription has expired (expiration date)")
-                        
+                                    active_subscriptions.update({"ue_reachability" : False})
+                                    logging.warning("Subscription has expired")
+                         #Monitoring Event API - UE reachability
                         
                         
                         # logging.warning(f"UE({UE.supi}) with ipv4 {UE.ip_address_v4} handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
@@ -217,33 +226,33 @@ class BackgroundTasks(threading.Thread):
                         
                         #Monitoring Event API - Location Reporting
                         #Retrieve the subscription of the UE by external Id | This could be outside while true but then the user cannot subscribe when the loop runs
-                        
-                        location_sub = crud_mongo.read_by_multiple_pairs(db_mongo, "MonitoringEvent", externalId = UE.external_identifier, monitoringType = "LOCATION_REPORTING")
-                        
-                        #Validation of subscription
-                        if not location_sub:
-                            # logging.warning("Monitoring Event subscription not found")
-                            pass
-                        elif not is_superuser and (location_sub.get("owner_id") != current_user.id):
-                            # logging.warning("Not enough permissions")
-                            pass
-                        else:
-                            sub_validate_time = tools.check_expiration_time(expire_time=location_sub.get("monitorExpireTime"))
-                            if sub_validate_time:
-                                location_sub = tools.check_numberOfReports(db_mongo, location_sub)
-                                if location_sub: #return the callback request only if subscription is valid
-                                    try:
-                                        monitoring_callbacks.location_callback(ues[f"{supi}"], location_sub.get("notificationDestination"), location_sub.get("link"))
-                                        # logging.info(response.json())
-                                    except requests.exceptions.ConnectionError as ex:
-                                        logging.warning("Failed to send the callback request")
-                                        logging.warning(ex)
-                                        crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", location_sub.get("_id"))
-                                        continue   
-                            else:
-                                crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", location_sub.get("_id"))
-                                logging.warning("Subscription has expired (expiration date)")
+                        if not active_subscriptions.get("location_reporting"):
+                            location_reporting_sub = crud_mongo.read_by_multiple_pairs(db_mongo, "MonitoringEvent", externalId = UE.external_identifier, monitoringType = "LOCATION_REPORTING")
+                            active_subscriptions.update({"location_reporting" : True})
 
+                        #Validation of subscription    
+                        if active_subscriptions.get("location_reporting"): 
+                            sub_is_valid = monitoring_event_sub_validation(location_reporting_sub, is_superuser, current_user.id, location_reporting_sub.get("owner_id"))    
+                            if sub_is_valid:
+                                try:
+                                    try:
+                                        monitoring_callbacks.location_callback(ues[f"{supi}"], location_reporting_sub.get("notificationDestination"), location_reporting_sub.get("link"))
+                                        location_reporting_sub.update({"maximumNumberOfReports" : location_reporting_sub.get("maximumNumberOfReports") - 1})
+                                        crud_mongo.update(db_mongo, "MonitoringEvent", location_reporting_sub.get("_id"), location_reporting_sub)
+                                    except timer.TimerError as ex:
+                                        # logging.critical(ex)
+                                        pass
+                                except requests.exceptions.ConnectionError as ex:
+                                    logging.warning("Failed to send the callback request")
+                                    logging.warning(ex)
+                                    crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", location_reporting_sub.get("_id"))
+                                    active_subscriptions.update({"location_reporting" : False})
+                                    continue
+                            else:
+                                crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", location_reporting_sub.get("_id"))
+                                active_subscriptions.update({"location_reporting" : False})
+                                logging.warning("Subscription has expired")
+                        #Monitoring Event API - Location Reporting
                         
                         qos_callback.qos_notification_control(current_user, ues[f"{supi}"]["ip_address_v4"], ues.copy(),  ues[f"{supi}"])
                     
@@ -469,3 +478,18 @@ def retrieve_ue(supi: str) -> dict:
     return ues.get(supi)
 
 
+def monitoring_event_sub_validation(sub: dict, is_superuser: bool, current_user_id: int, owner_id) -> bool:
+    
+    if not sub:
+    # logging.warning("Monitoring Event subscription not found")
+        return False
+    elif not is_superuser and (owner_id != current_user_id):
+        # logging.warning("Not enough permissions")
+        return False
+    else:
+        sub_validate_time = tools.check_expiration_time(expire_time=sub.get("monitorExpireTime"))
+        sub_validate_number_of_reports = tools.check_numberOfReports(sub.get("maximumNumberOfReports"))
+        if sub_validate_time and sub_validate_number_of_reports:
+            return True
+        else:
+            return False
