@@ -60,6 +60,7 @@ class MonitoringEventSubscription(MonitoringEventSubscriptionCreate):
 class MonitoringNotification(MonitoringEventReport):
     subscription: AnyHttpUrl
     lossOfConnectReason: Optional[int] = Field(None, description= "According to 3GPP TS 29.522 the lossOfConnectReason attribute shall be set to 6 if the UE is deregistered, 7 if the maximum detection timer expires or 8 if the UE is purged")
+    reachabilityType: Optional[ReachabilityType] = Field("DATA", description="If monitoringType is \"UE_REACHABILITY\", this parameter shall be included to identify whether the request is for \"Reachability for SMS\" or \"Reachability for Data\"")
 
 class MonitoringEventReportReceived(BaseModel):
     ok: bool

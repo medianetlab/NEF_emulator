@@ -333,58 +333,7 @@ class BackgroundTasks(threading.Thread):
             #             continue
                     
 
-            #         try:
-            #             UE = crud.ue.update_coordinates(db=db, lat=point["latitude"], long=point["longitude"], db_obj=UE)
-            #             cell_now = check_distance(UE.latitude, UE.longitude, json_cells) #calculate the distance from all the cells
-            #         except Exception as ex:
-            #             logging.warning("Failed to update coordinates")
-            #             logging.warning(ex)
-                    
-            #         if cell_now != None:
-            #             if UE.Cell_id != cell_now.get('id'): #Cell has changed in the db "handover"
-            #                 logging.warning(f"UE({UE.supi}) with ipv4 {UE.ip_address_v4} handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
-            #                 crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : cell_now.get('id')})
-                            
-            #                 #Retrieve the subscription of the UE by external Id | This could be outside while true but then the user cannot subscribe when the loop runs
-            #                 # sub = crud.monitoring.get_sub_externalId(db=db, externalId=UE.external_identifier, owner_id=current_user.id)
-            #                 sub = crud_mongo.read(db_mongo, "MonitoringEvent", "externalId", UE.external_identifier)
-                            
-            #                 #Validation of subscription
-            #                 if not sub:
-            #                     logging.warning("Monitoring Event subscription not found")
-            #                 elif not crud.user.is_superuser(current_user) and (sub.get("owner_id") != current_user.id):
-            #                     logging.warning("Not enough permissions")
-            #                 else:
-            #                     sub_validate_time = tools.check_expiration_time(expire_time=sub.get("monitorExpireTime"))
-            #                     if sub_validate_time:
-            #                         sub = tools.check_numberOfReports(db_mongo, sub)
-            #                         if sub: #return the callback request only if subscription is valid
-            #                             try:
-            #                                 response = location_callback(UE, sub.get("notificationDestination"), sub.get("link"))
-            #                                 logging.info(response.json())
-            #                             except requests.exceptions.ConnectionError as ex:
-            #                                 logging.warning("Failed to send the callback request")
-            #                                 logging.warning(ex)
-            #                                 crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", sub.get("_id"))
-            #                                 continue   
-            #                     else:
-            #                         crud_mongo.delete_by_uuid(db_mongo, "MonitoringEvent", sub.get("_id"))
-            #                         logging.warning("Subscription has expired (expiration date)")
-
-            #                 #QoS Monitoring Event (handover)
-            #                 ues_connected = crud.ue.get_by_Cell(db=db, cell_id=UE.Cell_id)
-            #                 if len(ues_connected) > 1:
-            #                     gbr = 'QOS_NOT_GUARANTEED'
-            #                 else:
-            #                     gbr = 'QOS_GUARANTEED'
-
-            #                 logging.warning(gbr)
-            #                 qos_notification_control(gbr ,current_user, UE.ip_address_v4)
-            #                 logging.critical("Bypassed qos notification control")
-            #         else:
-            #                 crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : None})
-
-            #         # logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
+            #         #-----------------------Code goes here-------------------------#
                     
             #         if UE.speed == 'LOW':
             #             time.sleep(1)
@@ -398,6 +347,7 @@ class BackgroundTasks(threading.Thread):
             #     if self._stop_threads:
             #             print("Terminating thread...")
             #             break       
+
         except Exception as ex:
             logging.critical(ex)
 
