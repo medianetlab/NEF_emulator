@@ -62,9 +62,11 @@ def create_subscription(
     if fiveG_qi.get('type') == 'GBR' or fiveG_qi.get('type') == 'DC-GBR':
         if (json_request['qosMonInfo'] == None) or (json_request['qosMonInfo']['repFreqs'] == None):
             raise HTTPException(status_code=400, detail="Please enter a value in repFreqs field")
-        else:
-            if 'EVENT_TRIGGERED' not in json_request['qosMonInfo']['repFreqs']:
-                raise HTTPException(status_code=400, detail="Only 'EVENT_TRIGGERED' reporting frequency is supported at the current version. Please enter 'EVENT_TRIGGERED' in repFreqs field")
+        
+    print(f'------------------------------------Curl from script   {item_in.ipv4Addr}')    
+        # else:
+        #     if 'EVENT_TRIGGERED' not in json_request['qosMonInfo']['repFreqs']:
+        #         raise HTTPException(status_code=400, detail="Only 'EVENT_TRIGGERED' reporting frequency is supported at the current version. Please enter 'EVENT_TRIGGERED' in repFreqs field")
         
     
     #Ensure that the user sends only one of the ipv4, ipv6, macAddr fields

@@ -1,6 +1,5 @@
 import requests, json, logging
-from pymongo import MongoClient
-from app.crud import crud_mongo, user, ue
+from app.crud import ue
 from app.api.api_v1.endpoints.qosInformation import qos_reference_match
 from app.db.session import SessionLocal
 from fastapi.encoders import jsonable_encoder
@@ -52,20 +51,7 @@ def qos_callback(callbackurl, resource, qos_status, ipv4):
     
     return response
 
-def qos_notification_control(current_user, ipv4, ues: dict, current_ue: dict):
-    client = MongoClient("mongodb://mongo:27017", username='root', password='pass')
-    db = client.fastapi
-
-    doc = crud_mongo.read(db, 'QoSMonitoring', 'ipv4Addr', ipv4)
-
-    #Check if the document exists
-    if not doc:
-        # logging.warning("AsSessionWithQoS subscription not found")
-        return
-    #If the document exists then validate the owner
-    if not user.is_superuser(current_user) and (doc['owner_id'] != current_user.id):
-        logging.info("Not enough permissions")
-        return
+def qos_notification_control(doc, ipv4, ues: dict, current_ue: dict):
 
     number_of_ues_in_cell = ues_in_cell(ues, current_ue)
 

@@ -89,7 +89,7 @@ class BackgroundTasks(threading.Thread):
 
             is_superuser = crud.user.is_superuser(current_user)
 
-            t = timer.Timer(logger=logging.critical)
+            t = timer.SequencialTimer(logger=logging.critical)
 
             # global loss_of_connectivity_ack
             loss_of_connectivity_ack = "FALSE"
@@ -163,7 +163,7 @@ class BackgroundTasks(threading.Thread):
                                     response = monitoring_callbacks.loss_of_connectivity_callback(ues[f"{supi}"], loss_of_connectivity_sub.get("notificationDestination"), loss_of_connectivity_sub.get("link"))
                                     
                                     logging.critical(response.json())
-                                    #This ack will be used to send one time the loss of connectivity callback
+                                    #This ack is used to send one time the loss of connectivity callback
                                     loss_of_connectivity_ack = response.json().get("ack")
                                     
                                     loss_of_connectivity_sub.update({"maximumNumberOfReports" : loss_of_connectivity_sub.get("maximumNumberOfReports") - 1})
@@ -182,6 +182,24 @@ class BackgroundTasks(threading.Thread):
                         active_subscriptions.update({"loss_of_connectivity" : False})
                         logging.warning("Subscription has expired")
                 #MonitoringEvent API - Loss of connectivity
+
+                #As Session With QoS API - search for active subscription in db
+                if not active_subscriptions.get("as_session_with_qos"):
+                    qos_sub = crud_mongo.read(db_mongo, 'QoSMonitoring', 'ipv4Addr', UE.ip_address_v4)
+                    if qos_sub:
+                        active_subscriptions.update({"as_session_with_qos" : True})
+                        reporting_freq = qos_sub["qosMonInfo"]["repFreqs"]
+                        reporting_period = qos_sub["qosMonInfo"]["repPeriod"]
+                        if "PERIODIC" in reporting_freq:
+                            rt = timer.RepeatedTimer(reporting_period, qos_callback.qos_notification_control, qos_sub, ues[f"{supi}"]["ip_address_v4"], ues.copy(),  ues[f"{supi}"])
+                            # qos_callback.qos_notification_control(qos_sub, ues[f"{supi}"]["ip_address_v4"], ues.copy(),  ues[f"{supi}"])
+
+
+                #If the document exists then validate the owner
+                if not is_superuser and (qos_sub['owner_id'] != current_user.id):
+                    logging.warning("Not enough permissions")
+                    active_subscriptions.update({"as_session_with_qos" : False})
+                #As Session With QoS API - search for active subscription in db
 
                 if cell_now != None:
                     try:
@@ -267,8 +285,13 @@ class BackgroundTasks(threading.Thread):
                                 logging.warning("Subscription has expired")
                         #Monitoring Event API - Location Reporting
                         
-                        qos_callback.qos_notification_control(current_user, ues[f"{supi}"]["ip_address_v4"], ues.copy(),  ues[f"{supi}"])
-                    
+                        #As Session With QoS API - if EVENT_TRIGGER then send callback on handover
+                        if active_subscriptions.get("as_session_with_qos"):
+                            reporting_freq = qos_sub["qosMonInfo"]["repFreqs"]
+                            if "EVENT_TRIGGERED" in reporting_freq:
+                                qos_callback.qos_notification_control(qos_sub, ues[f"{supi}"]["ip_address_v4"], ues.copy(),  ues[f"{supi}"])
+                        #As Session With QoS API - if EVENT_TRIGGER then send callback on handover
+
                 else:
                     # crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : None})
                     try:
@@ -301,6 +324,7 @@ class BackgroundTasks(threading.Thread):
                     crud.ue.update(db=self._db, db_obj=UE, obj_in={"Cell_id" : ues[f"{supi}"]["Cell_id"]})
                     ues.pop(f"{supi}")
                     self._db.close()
+                    rt.stop()
                     break
             
             # End of 2nd Approach for updating UEs position
