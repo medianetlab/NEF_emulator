@@ -205,6 +205,7 @@ class BackgroundTasks(threading.Thread):
                     try:
                         t.stop()
                         loss_of_connectivity_ack = "FALSE"
+                        rt.start()
                     except timer.TimerError as ex:
                         # logging.critical(ex)
                         pass
@@ -296,10 +297,11 @@ class BackgroundTasks(threading.Thread):
                     # crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : None})
                     try:
                         t.start()
+                        rt.stop()
                     except timer.TimerError as ex:
                         # logging.critical(ex)
                         pass
-                    
+
                     ues[f"{supi}"]["Cell_id"] = None
                     ues[f"{supi}"]["cell_id_hex"] = None
                     ues[f"{supi}"]["gnb_id_hex"] = None
