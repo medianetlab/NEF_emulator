@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Request
 from fastapi.responses import JSONResponse
 from pymongo.database import Database
 from sqlalchemy.orm.session import Session
-
+from app.db.session import client
 from app import models
 from app.api import deps
 from app.core.config import qosSettings
@@ -53,12 +53,13 @@ def read_qos_active_profiles(
     gNB_id: str = Path(..., title="The ID of the gNB", example="AAAAA1"),
     current_user: models.User = Depends(deps.get_current_active_user),
     http_request: Request,
-    db_mongo: Database = Depends(deps.get_mongo_db),
     db: Session = Depends(deps.get_db)
 ) -> Any:
     """
     Get the available QoS Characteristics
     """
+    db_mongo = client.fastapi
+
     gNB = gnb.get_gNB_id(db=db, id=gNB_id)
     if not gNB:
         raise HTTPException(status_code=404, detail="gNB not found")

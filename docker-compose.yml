@@ -45,10 +45,13 @@ services:
     restart: always
     ports:
       - 8081:8081
+    env_file:
+      - .env
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: "${MONGO_USER}"
       ME_CONFIG_MONGODB_ADMINPASSWORD: "${MONGO_PASSWORD}"
       ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo:27017/
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: "${MONGO_EXPRESS_ENABLE_ADMIN}"
 
   
   backend:

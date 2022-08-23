@@ -52,17 +52,9 @@ def check_expiration_time(expire_time):
     else:
         return False
 
-def check_numberOfReports(db, sub):
-    if sub.get("maximumNumberOfReports")>1:
-        newNumberOfReports = sub.get("maximumNumberOfReports") - 1
-        sub.update({"maximumNumberOfReports" : newNumberOfReports})
-        crud_mongo.update(db, "MonitoringEvent", sub.get("_id"), sub)
-        return sub
-    elif sub.get("maximumNumberOfReports") == 1:
-        newNumberOfReports = sub.get("maximumNumberOfReports") - 1
-        sub.update({"maximumNumberOfReports" : newNumberOfReports})
-        # monitoring.remove(db=db, id=item_in.id)
-        crud_mongo.delete_by_uuid(db, "MonitoringEvent", sub.get("_id"))
-        return sub
+def check_numberOfReports(maximum_number_of_reports: int) -> bool:
+    if maximum_number_of_reports >= 1:
+        return True
     else:
         logging.warning("Subscription has expired (maximum number of reports")
+        return False
