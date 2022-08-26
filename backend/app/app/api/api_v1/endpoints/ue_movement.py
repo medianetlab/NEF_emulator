@@ -90,7 +90,7 @@ class BackgroundTasks(threading.Thread):
             is_superuser = crud.user.is_superuser(current_user)
 
             t = timer.SequencialTimer(logger=logging.critical)
-
+            rt = None
             # global loss_of_connectivity_ack
             loss_of_connectivity_ack = "FALSE"
             '''
@@ -205,7 +205,8 @@ class BackgroundTasks(threading.Thread):
                     try:
                         t.stop()
                         loss_of_connectivity_ack = "FALSE"
-                        rt.start()
+                        if rt is not None:
+                            rt.start()
                     except timer.TimerError as ex:
                         # logging.critical(ex)
                         pass
@@ -297,7 +298,8 @@ class BackgroundTasks(threading.Thread):
                     # crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : None})
                     try:
                         t.start()
-                        rt.stop()
+                        if rt is not None:
+                            rt.stop()
                     except timer.TimerError as ex:
                         # logging.critical(ex)
                         pass
@@ -326,7 +328,8 @@ class BackgroundTasks(threading.Thread):
                     crud.ue.update(db=self._db, db_obj=UE, obj_in={"Cell_id" : ues[f"{supi}"]["Cell_id"]})
                     ues.pop(f"{supi}")
                     self._db.close()
-                    rt.stop()
+                    if rt is not None:
+                        rt.stop()
                     break
             
             # End of 2nd Approach for updating UEs position
