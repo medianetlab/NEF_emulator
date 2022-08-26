@@ -1,11 +1,43 @@
 # Changelog
 
-## (upcoming release)
+## v1.6.0
 
-### UI changes
+***Summary:***
 
- - replace common html blocks with reusable Jinja2 templates (header, sidebar, footer)
+> - *This version focuses on specific enchancements for both AsSessionWithQoS and Monitoring Event APIs*
+> - *AsSessionWithQoS API*:
+>   - *Provision of periodic reports, (NetApp indicates the reporting period in sec)*
+> - *MonitoringEvent API*:
+>   - *Addition of LOSS_OF_CONNECTIVITY event, Network detects that the UE is no longer reachable for either signalling or user plane communication. The NetApp may provide a Maximum Detection Time, which indicates the maximum period of time without any communication with the UE (after the UE is considered to be unreachable by the network)*
+>   - *Addition of UE_REACHABILITY event, which indicates when the UE becomes reachable (for sending downlink data to the UE)*
 
+
+## UI changes
+
+ - 👉 replace common html blocks with reusable Jinja2 templates (header, sidebar, footer)
+
+
+## Backend
+
+
+ - ➕ Addition of two events on `MonitoringEvent API` ➡`/api/v1/3gpp-monitoring-event/v1/{scsAsId}/subscriptions` 👇
+     - `LOSS_OF_CONNECTIVITY` event
+     - `UE_REACHABILITY` event 
+- ➕ Addition of periodic reports for `AsSessionWithQoS API` ➡`/api/v1/3gpp-as-session-with-qos/v1/{scsAsId}/subscriptions`
+
+
+
+## Database
+
+ - Optimization on MongoDB 👇
+     - MongoClient instance from pymongo module is created once in `backend/app/app/db/session.py`
+
+
+
+## Other
+
+ - ✔ `make logs-backend` : display the logs only in the backend service
+ - ✔ `make logs-mongo` : display the logs only for mongo service
 
 
 <br><br>
