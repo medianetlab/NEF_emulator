@@ -1,6 +1,7 @@
 #!/bin/bash
 
 PORT=8888
+URL=http://localhost
 
 set -a # automatically export all variables
 source .env
@@ -8,7 +9,7 @@ set +a
 
 
 TOKEN=$(curl -X 'POST' \
-  "http://localhost:${PORT}/api/v1/login/access-token" \
+  "${URL}:${PORT}/api/v1/login/access-token" \
   -H 'accept: application/json' \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   --data-urlencode "username=${FIRST_SUPERUSER}" \
@@ -26,7 +27,7 @@ printf '\n==================================================\n'
 
 
 curl -X 'POST' \
-  "http://localhost:${PORT}/api/v1/paths" \
+  "${URL}:${PORT}/api/v1/paths" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -45,7 +46,7 @@ curl -X 'POST' \
 }'
 
 curl -X 'POST' \
-  "http://localhost:${PORT}/api/v1/paths" \
+  "${URL}:${PORT}/api/v1/paths" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -73,7 +74,7 @@ printf '\n==================================================\n'
 
 
 curl -X 'POST' \
-  "http://localhost:${PORT}/api/v1/gNBs" \
+  "${URL}:${PORT}/api/v1/gNBs" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -96,7 +97,7 @@ printf '\n==================================================\n'
 
 
 curl -X 'POST' \
-  "http://localhost:${PORT}/api/v1/Cells" \
+  "${URL}:${PORT}/api/v1/Cells" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -111,7 +112,7 @@ curl -X 'POST' \
 }'
 
 curl -X 'POST' \
-  "http://localhost:${PORT}/api/v1/Cells" \
+  "${URL}:${PORT}/api/v1/Cells" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -126,7 +127,7 @@ curl -X 'POST' \
 }'
 
 curl -X 'POST' \
-  "http://localhost:${PORT}/api/v1/Cells" \
+  "${URL}:${PORT}/api/v1/Cells" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -141,7 +142,7 @@ curl -X 'POST' \
 }'
 
 curl -X 'POST' \
-  "http://localhost:${PORT}/api/v1/Cells" \
+  "${URL}:${PORT}/api/v1/Cells" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -165,7 +166,7 @@ printf '\n==================================================\n'
 
 
 curl -X 'POST' \
-  "http://localhost:${PORT}/api/v1/UEs" \
+  "${URL}:${PORT}/api/v1/UEs" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -186,7 +187,7 @@ curl -X 'POST' \
 }'
 
 curl -X 'POST' \
-  "http://localhost:${PORT}/api/v1/UEs" \
+  "${URL}:${PORT}/api/v1/UEs" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -207,7 +208,7 @@ curl -X 'POST' \
 }'
 
 curl -X 'POST' \
-  "http://localhost:${PORT}/api/v1/UEs" \
+  "${URL}:${PORT}/api/v1/UEs" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -228,7 +229,7 @@ curl -X 'POST' \
 }'
 
 curl -X 'POST' \
-  "http://localhost:${PORT}/api/v1/UEs/associate/path" \
+  "${URL}:${PORT}/api/v1/UEs/associate/path" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -238,7 +239,7 @@ curl -X 'POST' \
 }'
 
 curl -X 'POST' \
-  "http://localhost:${PORT}/api/v1/UEs/associate/path" \
+  "${URL}:${PORT}/api/v1/UEs/associate/path" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
@@ -248,7 +249,7 @@ curl -X 'POST' \
 }'
 
 curl -X 'POST' \
-  "http://localhost:${PORT}/api/v1/UEs/associate/path" \
+  "${URL}:${PORT}/api/v1/UEs/associate/path" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
   -H 'Content-Type: application/json' \
