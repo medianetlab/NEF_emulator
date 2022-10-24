@@ -7,4 +7,4 @@ engine = create_engine(settings.SQLALCHEMY_DATABASE_URI, pool_pre_ping=True, poo
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine) #Each instance is a db session
 
 
-client = MongoClient("mongodb://mongo:27017", username='root', password='pass')
+client = MongoClient(settings.MONGO_CLIENT, username='root', password='pass')
