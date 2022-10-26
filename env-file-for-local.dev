@@ -46,4 +46,4 @@ MONGO_EXPRESS_ENABLE_ADMIN=true
 # If CAPIF CORE FUNCTION is up and running set EXTERNAL_NET to true 
 # Else if NEF is used as a standalone service set EXTERNAL_NET to false
 
-EXTERNAL_NET=true
+EXTERNAL_NET=false
