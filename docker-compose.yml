@@ -12,6 +12,8 @@ services:
       - .env
     environment:
       - PGDATA=/var/lib/postgresql/data/pgdata
+    networks:
+      - services_default
 
 
 
@@ -26,6 +28,8 @@ services:
       - .env
     logging:
       driver: none
+    networks:
+      - services_default
 
   mongo:
     image: mongo:4.4.10
@@ -38,6 +42,8 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: "${MONGO_USER}"
       MONGO_INITDB_ROOT_PASSWORD: "${MONGO_PASSWORD}"
+    networks:
+      - services_default
 
   mongo-express:
     image: mongo-express:1.0.0-alpha.4
@@ -52,6 +58,8 @@ services:
       ME_CONFIG_MONGODB_ADMINPASSWORD: "${MONGO_PASSWORD}"
       ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo:27017/
       ME_CONFIG_MONGODB_ENABLE_ADMIN: "${MONGO_EXPRESS_ENABLE_ADMIN}"
+    networks:
+      - services_default
 
   
   backend:
@@ -77,9 +85,13 @@ services:
         INSTALL_JUPYTER: ${INSTALL_JUPYTER-true}
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+      - services_default
 
 
-
+networks:
+    services_default:
+      external: ${EXTERNAL_NET}
 
 
 volumes:
