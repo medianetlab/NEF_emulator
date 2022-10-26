@@ -37,7 +37,7 @@ PGADMIN_DEFAULT_PASSWORD=pass
 # Mongo 
 MONGO_USER=root
 MONGO_PASSWORD=pass
-MONGO_CLIENT=mongodb://localhost:27017/
+MONGO_CLIENT=mongodb://mongo:27017/
 
 # MongoExpress
 MONGO_EXPRESS_ENABLE_ADMIN=true
