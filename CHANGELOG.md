@@ -24,12 +24,6 @@
 - Change ```requests``` from ```^2.27.0``` 👉 ```^2.26.0```
 - Change ```pytest``` from ```^5.4.1``` 👉 ```>6```
 
-
-### Other
-
-- ✔ `make db-reset` : except for reseting the postgresql db, add functionality to also reset mongo db
-
-
 <br><br>
 
 ## v1.6.0
