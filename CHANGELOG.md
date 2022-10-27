@@ -1,4 +1,30 @@
 # Changelog
+## v1.6.1
+
+### UI changes
+
+ - Upgrade coreui bootstrat admin template to v.4.2.1
+
+
+### NEF APIs / backend
+
+- Change status code from `403` to `401` for invalid credentials
+- Create environment variable for MongoClient host 👉 ```MONGO_CLIENT```
+
+
+### Docker 🐳
+
+- Addition of ```services_default``` network in docker-compose. Individual services are now connected to services_default network. Environmental variable ```EXTERNAL_NET``` defines if this network is external or not (```true``` or ```false```)
+
+
+### Libraries
+
+- 🪛 Fix poetry installer - deprecated (different URL for poetry installation)
+- Import ```evolved5g ^0.8.3``` library
+- Change ```requests``` from ```^2.27.0``` 👉 ```^2.26.0```
+- Change ```pytest``` from ```^5.4.1``` 👉 ```>6```
+
+<br><br>
 
 ## v1.6.0
 

@@ -1,0 +1,62 @@
+{
+    "apiName": "api_name_2",
+    "aefProfiles": [
+      {
+        "aefId": "UNIQUE_ID THAT IS SET AUTOMATICALLY BY THE SDK. Contains the API PROV DOM ID parameter",
+        "versions": [
+          {
+            "apiVersion": "v1",
+            "expiry": "2021-11-30T10:32:02.004Z",
+            "resources": [
+              {
+                "resourceName": "hello-endpoint",
+                "commType": "REQUEST_RESPONSE",
+                "uri": "/hello",
+                "custOpName": "string",
+                "operations": [
+                  "POST"
+                ],
+                "description": "string"
+              }
+            ],
+            "custOperations": [
+              {
+                "commType": "REQUEST_RESPONSE",
+                "custOpName": "string",
+                "operations": [
+                  "POST"
+                ],
+                "description": "string"
+              }
+            ]
+          }
+        ],
+        "protocol": "HTTP_1_1",
+        "dataFormat": "JSON",
+        "securityMethods": ["Oauth", "PSK"],
+        "interfaceDescriptions": [
+          {
+            "ipv4Addr": "the ip address where the exposer relies",
+            "port": 8086,
+            "securityMethods": ["Oauth"]
+          }
+        ]
+      }
+    ],
+    "description": "API of dummy netapp to test",
+    "supportedFeatures": "fffff",
+    "shareableInfo": {
+      "isShareable": true,
+      "capifProvDoms": [
+        "string"
+      ]
+    },
+    "serviceAPICategory": "string",
+    "apiSuppFeats": "fffff",
+    "pubApiPath": {
+      "ccfIds": [
+        "string"
+      ]
+    },
+    "ccfId": "test"
+}
