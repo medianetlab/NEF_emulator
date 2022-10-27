@@ -5,6 +5,13 @@
   <img src="./backend/app/app/static/NEF_logo_400x400_light.svg" />
 </p>
 
+## Contents
+
+- [Setup locally](#-setup-locally)
+  - [Try out your setup](#try-out-your-setup)
+- [How to work with a specific tag / release](#%EF%B8%8F-how-to-work-on-a-specific-tag--release)
+- [NetApp communication options](#%EF%B8%8F-netapp-communication-options)
+- [Integration with CAPIF](#integration-with-capif)
 
 ## ⚙ Setup locally
 
@@ -154,3 +161,30 @@ Three possible ways to achieve the above approach:
 3. with **docker network connect**, try adding your container to the bridge network:
 
        docker network connect BRIDGE_NAME NETAPP_NAME
+
+## Integration with CAPIF
+
+In order to integrate NEF Emulator with CAPIF you should perform the following steps:
+
+1. The first step is to ensure that all CAPIF services are up and running. After cloning the code from the official github repository https://github.com/EVOLVED-5G/CAPIF_API_Services you can execute:
+
+```
+cd services/
+
+sudo ./run.sh
+
+./check_services_are_running.sh
+```
+
+2. Then, in NEF Emulator project, change the `EXTERNAL_NET` environment variable to **true** in `.env` file. This will enable NEF containers to join CAPIF's pre-existing network (services_default)
+
+3. Start NEF services either using `make up` or `make debug-up` commands
+
+NEF should be successfully onboard to CAPIF Core Function. To ensure that, the following files should be created in `app/core/certificates/` folder:
+
+```
+ca.crt
+private.key
+test_nef01.crt
+capif_exposer_details.json
+```
