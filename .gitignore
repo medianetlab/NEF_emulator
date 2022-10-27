@@ -1,3 +1,6 @@
 .vscode
 .mypy_cache
 .env
+.key
+.crt
+capif_exposer_details.json
