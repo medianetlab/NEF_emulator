@@ -31,7 +31,7 @@ services:
     networks:
       - services_default
 
-  mongo:
+  mongo_nef:
     image: mongo:4.4.10
     profiles: ["debug", "dev"]
     volumes:
@@ -56,7 +56,7 @@ services:
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: "${MONGO_USER}"
       ME_CONFIG_MONGODB_ADMINPASSWORD: "${MONGO_PASSWORD}"
-      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo:27017/
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo_nef:27017/
       ME_CONFIG_MONGODB_ENABLE_ADMIN: "${MONGO_EXPRESS_ENABLE_ADMIN}"
     networks:
       - services_default

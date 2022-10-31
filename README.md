@@ -112,7 +112,7 @@ If you develop your NetApp directly on the host, for example a `Flask` app runni
 ### 2. via the same docker `bridge` network
 
 If you develop your NetApp as a container, the easiest way to establish a bi-directional communication would be to `attach` it to the pre-existing bridge network that the NEF_emulator containers use:
- - this bridge network is automatically created whenever you `docker-compose up` a project, in our case that would probably be named as `nef_emulator_default`
+ - this bridge network is automatically created whenever you `docker-compose up` a project, in our case if CAPIF Core Function is integrated with NEF then the docker network is named as `services_default`. If NEF Emulator is used **without** CAPIF Core Function then the network is named as `nef_emulator_services_default`
  - Docker will provide automatic DNS resolution between these containers names
  - your NetApp will be able to connect to the NEF_emulator at `http://backend`
  - the NEF_emulator will be able to connect to your NetApp at `http://your_netapp_container_name:9999`
@@ -143,7 +143,7 @@ Three possible ways to achieve the above approach:
 
 1. with **docker**, try the `--net=...` option and provide the bridge name that you want to `attach` to:
 
-       docker container run --net=nef_emulator_default ...
+       docker container run --net=<network_name> ...
 
 2. with **docker-compose**, try adding the bridge as an external network, something like:
 
@@ -153,9 +153,9 @@ Three possible ways to achieve the above approach:
            netapp:
            ....
                networks:
-                  - nef_emulator_default
+                  - <network_name>
        networks:
-         nef_emulator_default:
+         <network_name>:
            external: true
 
 3. with **docker network connect**, try adding your container to the bridge network:
@@ -176,7 +176,7 @@ sudo ./run.sh
 ./check_services_are_running.sh
 ```
 
-2. Then, in NEF Emulator project, change the `EXTERNAL_NET` environment variable to **true** in `.env` file. This will enable NEF containers to join CAPIF's pre-existing network (services_default)
+2. Then, in NEF Emulator project, change the `EXTERNAL_NET` environment variable to **true** in `.env` file. This will enable NEF containers to join CAPIF's pre-existing network (services_default). Note that if you want to use NEF Emulator without CAPIF, then change the `EXTERNAL_NET` environment variable back to **false** in `.env` file
 
 3. Start NEF services either using `make up` or `make debug-up` commands
 

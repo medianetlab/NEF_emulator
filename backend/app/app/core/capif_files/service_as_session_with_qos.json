@@ -1,22 +1,28 @@
 {
-    "apiName": "api_name_2",
+    "apiName": "/nef/api/v1/3gpp-as-session-with-qos/",
     "aefProfiles": [
       {
-        "aefId": "UNIQUE_ID THAT IS SET AUTOMATICALLY BY THE SDK. Contains the API PROV DOM ID parameter",
+        "aefId": "string",
         "versions": [
           {
             "apiVersion": "v1",
-            "expiry": "2021-11-30T10:32:02.004Z",
+            "expiry": "2100-11-30T10:32:02.004Z",
             "resources": [
               {
-                "resourceName": "hello-endpoint",
-                "commType": "REQUEST_RESPONSE",
-                "uri": "/hello",
-                "custOpName": "string",
-                "operations": [
-                  "POST"
-                ],
-                "description": "string"
+                "resourceName": "QOS_SUBSCRIPTIONS",
+                "commType": " SUBSCRIBE_NOTIFY",
+                "uri": "/{scsAsId}/subscriptions",
+                "custOpName": "http_post",
+                "operations": ["GET","POST"],
+                "description": "Endpoint to manage monitoring subscriptions"
+              },
+              {
+                "resourceName": "QOS_SUBSCRIPTION_SINGLE",
+                "commType": " SUBSCRIBE_NOTIFY",
+                "uri": "/{scsAsId}/subscriptions/{subscriptionId}",
+                "custOpName": "http_get",
+                "operations": ["GET","PUT","DELETE"],
+                "description": "Endpoint to manage single subscription"
               }
             ],
             "custOperations": [
@@ -36,8 +42,8 @@
         "securityMethods": ["Oauth", "PSK"],
         "interfaceDescriptions": [
           {
-            "ipv4Addr": "the ip address where the exposer relies",
-            "port": 8086,
+            "ipv4Addr": "127.0.0.1",
+            "port": 8888,
             "securityMethods": ["Oauth"]
           }
         ]
@@ -58,5 +64,5 @@
         "string"
       ]
     },
-    "ccfId": "test"
-}
+    "ccfId": "string"
+  }
