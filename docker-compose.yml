@@ -89,6 +89,32 @@ services:
       - services_default
 
 
+  reverse_proxy:
+    build:
+      context: nginx
+      dockerfile: Dockerfile.nginx
+    image: nginx-nef
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      APP_ENV: "prod"
+      APP_NAME: "webserver"
+      APP_DEBUG: "false"
+      SERVICE_NAME: "webserver"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - nginxdata:/var/log/nginx
+      - ./nginx/conf.d/app.conf:/etc/nginx/conf.d/app.conf
+      - ./nginx/certs:/etc/nginx/certs
+    depends_on:
+      - backend
+      - mongo_nef
+      - db
+    networks:
+      - services_default
+
 networks:
     services_default:
       external: ${EXTERNAL_NET}
@@ -98,4 +124,5 @@ volumes:
   app-db-data:
   pgadmin-data:
   app-mongo-db-data:
+  nginxdata:
 
