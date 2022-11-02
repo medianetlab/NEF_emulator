@@ -1,7 +1,6 @@
 import threading, logging, time, requests
 from fastapi import APIRouter, Path, Depends, HTTPException
 from fastapi.encoders import jsonable_encoder
-from pymongo import MongoClient
 from typing import Any
 from app import crud, tools, models
 from app.crud import crud_mongo
@@ -11,7 +10,6 @@ from app.db.session import SessionLocal, client
 from app.api import deps
 from app.schemas import Msg
 from app.tools import monitoring_callbacks, timer
-from sqlalchemy.orm import Session
 
 #Dictionary holding threads that are running per user id.
 threads = {}
@@ -189,8 +187,9 @@ class BackgroundTasks(threading.Thread):
                     if qos_sub:
                         active_subscriptions.update({"as_session_with_qos" : True})
                         reporting_freq = qos_sub["qosMonInfo"]["repFreqs"]
-                        reporting_period = qos_sub["qosMonInfo"]["repPeriod"]
+                        
                         if "PERIODIC" in reporting_freq:
+                            reporting_period = qos_sub["qosMonInfo"]["repPeriod"]
                             rt = timer.RepeatedTimer(reporting_period, qos_callback.qos_notification_control, qos_sub, ues[f"{supi}"]["ip_address_v4"], ues.copy(),  ues[f"{supi}"])
                             # qos_callback.qos_notification_control(qos_sub, ues[f"{supi}"]["ip_address_v4"], ues.copy(),  ues[f"{supi}"])
 
