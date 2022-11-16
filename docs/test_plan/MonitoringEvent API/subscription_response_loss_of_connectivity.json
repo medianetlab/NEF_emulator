@@ -1,0 +1,10 @@
+{
+  "externalId": "10001@domain.com",
+  "notificationDestination": "http://localhost:80/api/v1/utils/monitoring/callback",
+  "monitoringType": "LOSS_OF_CONNECTIVITY",
+  "maximumNumberOfReports": 1000,
+  "monitorExpireTime": "2023-11-16T14:20:56.299000+00:00",
+  "maximumDetectionTime": 5,
+  "ipv4Addr": "10.0.0.1",
+  "link": "http://localhost:8888/nef/api/v1/3gpp-monitoring-event/v1/myNetapp/subscriptions/6374f209a5b10ea02a59f7de"
+}
