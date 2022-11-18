@@ -52,7 +52,7 @@ class Settings(BaseSettings):
         )
 
     MONGO_CLIENT: str
-
+    CAPIF_HOST: str
     SMTP_TLS: bool = True
     SMTP_PORT: Optional[int] = None
     SMTP_HOST: Optional[str] = None

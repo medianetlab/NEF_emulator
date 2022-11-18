@@ -1,8 +1,8 @@
-import logging
+import logging, requests
 from evolved5g.sdk import CAPIFExposerConnector
 from tenacity import after_log, before_log, retry, stop_after_attempt, wait_fixed
 from app.db.session import SessionLocal
-import requests
+from app.core.config import settings
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ def capif_nef_connector():
     """
     try:
         capif_connector = CAPIFExposerConnector(certificates_folder="app/core/certificates",
-                                                capif_host="capifcore",
+                                                capif_host=settings.CAPIF_HOST,
                                                 capif_http_port="8080",
                                                 capif_https_port="443",
                                                 capif_netapp_username="test_nef01",
