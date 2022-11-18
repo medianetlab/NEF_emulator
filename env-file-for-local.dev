@@ -42,8 +42,10 @@ MONGO_CLIENT=mongodb://mongo_nef:27017/
 # MongoExpress
 MONGO_EXPRESS_ENABLE_ADMIN=true
 
+# CAPIF
 # Compose Networking 
 # If CAPIF CORE FUNCTION is up and running set EXTERNAL_NET to true 
 # Else if NEF is used as a standalone service set EXTERNAL_NET to false
 
+CAPIF_HOST=capifcore
 EXTERNAL_NET=false
