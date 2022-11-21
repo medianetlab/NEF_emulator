@@ -29,7 +29,7 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 
 # ================================= Sub Application - Northbound APIs =================================
 
-nefapi = FastAPI(title="Northbound APIs", openapi_prefix="/nef")
+nefapi = FastAPI(title="Northbound APIs")
 nefapi.include_router(nef_router, prefix=settings.API_V1_STR)
 app.mount("/nef", nefapi)
 
