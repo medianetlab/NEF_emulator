@@ -1,3 +1,5 @@
+import random
+
 from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, Path
 from fastapi.encoders import jsonable_encoder
@@ -56,28 +58,54 @@ def create_UE(
     Create new UE.
     """
     #Validate Unique ids
-    if crud.ue.get_supi(db=db, supi=item_in.supi):
-        raise HTTPException(
-            status_code=409, detail=f"UE with supi {item_in.supi} already exists")
-    elif crud.ue.get_ipv4(db=db, ipv4=str(item_in.ip_address_v4), owner_id=current_user.id):
-        raise HTTPException(
-            status_code=409, detail=f"UE with ipv4 {str(item_in.ip_address_v4)} already exists")
-    elif crud.ue.get_ipv6(db=db, ipv6=str(item_in.ip_address_v6.exploded), owner_id=current_user.id):
-        raise HTTPException(
-            status_code=409, detail=f"UE with ipv6 {str(item_in.ip_address_v6)} already exists")
-    elif crud.ue.get_mac(db=db, mac=str(item_in.mac_address), owner_id=current_user.id):
-        raise HTTPException(
-            status_code=409, detail=f"UE with mac {str(item_in.mac_address)} already exists")
-    elif crud.ue.get_externalId(db=db, externalId=item_in.external_identifier, owner_id=current_user.id):
-        raise HTTPException(
-            status_code=409, detail=f"UE with external id {str(item_in.mac_address)} already exists")
+    if item_in.external_identifier.find("companionapp"):
+        json_data = jsonable_encoder(item_in)
 
-    json_data = jsonable_encoder(item_in)
-    json_data['ip_address_v4'] = str(item_in.ip_address_v4)
-    json_data['ip_address_v6'] = str(item_in.ip_address_v6.exploded)
-    json_data['Cell_id'] = None
+        #Random ipv4
+        ipv4 = ".".join(map(str, (random.randint(0, 255) for _ in range(4))))
+        json_data.update({"ip_address_v4" : ipv4})
+        print(ipv4)
+        #Randomly select values from hex_string sequence
+        hex_sequence = '0123456789abcdef'
+        random_hex = ':'.join(''.join([random.choice(hex_sequence) for _ in range(4)]) for _ in range(8))
+        ipv6 = random_hex
+        json_data.update({"ip_address_v6" : ipv6})
+        print(ipv6)
+        #Random supi
+        supi_sequence = ''.join(map(str, (random.randint(1, 9) for _ in range(10))))
+        json_data.update({"supi" : "20201"+supi_sequence})
+        print("20201"+supi_sequence)
+        #Random mac_address
+        random_mac = '-'.join(''.join([random.choice(hex_sequence) for _ in range(2)]) for _ in range(6))
+        json_data.update({"mac_address" : random_mac})
+        print(random_mac)
 
-    UE = crud.ue.create_with_owner(db=db, obj_in=json_data, owner_id=current_user.id)
+    try:
+        if crud.ue.get_supi(db=db, supi=item_in.supi):
+            raise HTTPException(
+                status_code=409, detail=f"UE with supi {item_in.supi} already exists")
+        elif crud.ue.get_ipv4(db=db, ipv4=str(item_in.ip_address_v4), owner_id=current_user.id):
+            raise HTTPException(
+                status_code=409, detail=f"UE with ipv4 {str(item_in.ip_address_v4)} already exists")
+        elif crud.ue.get_ipv6(db=db, ipv6=str(item_in.ip_address_v6.exploded), owner_id=current_user.id):
+            raise HTTPException(
+                status_code=409, detail=f"UE with ipv6 {str(item_in.ip_address_v6)} already exists")
+        elif crud.ue.get_mac(db=db, mac=str(item_in.mac_address), owner_id=current_user.id):
+            raise HTTPException(
+                status_code=409, detail=f"UE with mac {str(item_in.mac_address)} already exists")
+        elif crud.ue.get_externalId(db=db, externalId=item_in.external_identifier, owner_id=current_user.id):
+            raise HTTPException(
+                status_code=409, detail=f"UE with external id {str(item_in.mac_address)} already exists")
+
+        json_data = jsonable_encoder(item_in)
+        json_data['ip_address_v4'] = str(item_in.ip_address_v4)
+        json_data['ip_address_v6'] = str(item_in.ip_address_v6.exploded)
+        json_data['Cell_id'] = None 
+    except AttributeError as ex:
+        print(ex)
+
+
+    crud.ue.create_with_owner(db=db, obj_in=json_data, owner_id=current_user.id)
     json_data.update({"path_id" : 0})
 
     return json_data
@@ -100,25 +128,32 @@ def update_UE(
     if not crud.user.is_superuser(current_user) and (UE.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
 
-    ipv4_str = str(item_in.ip_address_v4)
-    ipv6_str = item_in.ip_address_v6.exploded
+    if (UE.external_identifier != item_in.external_identifier) and crud.ue.get_externalId(db=db, externalId=item_in.external_identifier, owner_id=current_user.id):
+            raise HTTPException(
+                status_code=409, detail=f"This external id {item_in.external_identifier} already exists")
 
-    if (UE.ip_address_v4 != ipv4_str) and crud.ue.get_ipv4(db=db, ipv4=ipv4_str, owner_id=current_user.id):
-        raise HTTPException(
-            status_code=409, detail=f"This ipv4 {ipv4_str} already exists")
-    elif (UE.ip_address_v6 != ipv6_str) and crud.ue.get_ipv6(db=db, ipv6=ipv6_str, owner_id=current_user.id):
-        raise HTTPException(
-            status_code=409, detail=f"This ipv6 {ipv6_str} already exists")
-    elif (UE.mac_address != item_in.mac_address) and crud.ue.get_mac(db=db, mac=str(item_in.mac_address), owner_id=current_user.id):
-        raise HTTPException(
-            status_code=409, detail=f"This mac {item_in.mac_address} already exists")
-    elif (UE.external_identifier != item_in.external_identifier) and crud.ue.get_externalId(db=db, externalId=item_in.external_identifier, owner_id=current_user.id):
-        raise HTTPException(
-            status_code=409, detail=f"This external id {item_in.mac_address} already exists")
+    try:
+        ipv4_str = str(item_in.ip_address_v4)
+        ipv6_str = item_in.ip_address_v6.exploded
 
-    json_data = jsonable_encoder(item_in)
-    json_data['ip_address_v4'] = str(item_in.ip_address_v4)
-    json_data['ip_address_v6'] = str(item_in.ip_address_v6.exploded)
+        if (UE.ip_address_v4 != ipv4_str) and crud.ue.get_ipv4(db=db, ipv4=ipv4_str, owner_id=current_user.id):
+            raise HTTPException(
+                status_code=409, detail=f"This ipv4 {ipv4_str} already exists")
+        elif (UE.ip_address_v6 != ipv6_str) and crud.ue.get_ipv6(db=db, ipv6=ipv6_str, owner_id=current_user.id):
+            raise HTTPException(
+                status_code=409, detail=f"This ipv6 {ipv6_str} already exists")
+        elif (UE.mac_address != item_in.mac_address) and crud.ue.get_mac(db=db, mac=str(item_in.mac_address), owner_id=current_user.id):
+            raise HTTPException(
+                status_code=409, detail=f"This mac {item_in.mac_address} already exists")
+
+        json_data = jsonable_encoder(item_in)
+        json_data['ip_address_v4'] = str(item_in.ip_address_v4)
+        json_data['ip_address_v6'] = str(item_in.ip_address_v6.exploded)
+    except AttributeError as ex: 
+        print(ex)
+    finally:
+        updated_data = item_in.dict(exclude_unset=True)
+        json_data = jsonable_encoder(updated_data)
 
     UE = crud.ue.update(db=db, db_obj=UE, obj_in=json_data)
     json_data.update({"supi": supi, "path_id" : UE.path_id})
