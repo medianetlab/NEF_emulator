@@ -63,7 +63,7 @@ db-init: #simple scenario with 3 UEs, 3 Cells, 1 gNB
 
 db-reset:
 	docker-compose exec db psql -h localhost -U postgres -d app -c 'TRUNCATE TABLE cell, gnb, monitoring, path, points, ue RESTART IDENTITY;'
-	docker-compose exec mongo /bin/bash -c 'mongo fastapi -u $$MONGO_USER -p $$MONGO_PASSWORD --authenticationDatabase admin --eval "db.dropDatabase();"'
+	docker-compose exec mongo_nef /bin/bash -c 'mongo fastapi -u $$MONGO_USER -p $$MONGO_PASSWORD --authenticationDatabase admin --eval "db.dropDatabase();"'
 
 
 db-reinit: db-reset db-init

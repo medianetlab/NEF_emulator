@@ -33,8 +33,8 @@ def capif_nef_connector():
     try:
         capif_connector = CAPIFExposerConnector(certificates_folder="app/core/certificates",
                                                 capif_host=settings.CAPIF_HOST,
-                                                capif_http_port="8080",
-                                                capif_https_port="443",
+                                                capif_http_port=settings.CAPIF_HTTP_PORT,
+                                                capif_https_port=settings.CAPIF_HTTPS_PORT,
                                                 capif_netapp_username="test_nef01",
                                                 capif_netapp_password="test_netapp_password",
                                                 description= "test_app_description"
