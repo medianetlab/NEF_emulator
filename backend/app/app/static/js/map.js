@@ -84,35 +84,36 @@ $( document ).ready(function() {
           wait_for_UEs_data();
         else {
             // when ready,
-            //  1. get and paint every path per UE
-            //  2. create start/stop buttons
-            for (const ue of ues) {
+            // //  1. get and paint every path per UE
+            // //  2. create start/stop buttons
+            // for (const ue of ues) {
 
-                // if no path selected, skip map paint and creation of button
-                if (ue.path_id == 0) { continue; }
+            //     // if no path selected, skip map paint and creation of button
+            //     if (ue.path_id == 0) { continue; }
 
-                // if not already fetched and painted, do so
-                if ( !helper_check_path_is_already_painted( ue.path_id ) ) { 
-                    api_get_specific_path(ue.path_id);
-                    paths_painted[ue.path_id] = true;
-                }
-                ui_generate_loop_btn_for( ue );
-                ui_set_loop_btn_status_for( ue );
-            }
+            //     // if not already fetched and painted, do so
+            //     if ( !helper_check_path_is_already_painted( ue.path_id ) ) { 
+            //         api_get_specific_path(ue.path_id);
+            //         paths_painted[ue.path_id] = true;
+            //     }
+            //     ui_generate_loop_btn_for( ue );
+            //     ui_set_loop_btn_status_for( ue );
+            // }
 
 
             if ( ues.length >0 ) {
-                ui_add_ue_btn_listeners();
-                ui_add_ue_all_btn_listener();
+                // ui_add_ue_btn_listeners();
+                // ui_add_ue_all_btn_listener();
+                start_map_refresh_interval();
             }
-            else {
-                $('#btn-start-all').removeClass("btn-success").addClass("btn-secondary").attr("disabled",true);
-            }
+            // else {
+            //     $('#btn-start-all').removeClass("btn-success").addClass("btn-secondary").attr("disabled",true);
+            // }
 
-            // edge case: UEs with no paths assigned --> disable button
-            if (paths_painted.length == 0) {
-                $('#btn-start-all').removeClass("btn-success").addClass("btn-secondary").attr("disabled",true);
-            }
+            // // edge case: UEs with no paths assigned --> disable button
+            // if (paths_painted.length == 0) {
+            //     $('#btn-start-all').removeClass("btn-success").addClass("btn-secondary").attr("disabled",true);
+            // }
         }
       }, 100);
     };
@@ -156,7 +157,7 @@ function start_map_refresh_interval() {
     if (UE_refresh_interval == null) {
 
         if ( UE_refresh_sec == 0 ) {
-            $('.map-reload-select').prop("disabled",false);
+            // $('.map-reload-select').prop("disabled",false);
             return;
         }
 
@@ -171,7 +172,7 @@ function start_map_refresh_interval() {
         }, UE_refresh_sec);
 
         // enable the select button
-        $('.map-reload-select').prop("disabled",false);
+        // $('.map-reload-select').prop("disabled",false);
         $('.map-reload-select').val(UE_refresh_sec);
     }
 }
@@ -183,7 +184,7 @@ function stop_map_refresh_interval() {
     UE_refresh_interval = null;
     
     // disable the select button
-    $('.map-reload-select').prop("disabled",true);
+    // $('.map-reload-select').prop("disabled",true);
     // UE_refresh_sec = 0;
     // $('.map-reload-select').val(0);
 }
@@ -807,7 +808,7 @@ function ui_add_ue_btn_listeners(){
             
             // start location UE loop
             api_start_loop({"supi":curr_supi});
-            start_map_refresh_interval();
+            
 
             $(this).data("running",true);
             $(this).removeClass('btn-success').addClass('btn-danger');
