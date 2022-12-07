@@ -168,7 +168,7 @@ function start_map_refresh_interval() {
 
         // start updating
         UE_refresh_interval = setInterval(function(){ 
-            api_get_moving_UEs();
+            api_get_UEs();
         }, UE_refresh_sec);
 
         // enable the select button
