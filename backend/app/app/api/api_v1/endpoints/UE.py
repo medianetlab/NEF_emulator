@@ -96,16 +96,12 @@ def create_UE(
                 raise HTTPException(
                     status_code=409, detail=f"UE with mac {mac_comp} already exists")
             elif crud.ue.get_externalId(db=db, externalId=item_in.external_identifier, owner_id=current_user.id):
-                raise HTTPException(
-                    status_code=409, detail=f"UE with external id {item_in.external_identifier} already exists")
+                ue = crud.ue.get_externalId(db=db, externalId=item_in.external_identifier, owner_id=current_user.id)
+                return JSONResponse(content={"detail" : f"UE with external id {item_in.external_identifier} already exists",  "supi" : ue.supi}, status_code=409)
 
-            json_data = jsonable_encoder(item_in)
-            json_data['ip_address_v4'] = str(item_in.ip_address_v4)
-            json_data['ip_address_v6'] = str(item_in.ip_address_v6.exploded)
             json_data['Cell_id'] = None 
         except AttributeError as ex:
             print(ex)
-    
     else:
         try:
             if crud.ue.get_supi(db=db, supi=item_in.supi):
@@ -130,7 +126,6 @@ def create_UE(
             json_data['Cell_id'] = None 
         except AttributeError as ex:
             print(ex)
-
 
     crud.ue.create_with_owner(db=db, obj_in=json_data, owner_id=current_user.id)
     json_data.update({"path_id" : 0})
@@ -161,7 +156,7 @@ def update_UE(
 
     try:
         ipv4_str = str(item_in.ip_address_v4)
-        ipv6_str = item_in.ip_address_v6.exploded
+        ipv6_str = str(item_in.ip_address_v6)
 
         if (UE.ip_address_v4 != ipv4_str) and crud.ue.get_ipv4(db=db, ipv4=ipv4_str, owner_id=current_user.id):
             raise HTTPException(
@@ -173,9 +168,10 @@ def update_UE(
             raise HTTPException(
                 status_code=409, detail=f"This mac {item_in.mac_address} already exists")
 
-        json_data = jsonable_encoder(item_in)
+        updated_data = item_in.dict(exclude_unset=True)
+        json_data = jsonable_encoder(updated_data)
         json_data['ip_address_v4'] = str(item_in.ip_address_v4)
-        json_data['ip_address_v6'] = str(item_in.ip_address_v6.exploded)
+        json_data['ip_address_v6'] = str(item_in.ip_address_v6)
     except AttributeError as ex: 
         print(ex)
     finally:
