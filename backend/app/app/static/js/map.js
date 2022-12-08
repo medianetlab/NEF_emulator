@@ -12,6 +12,8 @@ var paths = null;
 
 var moving_ues = null;
 
+var UEs_first_paint = true;
+
 
 // variables used for painting / updating the map
 //  map layer groups
@@ -168,7 +170,7 @@ function start_map_refresh_interval() {
 
         // start updating
         UE_refresh_interval = setInterval(function(){ 
-            api_get_moving_UEs();
+            api_get_UEs();
         }, UE_refresh_sec);
 
         // enable the select button
@@ -392,34 +394,114 @@ function ui_map_paint_UEs() {
 
     // console.log(ues);
 
-    for (const ue of ues) {
-        // create markers - this will be executed only once!
-        var walk_icon = L.divIcon({
-            className: 'emu-pin-box',
-            iconSize: L.point(30,42),
-            iconAnchor: L.point(15,42),
-            popupAnchor: L.point(0,-38),
-            tooltipAnchor: L.point(0,0),
-            html: '<div class="pin-bg pin-bg-walk"></div>\
-                   <div class="pin-icon ion-md-walk"></div>'
-        });
+    // for (const ue of ues) {
+    //     // create markers - this will be executed only once!
+    //     var walk_icon = L.divIcon({
+    //         className: 'emu-pin-box',
+    //         iconSize: L.point(30,42),
+    //         iconAnchor: L.point(15,42),
+    //         popupAnchor: L.point(0,-38),
+    //         tooltipAnchor: L.point(0,0),
+    //         html: '<div class="pin-bg pin-bg-walk"></div>\
+    //                <div class="pin-icon ion-md-walk"></div>'
+    //     });
         
-        ue_markers[ue.supi] = L.marker([ue.latitude,ue.longitude], {icon: walk_icon}).addTo(mymap)
-            .bindTooltip(ue.ip_address_v4)
-            .bindPopup("<b>"+ ue.name +"</b><br />"+
-                       // ue.description +"<br />"+
-                       "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
-                       "Cell ID: " + ( (ue.cell_id_hex==null)? "-" : ue.cell_id_hex ) +"<br />"+
-                       "External identifier: " + ue.external_identifier +"<br />"+
-                       "Speed:"+ ue.speed)
-            .addTo(ues_lg); // add to layer group
+    //     ue_markers[ue.supi] = L.marker([ue.latitude,ue.longitude], {icon: walk_icon}).addTo(mymap)
+    //         .bindTooltip(ue.ip_address_v4)
+    //         .bindPopup("<b>"+ ue.name +"</b><br />"+
+    //                    // ue.description +"<br />"+
+    //                    "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
+    //                    "Cell ID: " + ( (ue.cell_id_hex==null)? "-" : ue.cell_id_hex ) +"<br />"+
+    //                    "External identifier: " + ue.external_identifier +"<br />"+
+    //                    "Speed:"+ ue.speed)
+    //         .addTo(ues_lg); // add to layer group
 
-        if ( ue.cell_id_hex==null ) {
-            L.DomUtil.addClass(ue_markers[ue.supi]._icon, 'null-cell');
-        } else {
-            L.DomUtil.removeClass(ue_markers[ue.supi]._icon, 'null-cell');
+    //     // if ( ue.cell_id_hex==null ) {
+    //     //     L.DomUtil.addClass(ue_markers[ue.supi]._icon, 'null-cell');
+    //     // } else {
+    //     //     L.DomUtil.removeClass(ue_markers[ue.supi]._icon, 'null-cell');
+    //     // }
+            
+    //     // update UE marker color
+    //     temp_icon = L.DomUtil.get(ue_markers[ue.supi]._icon);
+
+    //     if (temp_icon == null) {
+    //         // if the user has unchecked the UEs checkbox ✅ on the map settings
+    //         // temp_icon is null and triggers console errors
+    //         // if this is the case, continue...
+    //         continue;
+    //     } else {
+    //         if ( ue.cell_id_hex==null ) {
+    //             // 'null-cell' class gives a grey color
+    //             // to UEs that are not connected to a cell
+    //             L.DomUtil.addClass(temp_icon, 'null-cell');
+    //         } else {
+    //             L.DomUtil.removeClass(temp_icon, 'null-cell');
+    //         }
+    //     }
+    // }
+    for (const ue of ues) {
+        if (UEs_first_paint) { 
+            // create markers - this will be executed only once!
+            var walk_icon = L.divIcon({
+                className: 'emu-pin-box',
+                iconSize: L.point(30,42),
+                iconAnchor: L.point(15,42),
+                popupAnchor: L.point(0,-38),
+                tooltipAnchor: L.point(0,0),
+                html: '<div class="pin-bg pin-bg-walk"></div>\
+                       <div class="pin-icon ion-md-walk"></div>'
+            });
+
+            ue_markers[ue.supi] = L.marker([ue.latitude,ue.longitude], {icon: walk_icon}).addTo(mymap)
+                .bindTooltip(ue.ip_address_v4)
+                .bindPopup("<b>"+ ue.name +"</b><br />"+
+                           // ue.description +"<br />"+
+                           "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
+                           "Cell ID: " + ( (ue.cell_id_hex==null)? "-" : ue.cell_id_hex ) +"<br />"+
+                           "External identifier: " + ue.external_identifier +"<br />"+
+                           "Speed:"+ ue.speed)
+                .addTo(ues_lg); // add to layer group
+
+            if ( ue.cell_id_hex==null ) {
+                L.DomUtil.addClass(ue_markers[ue.supi]._icon, 'null-cell');
+            } else {
+                L.DomUtil.removeClass(ue_markers[ue.supi]._icon, 'null-cell');
+            }
+
+        }
+        else {
+            // move existing markers
+            var newLatLng = [ue.latitude,ue.longitude];
+            ue_markers[ue.supi].setLatLng(newLatLng);
+            ue_markers[ue.supi].setPopupContent("<b>"+ ue.name +"</b><br />"+
+                           // ue.description +"<br />"+
+                           "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
+                           "Cell ID: " + ( (ue.cell_id_hex==null)? "-" : ue.cell_id_hex ) +"<br />"+
+                           "External identifier: " + ue.external_identifier +"<br />"+
+                           "Speed:"+ ue.speed);
+
+
+            // update UE marker color
+            temp_icon = L.DomUtil.get(ue_markers[ue.supi]._icon);
+
+            if (temp_icon == null) {
+                // if the user has unchecked the UEs checkbox ✅ on the map settings
+                // temp_icon is null and triggers console errors
+                // if this is the case, continue...
+                continue;
+            } else {
+                if ( ue.cell_id_hex==null ) {
+                    // 'null-cell' class gives a grey color
+                    // to UEs that are not connected to a cell
+                    L.DomUtil.addClass(temp_icon, 'null-cell');
+                } else {
+                    L.DomUtil.removeClass(temp_icon, 'null-cell');
+                }
+            }
         }
     }
+    UEs_first_paint = false;
 }
 
 
