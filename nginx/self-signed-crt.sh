@@ -13,7 +13,7 @@ fi
 openssl genrsa -out /app/app/core/certificates/server_nef.pem 2048
 
 # Generate a CSR (Certificate Signing Request)
-openssl req -new -key /app/app/core/certificates/server_nef.pem -out /app/app/core/certificates/server_nef.csr
+openssl req -new -key /app/app/core/certificates/server_nef.pem -out /app/app/core/certificates/server_nef.csr  -subj "/C=GR/ST=Athens/L=Earth/O=NCSRD/OU=IT/CN=www.nef-emulator.com/emailAddress=email@example.com"
 
 # Generate a Self Signed Certificate
 openssl x509 -req -days 365 -in /app/app/core/certificates/server_nef.csr -signkey /app/app/core/certificates/server_nef.pem -out /app/app/core/certificates/self_signed_nef.pem

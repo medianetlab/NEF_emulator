@@ -7,3 +7,7 @@ COPY conf.d/app.conf /etc/nginx/conf.d/app.conf
 RUN mkdir -p /etc/nginx/certs
 
 COPY ./certs /etc/nginx/certs
+
+COPY ./self-signed-crt.sh /
+
+RUN /self-signed-crt.sh
