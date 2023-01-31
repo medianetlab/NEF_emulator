@@ -10,4 +10,5 @@ COPY ./certs /etc/nginx/certs
 
 COPY ./self-signed-crt.sh /
 
+#Create the private-public keys only on build
 RUN /self-signed-crt.sh

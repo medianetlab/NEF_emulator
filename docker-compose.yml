@@ -94,7 +94,6 @@ services:
       context: nginx
       dockerfile: Dockerfile.nginx
     image: nginx-nef
-    command: /self-signed-crt.sh
     restart: unless-stopped
     env_file: .env
     environment:
