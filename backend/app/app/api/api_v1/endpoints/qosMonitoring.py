@@ -41,7 +41,7 @@ def read_active_subscriptions(
 qos_callback_router = APIRouter()
 
 @qos_callback_router.post("{$request.body.notificationDestination}", response_class=Response)
-def monitoring_notification(body: schemas.UserPlaneNotificationData):
+def as_session_with_qos_notification(body: schemas.UserPlaneNotificationData):
     pass
 
 @router.post("/{scsAsId}/subscriptions", responses={201: {"model" : schemas.AsSessionWithQoSSubscription}}, callbacks=qos_callback_router.routes)
