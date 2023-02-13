@@ -5,4 +5,4 @@
 *.crt
 *.csr
 *.pem
-capif_provider_details.json
+.capif_provider_details.json
