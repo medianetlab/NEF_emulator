@@ -3,5 +3,6 @@
 .env
 *.key
 *.crt
-!ca.crt
-capif_exposer_details.json
+*.csr
+*.pem
+capif_provider_details.json
