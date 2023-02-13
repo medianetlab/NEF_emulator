@@ -5,5 +5,4 @@
 *.crt
 *.pem
 *.csr
-!ca.crt
 capif_exposer_details.json
