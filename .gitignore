@@ -5,4 +5,4 @@
 *.crt
 *.csr
 *.pem
-.capif_provider_details.json
+backend/app/app/core/certificates/capif_provider_details.json

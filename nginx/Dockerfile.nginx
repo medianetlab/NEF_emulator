@@ -7,8 +7,10 @@ COPY conf.d/app.conf /etc/nginx/conf.d/app.conf
 RUN mkdir -p /etc/nginx/certs
 
 COPY ./certs /etc/nginx/certs
-
+COPY ./dynamic_ports.sh /
+RUN chmod 700 dynamic_ports.sh
 COPY ./self-signed-crt.sh /
+
 
 #Create the private-public keys only on build
 RUN /self-signed-crt.sh

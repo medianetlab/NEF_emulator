@@ -101,12 +101,13 @@ services:
       APP_NAME: "webserver"
       APP_DEBUG: "false"
       SERVICE_NAME: "webserver"
+    hostname: ${NEF_HOST}
     ports:
-      - "80:80"
-      - "443:443"
+      - "${NGINX_HTTP}:80"
+      - "${NGINX_HTTPS}:443"
     volumes:
       - nginxdata:/var/log/nginx
-      - ./nginx/conf.d/app.conf:/etc/nginx/conf.d/app.conf
+      - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
       - ./nginx/certs:/etc/nginx/certs
     depends_on:
       - backend
@@ -114,6 +115,7 @@ services:
       - db
     networks:
       - services_default
+    command: /dynamic_ports.sh
 
 networks:
     services_default:
