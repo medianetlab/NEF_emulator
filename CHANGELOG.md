@@ -1,4 +1,29 @@
 # Changelog
+## v1.6.2
+
+### NEF APIs / backend
+
+- Create environment variable for MongoClient host 👉 ```MONGO_CLIENT```
+- Add publish service from evolved5g library to publish the service APIs into CAPIF
+- Add service description `json` files to support the publish service
+- Fix LOCATION_REPORTING one time requests bug (commit e27c82470a51faa4e0ebebf7dd28207993779e02)
+
+### Docker 🐳
+
+-  Change mongo service in docker-compose 👉mongo_nef
+-  Create env variables for CAPIF hostname 👉`CAPIF_HOST`
+-  Create env variables for CAPIF ports 👉`CAPIF_HTTP_PORT` `CAPIF_HTTP_PORT`
+
+### Libraries
+
+-  🪛 Fix python version incompatibility between docker-image and poetry (from `3.9.7` 👉 `^3.9.7`)
+
+### Other
+
+ - ✔ Add /app/app/core/certificates folder to save certificates from CAPIF locally
+ - ✔ Creation of Test descriptions for UE_REACHABILITY and LOSS_OF_CONNECTIVITY events on Monitoring Event API /docs/test_plan 
+-  🪛 Fix python `make db-reset` command
+
 ## v1.6.1
 
 ### UI changes
