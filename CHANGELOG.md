@@ -3,7 +3,6 @@
 
 ### NEF APIs / backend
 
-- Create environment variable for MongoClient host 👉 ```MONGO_CLIENT```
 - Add publish service from evolved5g library to publish the service APIs into CAPIF
 - Add service description `json` files to support the publish service
 - Fix LOCATION_REPORTING one time requests bug (commit e27c82470a51faa4e0ebebf7dd28207993779e02)
