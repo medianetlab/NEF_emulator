@@ -25,6 +25,7 @@ pytest = ">6"
 python-jose = {extras = ["cryptography"], version = "^3.1.0"}
 aiofiles = "^0.6.0"
 evolved5g = "^0.8.3"
+pyOpenSSL = "23.0.0" 
 
 
 [tool.poetry.dev-dependencies]

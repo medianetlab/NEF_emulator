@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Any, Union
-
+from OpenSSL import crypto
 from jose import jwt
 from passlib.context import CryptContext
 
@@ -9,7 +9,7 @@ from app.core.config import settings
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-ALGORITHM = "HS256"
+ALGORITHM = ("HS256", "RS256")
 
 
 def create_access_token(
@@ -32,3 +32,15 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
+
+def extract_public_key(cert_path: str):
+    try:
+        with open(cert_path, 'r') as f:
+            cert = f.read()
+    except FileNotFoundError as e:
+        print(e)
+        
+    crtObj = crypto.load_certificate(crypto.FILETYPE_PEM, cert)
+    pubKeyObject = crtObj.get_pubkey()
+    pubKeyString = crypto.dump_publickey(crypto.FILETYPE_PEM,pubKeyObject)
+    return pubKeyString
