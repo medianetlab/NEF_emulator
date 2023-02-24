@@ -6,3 +6,4 @@
 *.csr
 *.pem
 backend/app/app/core/certificates/capif_provider_details.json
+venv/
