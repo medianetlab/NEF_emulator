@@ -1,4 +1,4 @@
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.9
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.10
 
 WORKDIR /app/
 
@@ -24,4 +24,13 @@ RUN bash -c "if [ $INSTALL_JUPYTER == 'true' ] ; then pip install jupyterlab ; f
 COPY ./app /app
 ENV PYTHONPATH=/app
 
+WORKDIR /
+
+RUN git clone https://github.com/EVOLVED-5G/SDK-CLI.git && \
+    cd SDK-CLI/ && \
+    git checkout libraries && \ 
+    python3 setup.py install && \ 
+    cp -R evolved5g /usr/local/lib/python3.10/site-packages/
+
+WORKDIR /app/
 COPY ./start-reload.sh /
