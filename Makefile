@@ -33,7 +33,7 @@ build:
 	docker-compose --profile debug build
 
 build-no-cache:
-	docker-compose --profile debug build --no-cache
+	docker-compose --profile debug build --no-cache --pull
 
 logs:
 	docker-compose logs -f

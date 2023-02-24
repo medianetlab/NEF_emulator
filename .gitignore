@@ -3,5 +3,7 @@
 .env
 *.key
 *.crt
-!ca.crt
-capif_exposer_details.json
+*.csr
+*.pem
+backend/app/app/core/certificates/capif_provider_details.json
+venv/
