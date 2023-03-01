@@ -14,7 +14,7 @@ from .ue_movement import retrieve_ue_state, retrieve_ue
 router = APIRouter()
 db_collection= 'MonitoringEvent'
 
-@router.get("/{scsAsId}/subscriptions")
+@router.get("/{scsAsId}/subscriptions", response_model=List[schemas.MonitoringEventSubscription], responses={204: {"model" : None}})
 def read_active_subscriptions(
     *,
     scsAsId: str = Path(..., title="The ID of the Netapp that read all the subscriptions", example="myNetapp"),
