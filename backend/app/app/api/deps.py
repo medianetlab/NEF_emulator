@@ -30,7 +30,6 @@ def verify_with_public_key(tokens: Dict[str, str] = Depends(reusable_oauth2)):
         try:
             if "capif_token" in tokens:
                 token = tokens.get("capif_token") 
-                print(f"CAPIF token {token}")
             else:
                 token = tokens.get("token")
 
@@ -52,7 +51,6 @@ def get_current_user(
     try:
         if "nef_token" in tokens:
             token = tokens.get("nef_token") 
-            print(f"NEF token {token}")
         else:
             token = tokens.get("token")
 
