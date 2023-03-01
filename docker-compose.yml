@@ -66,8 +66,6 @@ services:
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
     profiles: ["debug", "dev"]
     command: /start-reload.sh
-    ports:
-      - "${SERVER_PORT}:80"
     volumes:
       - ./backend/app:/app
     env_file:
