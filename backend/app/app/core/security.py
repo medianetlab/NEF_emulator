@@ -54,7 +54,6 @@ class OAuth2TwoTokensBearer(OAuth2):
 
         try:
             nef_token, capif_token = param.split(',')
-            print("Parameter splitted")
         except ValueError as ex:
             return {"token" : param}
         
