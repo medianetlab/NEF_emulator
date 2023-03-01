@@ -113,7 +113,7 @@ services:
       - db
     networks:
       - services_default
-    command: /dynamic_ports.sh
+    command: sh -c '/self-signed-crt.sh && /dynamic_ports.sh'
 
 networks:
     services_default:
@@ -125,4 +125,3 @@ volumes:
   pgadmin-data:
   app-mongo-db-data:
   nginxdata:
-

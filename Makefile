@@ -21,13 +21,13 @@ debug-upd:
 	docker compose --profile debug up -d
 
 down:
-	docker compose down
+	docker compose --profile debug down
 
 down-v: # also removes volumes
-	docker compose down -v
+	docker compose --profile debug down -v
 
 stop:
-	docker compose stop
+	docker compose --profile debug stop
 
 build:
 	docker compose --profile debug build
