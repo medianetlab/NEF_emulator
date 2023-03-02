@@ -15,7 +15,7 @@
 
 ## ⚙ Setup locally
 
-**Host prerequisites**: `docker`, `docker-compose 1.29.2`, `build-essential`\*, `jq`\*\*
+**Host prerequisites**: `Docker version 23.0.1`, `Docker Compose v2`, `build-essential`\*, `jq`\*\*
 
 After cloning the repository, there are 4 more steps to do. For convinience, we have created a [`Makefile`](Makefile) that contains a command for each step + several common `docker-compose` tasks which you may find handy in the future.
 
@@ -48,16 +48,12 @@ make db-init
 
 After the containers are up and running:
 
- - access and start playing with the Swager UI at: [localhost:8888/nef/docs](http://localhost:8888/nef/docs)
- - login to the admin dashboard at: [localhost:8888/login](http://localhost:8888/login)
+ - access and start playing with the Swager UI at: [http://localhost:8090/nef/docs](http://localhost:8090/nef/docs) or [https://localhost:4443/nef/docs](http://localhost:4443/nef/docs)
+ - login to the admin dashboard at: [http://localhost:8090/login](http://localhost:8090) or [https://localhost:4443/login](http://localhost:4443/login)
      - Default credentials: `admin@my-email.com` / `pass`
      - they can be found/changed inside your `.env` file
 
-
-
 <br><br>
-
-
 
 ## 🏷️ How to work on a specific tag / release
 
@@ -79,112 +75,37 @@ Short reasoning on why we choose tags over branches:
 
 ## ↔️ NetApp communication options
 
-Below, you may find different options for establishing a bi-directional communication over HTTP between the NetApp and the NEF_emulator (for example to be used for `callbacks`).
-
-### 1. via `host.docker.internal`
-
-If you develop your NetApp directly on the host, for example a `Flask` app running on port `9999`:
- - you will be able to connect to the NEF_emulator at: `http://localhost:8888`
- - the NEF_emulator will **not** be able to connect to `http://localhost:9999` because "localhost" for a container is itself, not the host.
- - to overcome the above problem, Docker provides `host.docker.internal`
- - the NEF_emulator will be able to connect to `http://host.docker.internal:9999`
- - ⚠ make sure you bind your NetApp on `0.0.0.0:[port]` and not only on `127.0.0.1:[port]`
-
-```
-┌───────────────────────────────────────────────────────────────┐
-│                          HOST                                 │
-│                                                               │
-│                        ┌───────────────────────────────┐      │
-│      NetApp            │    docker-compose network     │      │
-│         │              ├───────────────────────────────┤      │
-│         │              │    NEF_emulator containers    │      │
-│         │              │           live here           │      │
-│         │              └── :80 ────────────── :5050 ───┘      │
-│         │                   │                   │             │
-│         │                   │                   │             │
-└────── :9999 ───────────── :8888 ───────────── :5050 ──────────┘
-          │                   │ 
-          └─< communication >─┘
-```
-
-<br>
-
-### 2. via the same docker `bridge` network
-
-If you develop your NetApp as a container, the easiest way to establish a bi-directional communication would be to `attach` it to the pre-existing bridge network that the NEF_emulator containers use:
- - this bridge network is automatically created whenever you `docker-compose up` a project, in our case if CAPIF Core Function is integrated with NEF then the docker network is named as `services_default`. If NEF Emulator is used **without** CAPIF Core Function then the network is named as `nef_emulator_services_default`
- - Docker will provide automatic DNS resolution between these containers names
- - your NetApp will be able to connect to the NEF_emulator at `http://backend`
- - the NEF_emulator will be able to connect to your NetApp at `http://your_netapp_container_name:9999`
- - ⚠ make sure you use the container ports directly, not the `published` ones
- - ⚠ make sure you first `docker-compose up` the NEF_emulator and then `attach` your NetApp container
- - more details at Docker docs: [Use bridge networks](https://docs.docker.com/network/bridge/) and [Networking in Compose](https://docs.docker.com/compose/networking/)
-
-```
-┌───────────────────────────────────────────────────────────────┐
-│                          HOST                                 │
-│                                                               │
-│    ┌───────────────────────────────────────────────────┐      │
-│    │               docker-compose network              │      │
-│    ├───────────────────────────────────────────────────┤      │
-│    │                                                   │      │
-│    │  NetApp                NEF_emulator containers    │      │
-│    │ also lives here               live here           │      │
-│    │                                                   │      │
-│    └─── :9999 ──────────── :80 ────────────── :5050 ───┘      │
-│         │                   │                   │             │
-│         ├─< communication >─┤                   │             │
-│         │                   │                   │             │
-│         │                   │                   │             │
-└────── :9999 ───────────── :8888 ───────────── :5050 ──────────┘
-```
-
-Three possible ways to achieve the above approach:
-
-1. with **docker**, try the `--net=...` option and provide the bridge name that you want to `attach` to:
-
-       docker container run --net=<network_name> ...
-
-2. with **docker-compose**, try adding the bridge as an external network, something like:
-
-
-       services:
-       ....
-           netapp:
-           ....
-               networks:
-                  - <network_name>
-       networks:
-         <network_name>:
-           external: true
-
-3. with **docker network connect**, try adding your container to the bridge network:
-
-       docker network connect BRIDGE_NAME NETAPP_NAME
+To be updated...
 
 ## Integration with CAPIF
 
 In order to integrate NEF Emulator with CAPIF you should perform the following steps:
 
-1. The first step is to ensure that all CAPIF services are up and running. After cloning the code from the official github repository https://github.com/EVOLVED-5G/CAPIF_API_Services you can execute:
+1. Ensure that all CAPIF services are up and running. Clone the code from the official Github repository https://github.com/EVOLVED-5G/CAPIF_API_Services, navigate to the `services/` directory and execute the following commands:
 
 ```
 cd services/
-
 sudo ./run.sh
-
 ./check_services_are_running.sh
 ```
+These commands will start the CAPIF services and ensure that they are running correctly.
 
-2. Then, in NEF Emulator project, change the `EXTERNAL_NET` environment variable to **true** in `.env` file. This will enable NEF containers to join CAPIF's pre-existing network (services_default). Note that if you want to use NEF Emulator without CAPIF, then change the `EXTERNAL_NET` environment variable back to **false** in `.env` file
+2. Configure the NEF Emulator project to join the CAPIF network by following one of the below steps based on your deployment requirements:
 
-3. Start NEF services either using `make up` or `make debug-up` commands
-
-NEF should be successfully onboard to CAPIF Core Function. To ensure that, the following files should be created in `app/core/certificates/` folder:
-
+  - For local deployment:
+Update the `EXTERNAL_NET` environment variable to `true` in the `.env` file of the NEF Emulator project. This will allow NEF containers to join CAPIF's pre-existing network called `services_default`. If you do not want to use NEF Emulator with CAPIF, change the `EXTERNAL_NET` environment variable back to false in the `.env` file. Add the following entry to the `/etc/hosts` file of the host machine:
 ```
-ca.crt
-private.key
-test_nef01.crt
-capif_exposer_details.json
+127.0.0.1 capifcore
 ```
+> This entry maps the hostname "capifcore" to the IP address `127.0.0.1`, which is the loopback address of the local network interface.
+
+  - For deployment in separate VMs:
+Update the `EXTERNAL_NET` environment variable to `false` in the `.env` file of the NEF Emulator project. Add the following entry to the `/etc/hosts` file of the host machine:
+```
+<ip-of-capif> capifcore
+```
+> This entry maps the hostname "capifcore" to the IP address of the machine that CAPIF is running on.
+
+3. Start the NEF services by executing either the make up or make debug-up command in the NEF Emulator project directory.
+
+> 💡 Once you have completed these steps, NEF should be successfully onboarded to the CAPIF Core Function. To confirm this, check that 12 files have been created in the `app/core/certificates/` folder.

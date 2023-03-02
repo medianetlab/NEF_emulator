@@ -1,14 +1,13 @@
 #!/bin/bash
 
-PORT=8888
-URL=http://localhost
-
 set -a # automatically export all variables
 source .env
 set +a
 
+PORT=$NGINX_HTTPS
+URL=https://$DOMAIN
 
-TOKEN=$(curl -X 'POST' \
+TOKEN=$(curl -k -X 'POST' \
   "${URL}:${PORT}/api/v1/login/access-token" \
   -H 'accept: application/json' \
   -H 'Content-Type: application/x-www-form-urlencoded' \
@@ -26,7 +25,7 @@ printf '\n==================================================\n'
 
 
 
-curl -X 'POST' \
+curl -k -X 'POST' \
   "${URL}:${PORT}/api/v1/paths" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
@@ -45,7 +44,7 @@ curl -X 'POST' \
   "color": "#00a3cc"
 }'
 
-curl -X 'POST' \
+curl -k -X 'POST' \
   "${URL}:${PORT}/api/v1/paths" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
@@ -73,7 +72,7 @@ printf '\n==================================================\n'
 
 
 
-curl -X 'POST' \
+curl -k -X 'POST' \
   "${URL}:${PORT}/api/v1/gNBs" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
@@ -96,7 +95,7 @@ printf '\n==================================================\n'
 
 
 
-curl -X 'POST' \
+curl -k -X 'POST' \
   "${URL}:${PORT}/api/v1/Cells" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
@@ -111,7 +110,7 @@ curl -X 'POST' \
   "radius" : 100
 }'
 
-curl -X 'POST' \
+curl -k -X 'POST' \
   "${URL}:${PORT}/api/v1/Cells" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
@@ -126,7 +125,7 @@ curl -X 'POST' \
   "radius" : 150
 }'
 
-curl -X 'POST' \
+curl -k -X 'POST' \
   "${URL}:${PORT}/api/v1/Cells" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
@@ -141,7 +140,7 @@ curl -X 'POST' \
   "radius" : 100
 }'
 
-curl -X 'POST' \
+curl -k -X 'POST' \
   "${URL}:${PORT}/api/v1/Cells" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
@@ -165,7 +164,7 @@ printf 'Initiallizing UEs for admin...'
 printf '\n==================================================\n'
 
 
-curl -X 'POST' \
+curl -k -X 'POST' \
   "${URL}:${PORT}/api/v1/UEs" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
@@ -186,7 +185,7 @@ curl -X 'POST' \
   "speed": "LOW"
 }'
 
-curl -X 'POST' \
+curl -k -X 'POST' \
   "${URL}:${PORT}/api/v1/UEs" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
@@ -207,7 +206,7 @@ curl -X 'POST' \
   "speed": "LOW"
 }'
 
-curl -X 'POST' \
+curl -k -X 'POST' \
   "${URL}:${PORT}/api/v1/UEs" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
@@ -228,7 +227,7 @@ curl -X 'POST' \
   "speed": "HIGH"
 }'
 
-curl -X 'POST' \
+curl -k -X 'POST' \
   "${URL}:${PORT}/api/v1/UEs/associate/path" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
@@ -238,7 +237,7 @@ curl -X 'POST' \
   "path": 2
 }'
 
-curl -X 'POST' \
+curl -k -X 'POST' \
   "${URL}:${PORT}/api/v1/UEs/associate/path" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
@@ -248,7 +247,7 @@ curl -X 'POST' \
   "path": 1
 }'
 
-curl -X 'POST' \
+curl -k -X 'POST' \
   "${URL}:${PORT}/api/v1/UEs/associate/path" \
   -H 'accept: application/json' \
   -H "Authorization: Bearer ${TOKEN}" \
