@@ -57,10 +57,10 @@ def create_UE(
     """
     Create new UE.
     """
+    json_data = jsonable_encoder(item_in) 
+
     #Check for companionapp
     if item_in.external_identifier.find("companionapp"):
-        json_data = jsonable_encoder(item_in)
-
         #Random ipv4
         ipv4_comp = ".".join(map(str, (random.randint(0, 255) for _ in range(4))))
         json_data.update({"ip_address_v4" : ipv4_comp})
@@ -119,11 +119,13 @@ def create_UE(
             elif crud.ue.get_externalId(db=db, externalId=item_in.external_identifier, owner_id=current_user.id):
                 raise HTTPException(
                     status_code=409, detail=f"UE with external id {str(item_in.mac_address)} already exists")
+   
+            json_data.update({
+            "ip_address_v4": str(item_in.ip_address_v4),
+            "ip_address_v6": str(item_in.ip_address_v6.exploded),
+            "Cell_id": None
+            })
 
-            json_data = jsonable_encoder(item_in)
-            json_data['ip_address_v4'] = str(item_in.ip_address_v4)
-            json_data['ip_address_v6'] = str(item_in.ip_address_v6.exploded)
-            json_data['Cell_id'] = None 
         except AttributeError as ex:
             print(ex)
 
@@ -173,10 +175,10 @@ def update_UE(
         json_data['ip_address_v4'] = str(item_in.ip_address_v4)
         json_data['ip_address_v6'] = str(item_in.ip_address_v6)
     except AttributeError as ex: 
-        print(ex)
-    finally:
         updated_data = item_in.dict(exclude_unset=True)
         json_data = jsonable_encoder(updated_data)
+        print(ex)
+        
 
     UE = crud.ue.update(db=db, db_obj=UE, obj_in=json_data)
     json_data.update({"supi": supi, "path_id" : UE.path_id})

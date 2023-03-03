@@ -322,6 +322,11 @@ class BackgroundTasks(threading.Thread):
 
                 
                 if self._stop_threads:
+                    '''
+                    It's important to close the database connection to avoid consuming too many resources and hitting the limit of simultaneous connections. 
+                    If the thread is stopped and the database connection is not closed, the resources used by the database connection will not be released until the connection is closed. 
+                    If the thread is started again and a new database connection is created without closing the previous one, the number of connections will increase, which can cause performance issues or even crashes.
+                    '''
                     logging.critical("Terminating thread...")
                     crud.ue.update_coordinates(db=self._db, lat=ues[f"{supi}"]["latitude"], long=ues[f"{supi}"]["longitude"], db_obj=UE)
                     crud.ue.update(db=self._db, db_obj=UE, obj_in={"Cell_id" : ues[f"{supi}"]["Cell_id"]})
