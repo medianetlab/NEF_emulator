@@ -1,6 +1,6 @@
 # Functional Tests for NEF Emulator / Northbound APIs
 
-## Test Plan for Monitoring Event API
+## Test Plan for Monitoring Event API - LOCATION_REPORTING
 
 ### Tests for HTTP POST Method
 * [Test Case 1: Create subscription by Authorized NetApp](#-test-case-1-create-subscription-by-authorized-netapp)

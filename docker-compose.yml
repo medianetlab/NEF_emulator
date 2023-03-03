@@ -66,8 +66,6 @@ services:
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
     profiles: ["debug", "dev"]
     command: /start-reload.sh
-    ports:
-      - "${SERVER_PORT}:80"
     volumes:
       - ./backend/app:/app
     env_file:
@@ -89,6 +87,34 @@ services:
       - services_default
 
 
+  reverse_proxy:
+    build:
+      context: nginx
+      dockerfile: Dockerfile.nginx
+    image: nginx-nef
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      APP_ENV: "prod"
+      APP_NAME: "webserver"
+      APP_DEBUG: "false"
+      SERVICE_NAME: "webserver"
+    hostname: ${NEF_HOST}
+    ports:
+      - "${NGINX_HTTP}:80"
+      - "${NGINX_HTTPS}:443"
+    volumes:
+      - nginxdata:/var/log/nginx
+      - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/certs:/etc/nginx/certs
+    depends_on:
+      - backend
+      - mongo_nef
+      - db
+    networks:
+      - services_default
+    command: sh -c '/self-signed-crt.sh && /dynamic_ports.sh'
+
 networks:
     services_default:
       external: ${EXTERNAL_NET}
@@ -98,4 +124,4 @@ volumes:
   app-db-data:
   pgadmin-data:
   app-mongo-db-data:
-
+  nginxdata:

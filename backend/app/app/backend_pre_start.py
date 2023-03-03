@@ -1,5 +1,5 @@
 import logging, requests
-from evolved5g.sdk import CAPIFExposerConnector
+from evolved5g.sdk import CAPIFProviderConnector
 from tenacity import after_log, before_log, retry, stop_after_attempt, wait_fixed
 from app.db.session import SessionLocal
 from app.core.config import settings
@@ -31,16 +31,24 @@ def capif_nef_connector():
 
     """
     try:
-        capif_connector = CAPIFExposerConnector(certificates_folder="app/core/certificates",
+        capif_connector = CAPIFProviderConnector(certificates_folder="app/core/certificates",
                                                 capif_host=settings.CAPIF_HOST,
-                                                capif_http_port="8080",
-                                                capif_https_port="443",
+                                                capif_http_port=settings.CAPIF_HTTP_PORT,
+                                                capif_https_port=settings.CAPIF_HTTPS_PORT,
                                                 capif_netapp_username="test_nef01",
                                                 capif_netapp_password="test_netapp_password",
-                                                description= "test_app_description"
-                                                )
+                                                description= "test_app_description",
+                                                csr_common_name="apfExpapfoser1502", #TODO: ASK STAVROS. THIS SHOULD NOT BE HARDCODED, RIGHT?
+                                                csr_organizational_unit="test_app_ou",
+                                                csr_organization="test_app_o",
+                                                crs_locality="Madrid",
+                                                csr_state_or_province_name="Madrid",
+                                                csr_country_name="ES",
+                                                csr_email_address="test@example.com"
+                                             )
+                                                
 
-        capif_connector.register_and_onboard_exposer()
+        capif_connector.register_and_onboard_provider()
 
         capif_connector.publish_services(service_api_description_json_full_path="app/core/capif_files/service_monitoring_event.json")
         capif_connector.publish_services(service_api_description_json_full_path="app/core/capif_files/service_as_session_with_qos.json")

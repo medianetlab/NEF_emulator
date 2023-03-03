@@ -1,0 +1,13 @@
+FROM nginx:1.23.2
+
+
+#Create the private-public keys only on build
+COPY ./self-signed-crt.sh /
+RUN chmod 700 self-signed-crt.sh
+RUN mkdir -p /etc/nginx/certs
+# RUN /self-signed-crt.sh
+
+RUN rm -rf /etc/nginx/conf.d/default.conf
+COPY ./conf.d/app.conf /etc/nginx/conf.d/app.conf
+COPY ./dynamic_ports.sh /
+RUN chmod 700 dynamic_ports.sh
