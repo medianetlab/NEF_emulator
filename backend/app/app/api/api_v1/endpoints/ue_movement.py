@@ -25,6 +25,7 @@ class BackgroundTasks(threading.Thread):
         self._args = args
         self._kwargs = kwargs
         self._stop_threads = False
+        self._db = SessionLocal()
         return
 
     def run(self):
@@ -81,22 +82,25 @@ class BackgroundTasks(threading.Thread):
             -------------------------------------------------------------------
             '''
 
-            current_position_index = -1
+            # current_position_index = -1
 
-            # find the index of the point where the UE is located
-            for index, point in enumerate(points):
-                if (ues[f"{supi}"]["latitude"] == point["latitude"]) and (ues[f"{supi}"]["longitude"] == point["longitude"]):
-                    current_position_index = index
+            # # find the index of the point where the UE is located
+            # for index, point in enumerate(points):
+            #     if (ues[f"{supi}"]["latitude"] == point["latitude"]) and (ues[f"{supi}"]["longitude"] == point["longitude"]):
+            #         current_position_index = index
 
-            # start iterating from this index and keep increasing the moving_position_index...
-            moving_position_index = current_position_index
+            # # start iterating from this index and keep increasing the moving_position_index...
+            # moving_position_index = current_position_index
 
             while True:
                 try:
                     # UE = crud.ue.update_coordinates(db=db, lat=points[current_position_index]["latitude"], long=points[current_position_index]["longitude"], db_obj=UE)
                     # cell_now = check_distance(UE.latitude, UE.longitude, json_cells) #calculate the distance from all the cells
-                    ues[f"{supi}"]["latitude"] = points[current_position_index]["latitude"]
-                    ues[f"{supi}"]["longitude"] = points[current_position_index]["longitude"]
+                    # ues[f"{supi}"]["latitude"] = points[current_position_index]["latitude"]
+                    # ues[f"{supi}"]["longitude"] = points[current_position_index]["longitude"]
+                    UE = crud.ue.get_supi(db=self._db, supi=supi)
+                    ues[f"{supi}"]["latitude"] = UE.latitude
+                    ues[f"{supi}"]["longitude"] = UE.longitude
                     cell_now = check_distance(ues[f"{supi}"]["latitude"], ues[f"{supi}"]["longitude"], json_cells) #calculate the distance from all the cells
                 except Exception as ex:
                     logging.warning("Failed to update coordinates")
@@ -268,16 +272,16 @@ class BackgroundTasks(threading.Thread):
 
                 # logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
                 
-                if ues[f"{supi}"]["speed"] == 'LOW':
-                    # don't skip any points, keep default speed 1m /sec
-                    moving_position_index += 1
-                elif ues[f"{supi}"]["speed"] == 'HIGH':
-                    # skip 10 points --> 10m / sec
-                    moving_position_index += 10
+                # if ues[f"{supi}"]["speed"] == 'LOW':
+                #     # don't skip any points, keep default speed 1m /sec
+                #     moving_position_index += 1
+                # elif ues[f"{supi}"]["speed"] == 'HIGH':
+                #     # skip 10 points --> 10m / sec
+                #     moving_position_index += 10
 
-                time.sleep(1)
+                time.sleep(5)
 
-                current_position_index = moving_position_index%(len(points))
+                # current_position_index = moving_position_index%(len(points))
 
                 
                 if self._stop_threads:
@@ -288,12 +292,10 @@ class BackgroundTasks(threading.Thread):
                     '''
                     logging.critical("Terminating thread...")
                     logging.critical("Updating UE with the latest coordinates and cell in the database (last known position)...")
-                    db = SessionLocal()
-                    UE = crud.ue.get_supi(db, supi)
-                    crud.ue.update_coordinates(db=db, lat=ues[f"{supi}"]["latitude"], long=ues[f"{supi}"]["longitude"], db_obj=UE)
-                    crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : ues[f"{supi}"]["Cell_id"]})
+                    crud.ue.update_coordinates(db=self._db, lat=ues[f"{supi}"]["latitude"], long=ues[f"{supi}"]["longitude"], db_obj=UE)
+                    crud.ue.update(db=self._db, db_obj=UE, obj_in={"Cell_id" : ues[f"{supi}"]["Cell_id"]})
                     ues.pop(f"{supi}")
-                    db.close()
+                    self._db.close()
                     if rt is not None:
                         rt.stop()
                     break
