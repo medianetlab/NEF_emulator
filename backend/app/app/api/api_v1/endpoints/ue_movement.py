@@ -10,6 +10,7 @@ from app.db.session import SessionLocal, client
 from app.api import deps
 from app.schemas import Msg
 from app.tools import monitoring_callbacks, timer
+from sqlalchemy.orm import Session
 
 #Dictionary holding threads that are running per user id.
 threads = {}
@@ -24,14 +25,18 @@ class BackgroundTasks(threading.Thread):
         self._args = args
         self._kwargs = kwargs
         self._stop_threads = False
-        self._db = SessionLocal()
         return
 
     def run(self):
         
+        db_mongo = client.fastapi
+
         current_user = self._args[0]
         supi = self._args[1]
-        
+        json_cells = self._args[2]
+        points = self._args[3]
+        is_superuser = self._args[4]
+
         active_subscriptions = {
             "location_reporting" : False,
             "ue_reachability" : False,
@@ -40,57 +45,12 @@ class BackgroundTasks(threading.Thread):
         }
 
         try:
-            db_mongo = client.fastapi
-
-            #Initiate UE - if exists
-            UE = crud.ue.get_supi(db=self._db, supi=supi)
-            if not UE:
-                logging.warning("UE not found")
-                threads.pop(f"{supi}")
-                return
-            if (UE.owner_id != current_user.id):
-                logging.warning("Not enough permissions")
-                threads.pop(f"{supi}")
-                return
             
-            #Insert running UE in the dictionary
-
-            global ues
-            ues[f"{supi}"] = jsonable_encoder(UE)
-            ues[f"{supi}"].pop("id")
-
-            if UE.Cell_id != None:
-                ues[f"{supi}"]["cell_id_hex"] = UE.Cell.cell_id
-                ues[f"{supi}"]["gnb_id_hex"] = UE.Cell.gNB.gNB_id
-            else:
-                ues[f"{supi}"]["cell_id_hex"] = None
-                ues[f"{supi}"]["gnb_id_hex"] = None
-
-
-            #Retrieve paths & points
-            path = crud.path.get(db=self._db, id=UE.path_id)
-            if not path:
-                logging.warning("Path not found")
-                threads.pop(f"{supi}")
-                return
-            if (path.owner_id != current_user.id):
-                logging.warning("Not enough permissions")
-                threads.pop(f"{supi}")
-                return
-
-            points = crud.points.get_points(db=self._db, path_id=UE.path_id)
-            points = jsonable_encoder(points)
-
-            #Retrieve all the cells
-            Cells = crud.cell.get_multi_by_owner(db=self._db, owner_id=current_user.id, skip=0, limit=100)
-            json_cells = jsonable_encoder(Cells)
-
-            is_superuser = crud.user.is_superuser(current_user)
-
             t = timer.SequencialTimer(logger=logging.critical)
             rt = None
             # global loss_of_connectivity_ack
             loss_of_connectivity_ack = "FALSE"
+            
             '''
             ===================================================================
                                2nd Approach for updating UEs position
@@ -125,7 +85,7 @@ class BackgroundTasks(threading.Thread):
 
             # find the index of the point where the UE is located
             for index, point in enumerate(points):
-                if (UE.latitude == point["latitude"]) and (UE.longitude == point["longitude"]):
+                if (ues[f"{supi}"]["latitude"] == point["latitude"]) and (ues[f"{supi}"]["longitude"] == point["longitude"]):
                     current_position_index = index
 
             # start iterating from this index and keep increasing the moving_position_index...
@@ -145,7 +105,7 @@ class BackgroundTasks(threading.Thread):
                 
                 #MonitoringEvent API - Loss of connectivity
                 if not active_subscriptions.get("loss_of_connectivity"):
-                    loss_of_connectivity_sub = crud_mongo.read_by_multiple_pairs(db_mongo, "MonitoringEvent", externalId = UE.external_identifier, monitoringType = "LOSS_OF_CONNECTIVITY")
+                    loss_of_connectivity_sub = crud_mongo.read_by_multiple_pairs(db_mongo, "MonitoringEvent", externalId = ues[f"{supi}"]["external_identifier"], monitoringType = "LOSS_OF_CONNECTIVITY")
                     if loss_of_connectivity_sub:
                         active_subscriptions.update({"loss_of_connectivity" : True})
                     
@@ -183,7 +143,7 @@ class BackgroundTasks(threading.Thread):
 
                 #As Session With QoS API - search for active subscription in db
                 if not active_subscriptions.get("as_session_with_qos"):
-                    qos_sub = crud_mongo.read(db_mongo, 'QoSMonitoring', 'ipv4Addr', UE.ip_address_v4)
+                    qos_sub = crud_mongo.read(db_mongo, 'QoSMonitoring', 'ipv4Addr', ues[f"{supi}"]["ip_address_v4"])
                     if qos_sub:
                         active_subscriptions.update({"as_session_with_qos" : True})
                         reporting_freq = qos_sub["qosMonInfo"]["repFreqs"]
@@ -218,7 +178,7 @@ class BackgroundTasks(threading.Thread):
                         if ues[f"{supi}"]["Cell_id"] == None:
                             
                             if not active_subscriptions.get("ue_reachability"):
-                                ue_reachability_sub = crud_mongo.read_by_multiple_pairs(db_mongo, "MonitoringEvent", externalId = UE.external_identifier, monitoringType = "UE_REACHABILITY")
+                                ue_reachability_sub = crud_mongo.read_by_multiple_pairs(db_mongo, "MonitoringEvent", externalId = ues[f"{supi}"]["external_identifier"], monitoringType = "UE_REACHABILITY")
                                 if ue_reachability_sub:
                                     active_subscriptions.update({"ue_reachability" : True})
 
@@ -251,14 +211,13 @@ class BackgroundTasks(threading.Thread):
                         # logging.warning(f"UE({UE.supi}) with ipv4 {UE.ip_address_v4} handovers to Cell {cell_now.get('id')}, {cell_now.get('description')}")
                         ues[f"{supi}"]["Cell_id"] = cell_now.get('id')
                         ues[f"{supi}"]["cell_id_hex"] = cell_now.get('cell_id')
-                        gnb = crud.gnb.get(db=self._db, id=cell_now.get("gNB_id"))
-                        ues[f"{supi}"]["gnb_id_hex"] = gnb.gNB_id
+                        ues[f"{supi}"]["gnb_id_hex"] = cell_now.get('cell_id')[:6]
 
                         
                         #Monitoring Event API - Location Reporting
                         #Retrieve the subscription of the UE by external Id | This could be outside while true but then the user cannot subscribe when the loop runs
                         if not active_subscriptions.get("location_reporting"):
-                            location_reporting_sub = crud_mongo.read_by_multiple_pairs(db_mongo, "MonitoringEvent", externalId = UE.external_identifier, monitoringType = "LOCATION_REPORTING")
+                            location_reporting_sub = crud_mongo.read_by_multiple_pairs(db_mongo, "MonitoringEvent", externalId = ues[f"{supi}"]["external_identifier"], monitoringType = "LOCATION_REPORTING")
                             if location_reporting_sub:
                                 active_subscriptions.update({"location_reporting" : True})
 
@@ -309,10 +268,10 @@ class BackgroundTasks(threading.Thread):
 
                 # logging.info(f'User: {current_user.id} | UE: {supi} | Current location: latitude ={UE.latitude} | longitude = {UE.longitude} | Speed: {UE.speed}' )
                 
-                if UE.speed == 'LOW':
+                if ues[f"{supi}"]["speed"] == 'LOW':
                     # don't skip any points, keep default speed 1m /sec
                     moving_position_index += 1
-                elif UE.speed == 'HIGH':
+                elif ues[f"{supi}"]["speed"] == 'HIGH':
                     # skip 10 points --> 10m / sec
                     moving_position_index += 10
 
@@ -328,10 +287,13 @@ class BackgroundTasks(threading.Thread):
                     If the thread is started again and a new database connection is created without closing the previous one, the number of connections will increase, which can cause performance issues or even crashes.
                     '''
                     logging.critical("Terminating thread...")
-                    crud.ue.update_coordinates(db=self._db, lat=ues[f"{supi}"]["latitude"], long=ues[f"{supi}"]["longitude"], db_obj=UE)
-                    crud.ue.update(db=self._db, db_obj=UE, obj_in={"Cell_id" : ues[f"{supi}"]["Cell_id"]})
+                    logging.critical("Updating UE with the latest coordinates and cell in the database (last known position)...")
+                    db = SessionLocal()
+                    UE = crud.ue.get_supi(db, supi)
+                    crud.ue.update_coordinates(db=db, lat=ues[f"{supi}"]["latitude"], long=ues[f"{supi}"]["longitude"], db_obj=UE)
+                    crud.ue.update(db=db, db_obj=UE, obj_in={"Cell_id" : ues[f"{supi}"]["Cell_id"]})
                     ues.pop(f"{supi}")
-                    self._db.close()
+                    db.close()
                     if rt is not None:
                         rt.stop()
                     break
@@ -408,13 +370,60 @@ def initiate_movement(
     *,
     msg: Msg,
     current_user: models.User = Depends(deps.get_current_active_user),
+    db: Session = Depends(deps.get_db)
 ) -> Any:
     """
     Start the loop.
     """
     if msg.supi in threads:
         raise HTTPException(status_code=409, detail=f"There is a thread already running for this supi:{msg.supi}")
-    t = BackgroundTasks(args= (current_user, msg.supi, ))
+    
+    #Check if UE 
+    UE = crud.ue.get_supi(db=db, supi=msg.supi)
+    if not UE:
+        logging.warning("UE not found")
+        threads.pop(f"{msg.supi}")
+        return
+    if (UE.owner_id != current_user.id):
+        logging.warning("Not enough permissions")
+        threads.pop(f"{msg.supi}")
+        return
+    
+    #Insert running UE in the dictionary
+
+    global ues
+    ues[f"{msg.supi}"] = jsonable_encoder(UE)
+    ues[f"{msg.supi}"].pop("id")
+
+    if UE.Cell_id != None:
+        ues[f"{msg.supi}"]["cell_id_hex"] = UE.Cell.cell_id
+        ues[f"{msg.supi}"]["gnb_id_hex"] = UE.Cell.gNB.gNB_id
+    else:
+        ues[f"{msg.supi}"]["cell_id_hex"] = None
+        ues[f"{msg.supi}"]["gnb_id_hex"] = None
+
+
+    #Retrieve paths & points
+    path = crud.path.get(db=db, id=UE.path_id)
+    if not path:
+        logging.warning("Path not found")
+        threads.pop(f"{msg.supi}")
+        return
+    if (path.owner_id != current_user.id):
+        logging.warning("Not enough permissions")
+        threads.pop(f"{msg.supi}")
+        return
+
+    points = crud.points.get_points(db=db, path_id=UE.path_id)
+    points = jsonable_encoder(points)
+
+    #Retrieve all the cells
+    Cells = crud.cell.get_multi_by_owner(db=db, owner_id=current_user.id, skip=0, limit=100)
+    json_cells = jsonable_encoder(Cells)
+
+    is_superuser = crud.user.is_superuser(current_user)
+
+    t = BackgroundTasks(args= (current_user, msg.supi, json_cells, points, is_superuser))
     threads[f"{msg.supi}"] = {}
     threads[f"{msg.supi}"][f"{current_user.id}"] = t
     t.start()
