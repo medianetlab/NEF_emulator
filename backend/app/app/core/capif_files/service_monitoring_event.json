@@ -10,7 +10,7 @@
           "resources": [
             {
               "resourceName": "MONITORING_SUBSCRIPTIONS",
-              "commType": " SUBSCRIBE_NOTIFY",
+              "commType": "SUBSCRIBE_NOTIFY",
               "uri": "/{scsAsId}/subscriptions",
               "custOpName": "http_post",
               "operations": ["GET","POST"],
@@ -18,7 +18,7 @@
             },
             {
               "resourceName": "MONITORING_SUBSCRIPTION_SINGLE",
-              "commType": " SUBSCRIBE_NOTIFY",
+              "commType": "SUBSCRIBE_NOTIFY",
               "uri": "/{scsAsId}/subscriptions/{subscriptionId}",
               "custOpName": "http_get",
               "operations": ["GET","PUT","DELETE"],
