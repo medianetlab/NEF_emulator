@@ -12,8 +12,6 @@ var paths = null;
 
 var moving_ues = null;
 
-var UEs_first_paint = true;
-
 
 // variables used for painting / updating the map
 //  map layer groups
@@ -86,36 +84,35 @@ $( document ).ready(function() {
           wait_for_UEs_data();
         else {
             // when ready,
-            // //  1. get and paint every path per UE
-            // //  2. create start/stop buttons
-            // for (const ue of ues) {
+            //  1. get and paint every path per UE
+            //  2. create start/stop buttons
+            for (const ue of ues) {
 
-            //     // if no path selected, skip map paint and creation of button
-            //     if (ue.path_id == 0) { continue; }
+                // if no path selected, skip map paint and creation of button
+                if (ue.path_id == 0) { continue; }
 
-            //     // if not already fetched and painted, do so
-            //     if ( !helper_check_path_is_already_painted( ue.path_id ) ) { 
-            //         api_get_specific_path(ue.path_id);
-            //         paths_painted[ue.path_id] = true;
-            //     }
-            //     ui_generate_loop_btn_for( ue );
-            //     ui_set_loop_btn_status_for( ue );
-            // }
+                // if not already fetched and painted, do so
+                if ( !helper_check_path_is_already_painted( ue.path_id ) ) { 
+                    api_get_specific_path(ue.path_id);
+                    paths_painted[ue.path_id] = true;
+                }
+                ui_generate_loop_btn_for( ue );
+                ui_set_loop_btn_status_for( ue );
+            }
 
 
             if ( ues.length >0 ) {
-                // ui_add_ue_btn_listeners();
-                // ui_add_ue_all_btn_listener();
-                start_map_refresh_interval();
+                ui_add_ue_btn_listeners();
+                ui_add_ue_all_btn_listener();
             }
-            // else {
-            //     $('#btn-start-all').removeClass("btn-success").addClass("btn-secondary").attr("disabled",true);
-            // }
+            else {
+                $('#btn-start-all').removeClass("btn-success").addClass("btn-secondary").attr("disabled",true);
+            }
 
-            // // edge case: UEs with no paths assigned --> disable button
-            // if (paths_painted.length == 0) {
-            //     $('#btn-start-all').removeClass("btn-success").addClass("btn-secondary").attr("disabled",true);
-            // }
+            // edge case: UEs with no paths assigned --> disable button
+            if (paths_painted.length == 0) {
+                $('#btn-start-all').removeClass("btn-success").addClass("btn-secondary").attr("disabled",true);
+            }
         }
       }, 100);
     };
@@ -159,7 +156,7 @@ function start_map_refresh_interval() {
     if (UE_refresh_interval == null) {
 
         if ( UE_refresh_sec == 0 ) {
-            // $('.map-reload-select').prop("disabled",false);
+            $('.map-reload-select').prop("disabled",false);
             return;
         }
 
@@ -170,11 +167,11 @@ function start_map_refresh_interval() {
 
         // start updating
         UE_refresh_interval = setInterval(function(){ 
-            api_get_UEs();
+            api_get_moving_UEs();
         }, UE_refresh_sec);
 
         // enable the select button
-        // $('.map-reload-select').prop("disabled",false);
+        $('.map-reload-select').prop("disabled",false);
         $('.map-reload-select').val(UE_refresh_sec);
     }
 }
@@ -186,7 +183,7 @@ function stop_map_refresh_interval() {
     UE_refresh_interval = null;
     
     // disable the select button
-    // $('.map-reload-select').prop("disabled",true);
+    $('.map-reload-select').prop("disabled",true);
     // UE_refresh_sec = 0;
     // $('.map-reload-select').val(0);
 }
@@ -401,114 +398,34 @@ function ui_map_paint_UEs() {
 
     // console.log(ues);
 
-    // for (const ue of ues) {
-    //     // create markers - this will be executed only once!
-    //     var walk_icon = L.divIcon({
-    //         className: 'emu-pin-box',
-    //         iconSize: L.point(30,42),
-    //         iconAnchor: L.point(15,42),
-    //         popupAnchor: L.point(0,-38),
-    //         tooltipAnchor: L.point(0,0),
-    //         html: '<div class="pin-bg pin-bg-walk"></div>\
-    //                <div class="pin-icon ion-md-walk"></div>'
-    //     });
-        
-    //     ue_markers[ue.supi] = L.marker([ue.latitude,ue.longitude], {icon: walk_icon}).addTo(mymap)
-    //         .bindTooltip(ue.ip_address_v4)
-    //         .bindPopup("<b>"+ ue.name +"</b><br />"+
-    //                    // ue.description +"<br />"+
-    //                    "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
-    //                    "Cell ID: " + ( (ue.cell_id_hex==null)? "-" : ue.cell_id_hex ) +"<br />"+
-    //                    "External identifier: " + ue.external_identifier +"<br />"+
-    //                    "Speed:"+ ue.speed)
-    //         .addTo(ues_lg); // add to layer group
-
-    //     // if ( ue.cell_id_hex==null ) {
-    //     //     L.DomUtil.addClass(ue_markers[ue.supi]._icon, 'null-cell');
-    //     // } else {
-    //     //     L.DomUtil.removeClass(ue_markers[ue.supi]._icon, 'null-cell');
-    //     // }
-            
-    //     // update UE marker color
-    //     temp_icon = L.DomUtil.get(ue_markers[ue.supi]._icon);
-
-    //     if (temp_icon == null) {
-    //         // if the user has unchecked the UEs checkbox ✅ on the map settings
-    //         // temp_icon is null and triggers console errors
-    //         // if this is the case, continue...
-    //         continue;
-    //     } else {
-    //         if ( ue.cell_id_hex==null ) {
-    //             // 'null-cell' class gives a grey color
-    //             // to UEs that are not connected to a cell
-    //             L.DomUtil.addClass(temp_icon, 'null-cell');
-    //         } else {
-    //             L.DomUtil.removeClass(temp_icon, 'null-cell');
-    //         }
-    //     }
-    // }
     for (const ue of ues) {
-        if (UEs_first_paint) { 
-            // create markers - this will be executed only once!
-            var walk_icon = L.divIcon({
-                className: 'emu-pin-box',
-                iconSize: L.point(30,42),
-                iconAnchor: L.point(15,42),
-                popupAnchor: L.point(0,-38),
-                tooltipAnchor: L.point(0,0),
-                html: '<div class="pin-bg pin-bg-walk"></div>\
-                       <div class="pin-icon ion-md-walk"></div>'
-            });
+        // create markers - this will be executed only once!
+        var walk_icon = L.divIcon({
+            className: 'emu-pin-box',
+            iconSize: L.point(30,42),
+            iconAnchor: L.point(15,42),
+            popupAnchor: L.point(0,-38),
+            tooltipAnchor: L.point(0,0),
+            html: '<div class="pin-bg pin-bg-walk"></div>\
+                   <div class="pin-icon ion-md-walk"></div>'
+        });
+        
+        ue_markers[ue.supi] = L.marker([ue.latitude,ue.longitude], {icon: walk_icon}).addTo(mymap)
+            .bindTooltip(ue.ip_address_v4)
+            .bindPopup("<b>"+ ue.name +"</b><br />"+
+                       // ue.description +"<br />"+
+                       "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
+                       "Cell ID: " + ( (ue.cell_id_hex==null)? "-" : ue.cell_id_hex ) +"<br />"+
+                       "External identifier: " + ue.external_identifier +"<br />"+
+                       "Speed:"+ ue.speed)
+            .addTo(ues_lg); // add to layer group
 
-            ue_markers[ue.supi] = L.marker([ue.latitude,ue.longitude], {icon: walk_icon}).addTo(mymap)
-                .bindTooltip(ue.ip_address_v4)
-                .bindPopup("<b>"+ ue.name +"</b><br />"+
-                           // ue.description +"<br />"+
-                           "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
-                           "Cell ID: " + ( (ue.cell_id_hex==null)? "-" : ue.cell_id_hex ) +"<br />"+
-                           "External identifier: " + ue.external_identifier +"<br />"+
-                           "Speed:"+ ue.speed)
-                .addTo(ues_lg); // add to layer group
-
-            if ( ue.cell_id_hex==null ) {
-                L.DomUtil.addClass(ue_markers[ue.supi]._icon, 'null-cell');
-            } else {
-                L.DomUtil.removeClass(ue_markers[ue.supi]._icon, 'null-cell');
-            }
-
-        }
-        else {
-            // move existing markers
-            var newLatLng = [ue.latitude,ue.longitude];
-            ue_markers[ue.supi].setLatLng(newLatLng);
-            ue_markers[ue.supi].setPopupContent("<b>"+ ue.name +"</b><br />"+
-                           // ue.description +"<br />"+
-                           "location: ["  + ue.latitude.toFixed(6) + "," + ue.longitude.toFixed(6) +"]<br />"+
-                           "Cell ID: " + ( (ue.cell_id_hex==null)? "-" : ue.cell_id_hex ) +"<br />"+
-                           "External identifier: " + ue.external_identifier +"<br />"+
-                           "Speed:"+ ue.speed);
-
-
-            // update UE marker color
-            temp_icon = L.DomUtil.get(ue_markers[ue.supi]._icon);
-
-            if (temp_icon == null) {
-                // if the user has unchecked the UEs checkbox ✅ on the map settings
-                // temp_icon is null and triggers console errors
-                // if this is the case, continue...
-                continue;
-            } else {
-                if ( ue.cell_id_hex==null ) {
-                    // 'null-cell' class gives a grey color
-                    // to UEs that are not connected to a cell
-                    L.DomUtil.addClass(temp_icon, 'null-cell');
-                } else {
-                    L.DomUtil.removeClass(temp_icon, 'null-cell');
-                }
-            }
+        if ( ue.cell_id_hex==null ) {
+            L.DomUtil.addClass(ue_markers[ue.supi]._icon, 'null-cell');
+        } else {
+            L.DomUtil.removeClass(ue_markers[ue.supi]._icon, 'null-cell');
         }
     }
-    UEs_first_paint = false;
 }
 
 
@@ -897,7 +814,7 @@ function ui_add_ue_btn_listeners(){
             
             // start location UE loop
             api_start_loop({"supi":curr_supi});
-            
+            start_map_refresh_interval();
 
             $(this).data("running",true);
             $(this).removeClass('btn-success').addClass('btn-danger');
