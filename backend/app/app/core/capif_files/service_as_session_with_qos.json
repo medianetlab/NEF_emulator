@@ -10,16 +10,16 @@
             "resources": [
               {
                 "resourceName": "QOS_SUBSCRIPTIONS",
-                "commType": " SUBSCRIBE_NOTIFY",
-                "uri": "/{scsAsId}/subscriptions",
+                "commType": "SUBSCRIBE_NOTIFY",
+                "uri": "/scsAsId001/subscriptions",
                 "custOpName": "http_post",
                 "operations": ["GET","POST"],
                 "description": "Endpoint to manage monitoring subscriptions"
               },
               {
                 "resourceName": "QOS_SUBSCRIPTION_SINGLE",
-                "commType": " SUBSCRIBE_NOTIFY",
-                "uri": "/{scsAsId}/subscriptions/{subscriptionId}",
+                "commType": "SUBSCRIBE_NOTIFY",
+                "uri": "/scsAsId001/subscriptions/subscriptionId001",
                 "custOpName": "http_get",
                 "operations": ["GET","PUT","DELETE"],
                 "description": "Endpoint to manage single subscription"
