@@ -272,30 +272,20 @@ function ui_initialize_map() {
     // set map height
     $('#mapid').css({"height": window.innerHeight * 0.65} );
 
-    var mbAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
-                'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-        mbUrl = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoiZXhhbXBsZXMiLCJhIjoiY2p0MG01MXRqMW45cjQzb2R6b2ptc3J4MSJ9.zA2W0IkI0c6KaAhJfk9bWg';
-
     var osAttr = '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         osUrl  = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
-
-
-    var grayscale   = L.tileLayer(mbUrl, {id: 'mapbox/light-v9',    tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
-        streets     = L.tileLayer(mbUrl, {id: 'mapbox/streets-v11', tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
-        osm         = L.tileLayer(osUrl, {                          tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23});
+    var osm         = L.tileLayer(osUrl, {tileSize: 512, zoomOffset: -1, attribution: osAttr, maxZoom: 23});
 
 
     // map initialization
     mymap = L.map('mapid', {
-        layers: [grayscale, cells_lg, cell_coverage_lg, ues_lg, paths_lg]
+        layers: [osm, cells_lg, cell_coverage_lg, ues_lg, paths_lg]
     }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
     //.setView([37.996349, 23.819861], 17);  // previous "hard-coded" center for the first map scenario at NCSRD
 
 
     var baseLayers = {
-            "Grayscale": grayscale,
-            "Streets": streets,
             'OpenStreetMap': osm
         };
 
@@ -545,7 +535,7 @@ function ui_map_paint_Cells() {
         L.circle([cell.latitude,cell.longitude], cell.radius, {
             color: 'none',
             fillColor: '#f03',
-            fillOpacity: 0.05
+            fillOpacity: 0.15
         }).addTo(cell_coverage_lg).addTo(mymap);
         
         // keep (lat, long) to later set view of the map
