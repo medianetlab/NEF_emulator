@@ -8,7 +8,7 @@ from app.crud import crud_mongo, user, ue
 from app.api import deps
 from app import tools
 from app.db.session import client
-from app.api.api_v1.endpoints.utils import add_notifications
+from app.api.api_v1.endpoints.utils import add_notifications, ccf_logs
 from .ue_movement import retrieve_ue_state, retrieve_ue
 
 router = APIRouter()
@@ -41,6 +41,7 @@ def read_active_subscriptions(
     if retrieved_docs:
         http_response = JSONResponse(content=retrieved_docs, status_code=200)
         add_notifications(http_request, http_response, False)
+        ccf_logs(http_request, http_response, "service_monitoring_event.json", token_payload.get("sub"))
         return http_response
     else:
         return Response(status_code=204)
