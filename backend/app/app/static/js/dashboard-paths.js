@@ -484,7 +484,7 @@ function ui_show_edit_path_modal( path_id ) {
     api_get_specific_path_callback( edit_path_tmp_obj.id, function(data){
         // console.log(data);
         edit_path_tmp_points = data;
-        ui_map_paint_path(data, edit_path_map, edit_path_path_lg, 0.2);
+        ui_map_paint_path(data, edit_path_map, edit_path_path_lg, 0.4);
     });
 
     // add a solid-color small circle (dot) at the start lat,lon
@@ -719,7 +719,7 @@ function ui_edit_path_modal_add_listeners() {
             edit_path_path_lg.clearLayers();
             edit_path_tmp_points.color = new_color;
 
-            ui_map_paint_path(edit_path_tmp_points, edit_path_map, edit_path_path_lg, 0.2);
+            ui_map_paint_path(edit_path_tmp_points, edit_path_map, edit_path_path_lg, 0.4);
         } else {
             ui_display_toast_msg("error", "Error: not a valid color", "A valid hex color value must be used.");
         }
@@ -755,7 +755,7 @@ function ui_add_path_modal_add_listeners() {
             
             add_path_polyline = L.polyline(latlng, {
                 color: add_path_tmp_obj.color,
-                opacity: 0.2
+                opacity: 0.4
             }).addTo( add_path_new_path_lg ).addTo( add_path_map );
             
         } else {
@@ -898,7 +898,7 @@ function generate_coords_between_points(φ1, λ1, φ2, λ2){
     
     add_path_polyline = L.polyline(latlng, {
         color: add_path_tmp_obj.color,
-        opacity: 0.2
+        opacity: 0.4
     }).addTo( add_path_new_path_lg ).addTo( add_path_map );
 }
 

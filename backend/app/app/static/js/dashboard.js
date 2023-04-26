@@ -113,7 +113,7 @@ function ui_draw_Cells_to_map(map, cells_layer, coverage_layer, fillColor) {
             L.circle([item.latitude,(item.longitude)], item.radius, {
                 color: 'none',
                 fillColor: fillColor,
-                fillOpacity: 0.05
+                fillOpacity: 0.15
             }).addTo( coverage_layer ).addTo( map );
         }
     }
@@ -143,7 +143,7 @@ function ui_draw_Cells_to_map_excluding_selected(map, cells_layer, coverage_laye
             L.circle([item.latitude,(item.longitude)], item.radius, {
                 color: 'none',
                 fillColor: fillColor,
-                fillOpacity: 0.05
+                fillOpacity: 0.15
             }).addTo( coverage_layer ).addTo( map );
         }
     }
