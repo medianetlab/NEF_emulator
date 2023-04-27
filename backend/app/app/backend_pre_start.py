@@ -52,15 +52,20 @@ def capif_nef_connector():
 
         capif_connector.publish_services(service_api_description_json_full_path="app/core/capif_files/service_monitoring_event.json")
         capif_connector.publish_services(service_api_description_json_full_path="app/core/capif_files/service_as_session_with_qos.json")
+        return True
     except requests.exceptions.HTTPError as err:
         if err.response.status_code == 409:
             logger.error(f'"Http Error:", {err.response.json()}')
+        return False
     except requests.exceptions.ConnectionError as err:
         logger.error(f'"Error Connecting:", {err}')    
+        return False
     except requests.exceptions.Timeout as err:
         logger.error(f'"Timeout Error:", {err}')
+        return False
     except requests.exceptions.RequestException as err:
         logger.error(f'"Error:", {err}')
+        return False
     
         
 def main() -> None:
@@ -68,8 +73,10 @@ def main() -> None:
     init()
     logger.info("Service finished initializing")
     logger.info("Trying to connect with CAPIF Core Function")
-    capif_nef_connector()
-    logger.info("Successfully onboard to CAPIF Core Function")
+    if capif_nef_connector():
+        logger.info("Successfully onboard NEF in the CAPIF Core Function")
+    else:
+        logger.info("Failed to onboard NEF in the CAPIF Core Function")
 
 
 if __name__ == "__main__":
