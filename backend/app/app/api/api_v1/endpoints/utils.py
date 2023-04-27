@@ -13,57 +13,62 @@ from pydantic import BaseModel
 from app.api.api_v1.endpoints.paths import get_random_point
 from app.api.api_v1.endpoints.ue_movement import retrieve_ue_state
 from evolved5g.sdk import CAPIFLogger
-from urllib.parse import urlparse, unquote
 
 #Create CAPIF Logger object
-def ccf_logs(input_request: Request, output_response: JSONResponse, service_api_description: str, invoker_id: str):
-    capif_logger = CAPIFLogger(certificates_folder="app/core/certificates",
-                                capif_host="capifcore",
-                                capif_https_port="443"
-                                )
-
-    log_entries = []
-    service_description = capif_logger.get_capif_service_description(capif_service_api_description_json_full_path=
-                                                            f"app/core/certificates/CAPIF_{service_api_description}")
-
-    api_id = service_description["apiId"]
-
-    endpoint = input_request.url.path
-    if endpoint.find('monitoring') != -1:
-        resource = "Monitoring_Event_API"
-        endpoint = "/nef/api/v1/3gpp-monitoring-event/"
-    elif endpoint.find('session-with-qos') != -1:
-        resource = "AsSession_With_QoS_API"
-        endpoint = "/nef/api/v1/3gpp-as-session-with-qos/"
-
-    #Request body check and trim
-    if(input_request.method == 'POST') or (input_request.method == 'PUT'):  
-        req_body = input_request._body.decode("utf-8").replace('\n', '')
-        req_body = req_body.replace(' ', '')
-    else:
-        req_body = " "
+def ccf_logs(input_request: Request, output_response: dict, service_api_description: str, invoker_id: str):
     
-    url_string = "https://" + input_request.url.hostname + ":4443" + endpoint
-    
-    log_entry = CAPIFLogger.LogEntry(
-                                    apiId = api_id,
-                                    apiVersion="v1",
-                                    apiName=endpoint,
-                                    resourceName=resource,
-                                    uri=url_string,
-                                    protocol="HTTP_1_1",
-                                    invocationTime= datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                                    invocationLatency=10,
-                                    operation=input_request.method,
-                                    result= str(output_response.status_code),
-                                    inputParameters={ "request" : req_body},
-                                    outputParameters={ "response" : output_response.body.decode("utf-8") }
+    try:
+        capif_logger = CAPIFLogger(certificates_folder="app/core/certificates",
+                                    capif_host="capifcore",
+                                    capif_https_port="443"
                                     )
 
-    log_entries.append(log_entry)
-    api_invoker_id = invoker_id
-    capif_logger.save_log(api_invoker_id,log_entries)
-    return
+        log_entries = []
+        service_description = capif_logger.get_capif_service_description(capif_service_api_description_json_full_path=
+                                                                f"app/core/certificates/CAPIF_{service_api_description}")
+
+        api_id = service_description["apiId"]
+
+        endpoint = input_request.url.path
+        if endpoint.find('monitoring') != -1:
+            resource = "Monitoring_Event_API"
+            endpoint = "/nef/api/v1/3gpp-monitoring-event/"
+        elif endpoint.find('session-with-qos') != -1:
+            resource = "AsSession_With_QoS_API"
+            endpoint = "/nef/api/v1/3gpp-as-session-with-qos/"
+
+        #Request body check and trim
+        if(input_request.method == 'POST') or (input_request.method == 'PUT'):  
+            req_body = input_request._body.decode("utf-8").replace('\n', '')
+            req_body = req_body.replace(' ', '')
+            req_body = json.loads(req_body)
+        else:
+            req_body = " "
+        
+        url_string = "https://" + input_request.url.hostname + ":4443" + endpoint
+        
+        log_entry = CAPIFLogger.LogEntry(
+                                        apiId = api_id,
+                                        apiVersion="v1",
+                                        apiName=endpoint,
+                                        resourceName=resource,
+                                        uri=url_string,
+                                        protocol="HTTP_1_1",
+                                        invocationTime= datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                        invocationLatency=10,
+                                        operation=input_request.method,
+                                        result= output_response.get("status_code"),
+                                        inputParameters=req_body,
+                                        outputParameters=output_response.get("response")
+                                        )
+
+        log_entries.append(log_entry)
+        api_invoker_id = invoker_id
+        capif_logger.save_log(api_invoker_id,log_entries)
+    except Exception as ex:
+        logging.critical(ex)
+        logging.critical("Potential cause of failure: CAPIF Core Function is not deployed or unreachable")
+    
 
 #List holding notifications from 
 event_notifications = []
