@@ -35,8 +35,7 @@ class BackgroundTasks(threading.Thread):
         current_user = self._args[0]
         supi = self._args[1]
         json_cells = self._args[2]
-        points = self._args[3]
-        is_superuser = self._args[4]
+        is_superuser = self._args[3]
 
         active_subscriptions = {
             "location_reporting" : False,
@@ -99,8 +98,13 @@ class BackgroundTasks(threading.Thread):
                     # ues[f"{supi}"]["latitude"] = points[current_position_index]["latitude"]
                     # ues[f"{supi}"]["longitude"] = points[current_position_index]["longitude"]
                     UE = crud.ue.get_supi(db=self._db, supi=supi)
+                    self._db.close()
                     ues[f"{supi}"]["latitude"] = UE.latitude
                     ues[f"{supi}"]["longitude"] = UE.longitude
+                    ue_lat = ues[f"{supi}"]["latitude"]
+                    ue_long = ues[f"{supi}"]["longitude"]
+                    logging.critical(f"------------latitude: {ue_lat}")
+                    logging.critical(f"------------latitude: {ue_long}")
                     cell_now = check_distance(ues[f"{supi}"]["latitude"], ues[f"{supi}"]["longitude"], json_cells) #calculate the distance from all the cells
                 except Exception as ex:
                     logging.warning("Failed to update coordinates")
@@ -292,6 +296,7 @@ class BackgroundTasks(threading.Thread):
                     '''
                     logging.critical("Terminating thread...")
                     logging.critical("Updating UE with the latest coordinates and cell in the database (last known position)...")
+                    self._db = SessionLocal()
                     crud.ue.update_coordinates(db=self._db, lat=ues[f"{supi}"]["latitude"], long=ues[f"{supi}"]["longitude"], db_obj=UE)
                     crud.ue.update(db=self._db, db_obj=UE, obj_in={"Cell_id" : ues[f"{supi}"]["Cell_id"]})
                     ues.pop(f"{supi}")
@@ -404,28 +409,13 @@ def initiate_movement(
         ues[f"{msg.supi}"]["cell_id_hex"] = None
         ues[f"{msg.supi}"]["gnb_id_hex"] = None
 
-
-    #Retrieve paths & points
-    path = crud.path.get(db=db, id=UE.path_id)
-    if not path:
-        logging.warning("Path not found")
-        threads.pop(f"{msg.supi}")
-        return
-    if (path.owner_id != current_user.id):
-        logging.warning("Not enough permissions")
-        threads.pop(f"{msg.supi}")
-        return
-
-    points = crud.points.get_points(db=db, path_id=UE.path_id)
-    points = jsonable_encoder(points)
-
     #Retrieve all the cells
     Cells = crud.cell.get_multi_by_owner(db=db, owner_id=current_user.id, skip=0, limit=100)
     json_cells = jsonable_encoder(Cells)
 
     is_superuser = crud.user.is_superuser(current_user)
 
-    t = BackgroundTasks(args= (current_user, msg.supi, json_cells, points, is_superuser))
+    t = BackgroundTasks(args= (current_user, msg.supi, json_cells, is_superuser))
     threads[f"{msg.supi}"] = {}
     threads[f"{msg.supi}"][f"{current_user.id}"] = t
     t.start()
