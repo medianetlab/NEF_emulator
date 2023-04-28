@@ -1,4 +1,12 @@
 # Changelog
+## v2.1.0
+
+***Summary:***
+> - *Add functionality to support CAPIF Core Function's logging service*
+> - *Avoid db connections within the threads (optimisation)*
+> - *Fix token causing 403 error in mapbox front-end*
+<br><br>
+
 ## v2.0.0
 
 ***Summary:***
