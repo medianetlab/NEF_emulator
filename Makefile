@@ -35,8 +35,11 @@ build:
 build-no-cache:
 	docker compose --profile debug build --no-cache --pull
 
-logs:
-	docker compose logs -f
+logs-dev:
+	docker compose --profile dev logs -f
+
+logs-debug:
+	docker compose --profile debug logs -f
 
 logs-backend:
 	docker compose logs -f backend
