@@ -11,17 +11,24 @@
             {
               "resourceName": "MONITORING_SUBSCRIPTIONS",
               "commType": "SUBSCRIBE_NOTIFY",
-              "uri": "/scsAsId001/subscriptions",
+              "uri": "/{scsAsId}/subscriptions",
               "custOpName": "http_post",
-              "operations": ["GET","POST"],
+              "operations": [
+                "GET",
+                "POST"
+              ],
               "description": "Endpoint to manage monitoring subscriptions"
             },
             {
               "resourceName": "MONITORING_SUBSCRIPTION_SINGLE",
               "commType": "SUBSCRIBE_NOTIFY",
-              "uri": "/scsAsId001/subscriptions/subscriptionId001",
+              "uri": "/{scsAsId}/subscriptions/{subscriptionId}",
               "custOpName": "http_get",
-              "operations": ["GET","PUT","DELETE"],
+              "operations": [
+                "GET",
+                "PUT",
+                "DELETE"
+              ],
               "description": "Endpoint to manage single subscription"
             }
           ],
@@ -39,12 +46,17 @@
       ],
       "protocol": "HTTP_1_1",
       "dataFormat": "JSON",
-      "securityMethods": ["OAUTH", "PSK"],
+      "securityMethods": [
+        "OAUTH",
+        "PSK"
+      ],
       "interfaceDescriptions": [
         {
           "ipv4Addr": "127.0.0.1",
-          "port": 8888,
-          "securityMethods": ["OAUTH"]
+          "port": 8090,
+          "securityMethods": [
+            "OAUTH"
+          ]
         }
       ]
     }
