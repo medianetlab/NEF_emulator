@@ -1,4 +1,10 @@
 # Changelog
+## v2.1.1
+***Summary:***
+> - *Revert to previous service description files for CAPIF Core Function (commit: b1e3cea)*
+> - *Fix port number in service description files*
+<br><br>
+
 ## v2.1.0
 
 ***Summary:***
