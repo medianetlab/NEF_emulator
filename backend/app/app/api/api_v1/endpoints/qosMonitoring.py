@@ -39,6 +39,8 @@ def read_active_subscriptions(
             ccf_logs(http_request, json_response, "service_as_session_with_qos.json", token_payload.get("sub"))
         except TypeError as error:
             logging.error(f"Error: {error}")
+        except AttributeError as error:
+            logging.error(f"Error: {error}")
         raise HTTPException(status_code=404, detail="There are no active subscriptions")
     
     http_response = JSONResponse(content=retrieved_docs, status_code=200)
@@ -53,6 +55,8 @@ def read_active_subscriptions(
         ccf_logs(http_request, json_response, "service_as_session_with_qos.json", token_payload.get("sub"))
     except TypeError as error:
         logging.error(f"Error: {error}")
+    except AttributeError as error:
+            logging.error(f"Error: {error}")
 
     return http_response
 
@@ -90,6 +94,8 @@ def create_subscription(
                 ccf_logs(http_request, json_response, "service_as_session_with_qos.json", token_payload.get("sub"))
             except TypeError as error:
                 logging.error(f"Error: {error}")
+            except AttributeError as error:
+                logging.error(f"Error: {error}")
             raise HTTPException(status_code=400, detail="Please enter a value in repFreqs field")
     
     #Ensure that the user sends only one of the ipv4, ipv6, macAddr fields
@@ -124,6 +130,8 @@ def create_subscription(
             json_response.update({"status_code" : "409"})
             ccf_logs(http_request, json_response, "service_as_session_with_qos.json", token_payload.get("sub"))
         except TypeError as error:
+            logging.error(f"Error: {error}")
+        except AttributeError as error:
             logging.error(f"Error: {error}")
         raise HTTPException(status_code=409, detail=f"Subscription for UE with {selected_id} ({error_var}) already exists")
     
@@ -170,6 +178,8 @@ def create_subscription(
         ccf_logs(http_request, json_response, "service_as_session_with_qos.json", token_payload.get("sub"))
     except TypeError as error:
         logging.error(f"Error: {error}")
+    except AttributeError as error:
+            logging.error(f"Error: {error}")
 
     return http_response
 
@@ -198,6 +208,8 @@ def read_subscription(
             ccf_logs(http_request, json_response, "service_as_session_with_qos.json", token_payload.get("sub"))
         except TypeError as error:
             logging.error(f"Error: {error}")
+        except AttributeError as error:
+            logging.error(f"Error: {error}")
         raise HTTPException(status_code=400, detail='Please enter a valid uuid (24-character hex string)')
     
     #Check if the document exists
@@ -209,6 +221,8 @@ def read_subscription(
             json_response.update({"status_code" : "404"})
             ccf_logs(http_request, json_response, "service_as_session_with_qos.json", token_payload.get("sub"))
         except TypeError as error:
+            logging.error(f"Error: {error}")
+        except AttributeError as error:
             logging.error(f"Error: {error}")
         raise HTTPException(status_code=404, detail="Subscription not found")
     #If the document exists then validate the owner
@@ -228,6 +242,8 @@ def read_subscription(
         ccf_logs(http_request, json_response, "service_as_session_with_qos.json", token_payload.get("sub"))
     except TypeError as error:
             logging.error(f"Error: {error}")
+    except AttributeError as error:
+        logging.error(f"Error: {error}")
     
     return http_response
 
@@ -257,6 +273,8 @@ def update_subscription(
             ccf_logs(http_request, json_response, "service_as_session_with_qos.json", token_payload.get("sub"))
         except TypeError as error:
             logging.error(f"Error: {error}")
+        except AttributeError as error:
+            logging.error(f"Error: {error}")
         raise HTTPException(status_code=400, detail='Please enter a valid uuid (24-character hex string)')
     
     #Check if the document exists
@@ -268,6 +286,8 @@ def update_subscription(
             json_response.update({"status_code" : "404"})
             ccf_logs(http_request, json_response, "service_as_session_with_qos.json", token_payload.get("sub"))
         except TypeError as error:
+            logging.error(f"Error: {error}")
+        except AttributeError as error:
             logging.error(f"Error: {error}")
         raise HTTPException(status_code=404, detail="Subscription not found")
     #If the document exists then validate the owner
@@ -293,6 +313,8 @@ def update_subscription(
         ccf_logs(http_request, json_response, "service_as_session_with_qos.json", token_payload.get("sub"))
     except TypeError as error:
         logging.error(f"Error: {error}")
+    except AttributeError as error:
+            logging.error(f"Error: {error}")
 
     return http_response
 
@@ -321,6 +343,8 @@ def delete_subscription(
             ccf_logs(http_request, json_response, "service_as_session_with_qos.json", token_payload.get("sub"))
         except TypeError as error:
             logging.error(f"Error: {error}")
+        except AttributeError as error:
+            logging.error(f"Error: {error}")
         raise HTTPException(status_code=400, detail='Please enter a valid uuid (24-character hex string)')
 
 
@@ -333,6 +357,8 @@ def delete_subscription(
             json_response.update({"status_code" : "404"})
             ccf_logs(http_request, json_response, "service_as_session_with_qos.json", token_payload.get("sub"))
         except TypeError as error:
+            logging.error(f"Error: {error}")
+        except AttributeError as error:
             logging.error(f"Error: {error}")
         raise HTTPException(status_code=404, detail="Subscription not found")
     #If the document exists then validate the owner
@@ -352,6 +378,8 @@ def delete_subscription(
         ccf_logs(http_request, http_response, "service_as_session_with_qos.json", token_payload.get("sub"))
     except TypeError as error:
         logging.error(f"Error: {error}")
+    except AttributeError as error:
+            logging.error(f"Error: {error}")
 
     return http_response
 
