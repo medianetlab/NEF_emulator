@@ -180,6 +180,8 @@ def create_subscription(
             ccf_logs(http_request, json_response, "service_monitoring_event.json", token_payload.get("sub"))
         except TypeError as error:
             logging.error(f"Error: {error}")
+        except AttributeError as error:
+            logging.error(f"Error: {error}")
         
         return http_response
     elif (item_in.monitoringType == "LOSS_OF_CONNECTIVITY" or item_in.monitoringType == "UE_REACHABILITY") and item_in.maximumNumberOfReports == 1:
