@@ -12,7 +12,12 @@ class CRUD_Path(CRUDBase[Path, PathCreate, PathUpdate]):
     def create_with_owner(
         self, db: Session, *, obj_in: PathCreate, owner_id: int
     ) -> Path:
-        obj_in_data = jsonable_encoder(obj_in.copy(exclude = {'points', 'id'}))
+        if not isinstance(obj_in, dict):
+            obj_in_data = jsonable_encoder(obj_in.copy(exclude = {'points', 'id'}))
+        else:
+            obj_in_data=obj_in.copy()
+            obj_in_data.pop("points")
+            obj_in_data.pop("id")
         obj_in_data.update({"start_lat" : obj_in_data["start_point"]["latitude"]})
         obj_in_data.update({"start_long" : obj_in_data["start_point"]["longitude"]})
         obj_in_data.update({"end_lat" : obj_in_data["end_point"]["latitude"]})
@@ -44,8 +49,10 @@ class CRUD_Points(CRUDBase[Points, PathCreate, PathUpdate]):
     def create(
         self, db: Session, *, obj_in: PathCreate, path_id: int
     ) -> Points:
-        obj_in_data = jsonable_encoder(obj_in.copy(include = {'points'}))
-        
+        if not isinstance(obj_in, dict):
+            obj_in_data = jsonable_encoder(obj_in.copy(include = {'points'}))
+        else:
+            obj_in_data = obj_in.copy()
 
         for obj in obj_in_data["points"]:
             db_obj = self.model(**obj, path_id=path_id)
