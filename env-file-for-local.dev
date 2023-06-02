@@ -2,7 +2,8 @@
 # cp env-file-for-local.dev .env
 
 DOMAIN=localhost
-DOCKER_IMAGE_BACKEND=backend
+DOCKER_IMAGE_BACKEND=nef-backend
+BACKEND_TAG=1.0
 DOCKER_IMAGE_FRONTEND=frontend
 # Backend
 SERVER_NAME=localhost
@@ -43,7 +44,8 @@ MONGO_CLIENT=mongodb://mongo_nef:27017/
 MONGO_EXPRESS_ENABLE_ADMIN=true
 
 #Nginx
-
+DOCKER_IMAGE_PROXY=nef-nginx
+PROXY_TAG=1.0
 NGINX_HTTP=8090
 NGINX_HTTPS=4443
 

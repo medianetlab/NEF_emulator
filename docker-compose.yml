@@ -63,7 +63,7 @@ services:
 
   
   backend:
-    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${BACKEND_TAG-latest}'
     profiles: ["debug", "dev"]
     command: /start-reload.sh
     volumes:
@@ -91,7 +91,7 @@ services:
     build:
       context: nginx
       dockerfile: Dockerfile.nginx
-    image: nginx-nef
+    image: '${DOCKER_IMAGE_PROXY?Variable not set}:${PROXY_TAG-latest}'
     restart: unless-stopped
     env_file: .env
     environment:
