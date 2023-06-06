@@ -15,7 +15,11 @@ spec:
       containers:
         - name: db
           image: postgres:12
-          command: ["-c", "shared_buffers=256MB", "-c", "max_connections=200"]
+          args:
+            - "-c"
+            - "shared_buffers=256MB"
+            - "-c"
+            - "max_connections=200"
           volumeMounts:
             - name: app-db-data
               mountPath: /var/lib/postgresql/data/pgdata
@@ -49,43 +53,6 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pgadmin
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: pgadmin
-  template:
-    metadata:
-      labels:
-        app: pgadmin
-    spec:
-      containers:
-        - name: pgadmin
-          image: dpage/pgadmin4
-          ports:
-            - containerPort: 5050
-          volumeMounts:
-            - name: pgadmin-data
-              mountPath: /pgadmin4/servers.json
-          env:
-            - name: PGADMIN_DEFAULT_EMAIL
-              valueFrom:
-                configMapKeyRef:
-                  name: nef-configmap
-                  key: PGADMIN_DEFAULT_EMAIL
-            - name: PGADMIN_DEFAULT_PASSWORD
-              valueFrom:
-                configMapKeyRef:
-                  name: nef-configmap
-                  key: PGADMIN_DEFAULT_PASSWORD
-      volumes:
-        - name: pgadmin-data
-          emptyDir: {}
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
   name: mongo-nef
 spec:
   replicas: 1
@@ -111,54 +78,54 @@ spec:
                   key: MONGO_USER
             - name: MONGO_INITDB_ROOT_PASSWORD
               valueFrom:
-                secretKeyRef:
-                  name: mongo-credentials
+                configMapKeyRef:
+                  name: nef-configmap
                   key: MONGO_PASSWORD
       volumes:
         - name: app-mongo-db-data
           emptyDir: {}
 ---
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mongo-express
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: mongo-express
-  template:
-    metadata:
-      labels:
-        app: mongo-express
-    spec:
-      containers:
-        - name: mongo-express
-          image: mongo-express:1.0.0-alpha.4
-          ports:
-            - containerPort: 8081
-          env:
-            - name: ME_CONFIG_MONGODB_ADMINUSERNAME
-              valueFrom:
-                configMapKeyRef:
-                  name: nef-configmap
-                  key: MONGO_USER
-            - name: ME_CONFIG_MONGODB_ADMINPASSWORD
-              valueFrom:
-                configMapKeyRef:
-                  name: nef-configmap
-                  key: MONGO_PASSWORD
-            - name: ME_CONFIG_MONGODB_URL
-              valueFrom:
-                configMapKeyRef:
-                  name: nef-configmap
-                  key: ME_CONFIG_MONGODB_URL
-            - name: ME_CONFIG_MONGODB_ENABLE_ADMIN
-              valueFrom: 
-                configMapKeyRef:
-                    name: nef-configmap
-                    key: MONGO_EXPRESS_ENABLE_ADMIN
----
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: mongo-express
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: mongo-express
+#   template:
+#     metadata:
+#       labels:
+#         app: mongo-express
+#     spec:
+#       containers:
+#         - name: mongo-express
+#           image: mongo-express:1.0.0-alpha.4
+#           ports:
+#             - containerPort: 8081
+#           env:
+#             - name: ME_CONFIG_MONGODB_ADMINUSERNAME
+#               valueFrom:
+#                 configMapKeyRef:
+#                   name: nef-configmap
+#                   key: MONGO_USER
+#             - name: ME_CONFIG_MONGODB_ADMINPASSWORD
+#               valueFrom:
+#                 configMapKeyRef:
+#                   name: nef-configmap
+#                   key: MONGO_PASSWORD
+#             - name: ME_CONFIG_MONGODB_URL
+#               valueFrom:
+#                 configMapKeyRef:
+#                   name: nef-configmap
+#                   key: ME_CONFIG_MONGODB_URL
+#             - name: ME_CONFIG_MONGODB_ENABLE_ADMIN
+#               valueFrom: 
+#                 configMapKeyRef:
+#                     name: nef-configmap
+#                     key: MONGO_EXPRESS_ENABLE_ADMIN
+# ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -300,20 +267,13 @@ spec:
           command:
             - "/bin/sh"
             - "-c"
-            - |
-              /self-signed-crt.sh &
-              /dynamic_ports.sh
+            - "/self-signed-crt.sh && /dynamic_ports.sh"
           ports:
-            - containerPort: $(NGINX_HTTP)
-            - containerPort: $(NGINX_HTTPS)
+            - containerPort: 80
+            - containerPort: 443
           volumeMounts:
             - name: nginxdata
               mountPath: /var/log/nginx
-            - name: nginx-config
-              mountPath: /etc/nginx/conf.d/default.conf
-              subPath: default.conf
-            - name: nginx-certs
-              mountPath: /etc/nginx/certs
           env:
             - name: APP_ENV
               value: prod
@@ -323,7 +283,7 @@ spec:
               value: "false"
             - name: SERVICE_NAME
               value: webserver
-             - name: NGINX_HTTP
+            - name: NGINX_HTTP
               valueFrom:
                 configMapKeyRef:
                   name: nef-configmap
@@ -336,9 +296,3 @@ spec:
       volumes:
         - name: nginxdata
           emptyDir: {}
-        - name: nginx-config
-          configMap:
-            name: nginx-config
-        - name: nginx-certs
-          secret:
-            secretName: nginx-certs

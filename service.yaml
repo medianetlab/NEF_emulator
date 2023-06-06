@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: db
+  name: nef-db
 spec:
   selector:
     app: db
@@ -9,21 +9,21 @@ spec:
     - protocol: TCP
       port: 5432
 ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: pgadmin
+# spec:
+#   selector:
+#     app: pgadmin
+#   ports:
+#     - protocol: TCP
+#       port: 5050
+# ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: pgadmin
-spec:
-  selector:
-    app: pgadmin
-  ports:
-    - protocol: TCP
-      port: 5050
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: mongo-nef
+  name: nef-mongo
 spec:
   selector:
     app: mongo-nef
@@ -31,21 +31,21 @@ spec:
     - protocol: TCP
       port: 27017
 ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: mongo-express
+# spec:
+#   selector:
+#     app: mongo-express
+#   ports:
+#     - protocol: TCP
+#       port: 8081
+# ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: mongo-express
-spec:
-  selector:
-    app: mongo-express
-  ports:
-    - protocol: TCP
-      port: 8081
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: backend
+  name: nef-backend
 spec:
   selector:
     app: backend
@@ -61,9 +61,11 @@ spec:
   selector:
     app: reverse-proxy
   ports:
-    - protocol: TCP
-      port: 80
+    - name: http-port
+      protocol: TCP
+      port: 8090
       targetPort: 80
-    - protocol: TCP
-      port: 443
+    - name: https-port
+      protocol: TCP
+      port: 4443
       targetPort: 443
