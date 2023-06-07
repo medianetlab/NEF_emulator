@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nef-ingress
+  labels:
+    app: reverse-proxy
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: nef.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: reverse-proxy
+                port:
+                  number: 8090
