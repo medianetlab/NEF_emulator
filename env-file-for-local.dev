@@ -2,7 +2,7 @@
 # cp env-file-for-local.dev .env
 
 DOMAIN=localhost
-DOCKER_IMAGE_BACKEND=nef-backend
+DOCKER_IMAGE_BACKEND=dimfrag/nef-backend
 BACKEND_TAG=1.0
 DOCKER_IMAGE_FRONTEND=frontend
 # Backend
@@ -44,7 +44,7 @@ MONGO_CLIENT=mongodb://mongo_nef:27017/
 MONGO_EXPRESS_ENABLE_ADMIN=true
 
 #Nginx
-DOCKER_IMAGE_PROXY=nef-nginx
+DOCKER_IMAGE_PROXY=dimfrag/nef-nginx
 PROXY_TAG=1.0
 NGINX_HTTP=8090
 NGINX_HTTPS=4443
@@ -57,7 +57,7 @@ NGINX_HTTPS=4443
 CAPIF_HOST=capifcore
 CAPIF_HTTP_PORT=8080
 CAPIF_HTTPS_PORT=443
-EXTERNAL_NET=true
+EXTERNAL_NET=false
 
 #Public Certificate for verifing access token
-USE_PUBLIC_KEY_VERIFICATION=true
+USE_PUBLIC_KEY_VERIFICATION=false
