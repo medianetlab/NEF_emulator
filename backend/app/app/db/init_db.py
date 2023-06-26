@@ -49,29 +49,33 @@ def init_db(db: Session) -> None:
    
     db.execute('TRUNCATE TABLE cell, gnb, path, points, ue RESTART IDENTITY')
     
-    for gNB_in in gNBs:
-        gNB = crud.gnb.create_with_owner(db=db, obj_in=gNB_in, owner_id=user.id)
+    if gNBs is not None:
+        for gNB_in in gNBs:
+            gNB = crud.gnb.create_with_owner(db=db, obj_in=gNB_in, owner_id=user.id)
 
-    for cell_in in cells:
-        cell = crud.cell.create_with_owner(db=db, obj_in=cell_in, owner_id=user.id)
+    if cells is not None:
+        for cell_in in cells:
+            cell = crud.cell.create_with_owner(db=db, obj_in=cell_in, owner_id=user.id)
 
-    for ue_in in ues:
-        ue = crud.ue.create_with_owner(db=db, obj_in=ue_in, owner_id=user.id)
+    if ues is not None:
+        for ue_in in ues:
+            ue = crud.ue.create_with_owner(db=db, obj_in=ue_in, owner_id=user.id)
 
-    for path_in in paths:
-        path = crud.path.create_with_owner(db=db, obj_in=path_in, owner_id=user.id)
-        crud.points.create(db=db, obj_in=path_in, path_id=path.id) 
-        
-        for ue_path in ue_path_association:
-            #Assign the coordinates
-            UE = crud.ue.get_supi(db=db, supi=ue_path.get("supi"))
-            json_data = jsonable_encoder(UE)
+    if paths is not None:
+        for path_in in paths:
+            path = crud.path.create_with_owner(db=db, obj_in=path_in, owner_id=user.id)
+            crud.points.create(db=db, obj_in=path_in, path_id=path.id) 
             
-            json_data['path_id'] = path.id
-            random_point = get_random_point(db, path.id)
-            json_data['latitude'] = random_point.get('latitude')
-            json_data['longitude'] = random_point.get('longitude')
-            
-            crud.ue.update(db=db, db_obj=UE, obj_in=json_data)
+            for ue_path in ue_path_association:
+                #Assign the coordinates
+                UE = crud.ue.get_supi(db=db, supi=ue_path.get("supi"))
+                json_data = jsonable_encoder(UE)
+                
+                json_data['path_id'] = path.id
+                random_point = get_random_point(db, path.id)
+                json_data['latitude'] = random_point.get('latitude')
+                json_data['longitude'] = random_point.get('longitude')
+                
+                crud.ue.update(db=db, db_obj=UE, obj_in=json_data)
     
     return
