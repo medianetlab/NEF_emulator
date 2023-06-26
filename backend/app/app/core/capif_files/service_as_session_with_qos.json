@@ -53,7 +53,7 @@
       "interfaceDescriptions": [
         {
           "ipv4Addr": "127.0.0.1",
-          "port": 8090,
+          "port": 4443,
           "securityMethods": [
             "OAUTH"
           ]

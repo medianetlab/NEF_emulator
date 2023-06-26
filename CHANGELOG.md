@@ -1,4 +1,24 @@
 # Changelog
+## v2.2.1
+***Summary:***
+> - *Split jwt token authorisation for NEF and CAPIF. If NEF is deployed as a standalone component then only nef token authorisation is required. If capif is integrated with nef, jwt token acquired from CAPIF is required [commit](https://github.com/medianetlab/NEF_emulator/commit/16483f55d2d14b61d804c00eb8774119e6acffdc)*
+> - *Create initial data for the simulation scenario based on the default scenario (on build)*
+<br><br>
+
+## v2.1.1
+***Summary:***
+> - *Revert to previous service description files for CAPIF Core Function (commit: b1e3cea)*
+> - *Fix port number in service description files*
+<br><br>
+
+## v2.1.0
+
+***Summary:***
+> - *Add functionality to support CAPIF Core Function's logging service*
+> - *Avoid db connections within the threads (optimisation)*
+> - *Fix token causing 403 error in mapbox front-end*
+<br><br>
+
 ## v2.0.0
 
 ***Summary:***

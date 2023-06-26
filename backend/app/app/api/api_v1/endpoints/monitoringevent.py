@@ -51,6 +51,8 @@ def read_active_subscriptions(
             ccf_logs(http_request, json_response, "service_monitoring_event.json", token_payload.get("sub"))
         except TypeError as error:
             logging.critical(f"Error: {error}")
+        except AttributeError as error:
+            logging.error(f"Error: {error}")
 
         return http_response
     else:
@@ -91,6 +93,8 @@ def create_subscription(
             ccf_logs(http_request, json_response, "service_monitoring_event.json", token_payload.get("sub"))
         except TypeError as error:
             logging.critical(f"Error: {error}")
+        except AttributeError as error:
+            logging.error(f"Error: {error}")
         raise HTTPException(status_code=409, detail="UE with this external identifier doesn't exist")
     
     
@@ -126,6 +130,8 @@ def create_subscription(
             ccf_logs(http_request, json_response, "service_monitoring_event.json", token_payload.get("sub"))
         except TypeError as error:
             logging.error(f"Error: {error}")
+        except AttributeError as error:
+            logging.error(f"Error: {error}")
         
         return http_response 
     #Subscription
@@ -141,6 +147,8 @@ def create_subscription(
                 ccf_logs(http_request, json_response, "service_monitoring_event.json", token_payload.get("sub"))
             except TypeError as error:
                 logging.critical(f"Error: {error}")
+            except AttributeError as error:
+                logging.error(f"Error: {error}")
             raise HTTPException(status_code=409, detail=f"There is already an active subscription for UE with external id {item_in.externalId} - Monitoring Type = {item_in.monitoringType}")
    
         json_data = jsonable_encoder(item_in.dict(exclude_unset=True))
@@ -172,6 +180,8 @@ def create_subscription(
             ccf_logs(http_request, json_response, "service_monitoring_event.json", token_payload.get("sub"))
         except TypeError as error:
             logging.error(f"Error: {error}")
+        except AttributeError as error:
+            logging.error(f"Error: {error}")
         
         return http_response
     elif (item_in.monitoringType == "LOSS_OF_CONNECTIVITY" or item_in.monitoringType == "UE_REACHABILITY") and item_in.maximumNumberOfReports == 1:
@@ -184,6 +194,8 @@ def create_subscription(
             ccf_logs(http_request, json_response, "service_monitoring_event.json", token_payload.get("sub"))
         except TypeError as error:
             logging.critical(f"Error: {error}")
+        except AttributeError as error:
+            logging.error(f"Error: {error}")
         return JSONResponse(content=jsonable_encoder(
             {
                 "title" : "The requested parameters are out of range",
@@ -204,6 +216,8 @@ def create_subscription(
                 ccf_logs(http_request, json_response, "service_monitoring_event.json", token_payload.get("sub"))
             except TypeError as error:
                 logging.critical(f"Error: {error}")
+            except AttributeError as error:
+                logging.error(f"Error: {error}")
             raise HTTPException(status_code=409, detail=f"There is already an active subscription for UE with external id {item_in.externalId} - Monitoring Type = {item_in.monitoringType}")
    
         json_data = jsonable_encoder(item_in.dict(exclude_unset=True))
@@ -234,6 +248,8 @@ def create_subscription(
             json_response.update({"status_code" : str(http_response.status_code)})
             ccf_logs(http_request, json_response, "service_monitoring_event.json", token_payload.get("sub"))
         except TypeError as error:
+            logging.error(f"Error: {error}")
+        except AttributeError as error:
             logging.error(f"Error: {error}")
 
         return http_response
@@ -265,6 +281,8 @@ def update_subscription(
             ccf_logs(http_request, json_response, "service_monitoring_event.json", token_payload.get("sub"))
         except TypeError as error:
             logging.critical(f"Error: {error}")
+        except AttributeError as error:
+            logging.error(f"Error: {error}")
         raise HTTPException(status_code=400, detail='Please enter a valid uuid (24-character hex string)')
     
     #Check if the document exists
@@ -277,6 +295,8 @@ def update_subscription(
             ccf_logs(http_request, json_response, "service_monitoring_event.json", token_payload.get("sub"))
         except TypeError as error:
             logging.critical(f"Error: {error}")
+        except AttributeError as error:
+            logging.error(f"Error: {error}")
         raise HTTPException(status_code=404, detail="Subscription not found")
     #If the document exists then validate the owner
     if not user.is_superuser(current_user) and (retrieved_doc['owner_id'] != current_user.id):
@@ -304,6 +324,8 @@ def update_subscription(
             json_response.update({"status_code" : str(http_response.status_code)})
             ccf_logs(http_request, json_response, "service_monitoring_event.json", token_payload.get("sub"))
         except TypeError as error:
+            logging.error(f"Error: {error}")
+        except AttributeError as error:
             logging.error(f"Error: {error}")
 
         return http_response
@@ -336,6 +358,8 @@ def read_subscription(
             ccf_logs(http_request, json_response, "service_monitoring_event.json", token_payload.get("sub"))
         except TypeError as error:
             logging.critical(f"Error: {error}")
+        except AttributeError as error:
+            logging.error(f"Error: {error}")
         raise HTTPException(status_code=400, detail='Please enter a valid uuid (24-character hex string)')
     
     #Check if the document exists
@@ -348,6 +372,8 @@ def read_subscription(
             ccf_logs(http_request, json_response, "service_monitoring_event.json", token_payload.get("sub"))
         except TypeError as error:
             logging.critical(f"Error: {error}")
+        except AttributeError as error:
+            logging.error(f"Error: {error}")
         raise HTTPException(status_code=404, detail="Subscription not found")
     #If the document exists then validate the owner
     if not user.is_superuser(current_user) and (retrieved_doc['owner_id'] != current_user.id):
@@ -369,6 +395,8 @@ def read_subscription(
             json_response.update({"status_code" : str(http_response.status_code)})
             ccf_logs(http_request, json_response, "service_monitoring_event.json", token_payload.get("sub"))
         except TypeError as error:
+            logging.error(f"Error: {error}")
+        except AttributeError as error:
             logging.error(f"Error: {error}")
 
         return http_response
@@ -400,6 +428,8 @@ def delete_subscription(
             ccf_logs(http_request, json_response, "service_monitoring_event.json", token_payload.get("sub"))
         except TypeError as error:
             logging.critical(f"Error: {error}")
+        except AttributeError as error:
+            logging.error(f"Error: {error}")
         raise HTTPException(status_code=400, detail='Please enter a valid uuid (24-character hex string)')
     
     #Check if the document exists
@@ -412,6 +442,8 @@ def delete_subscription(
             ccf_logs(http_request, json_response, "service_monitoring_event.json", token_payload.get("sub"))
         except TypeError as error:
             logging.critical(f"Error: {error}")
+        except AttributeError as error:
+            logging.error(f"Error: {error}")
         raise HTTPException(status_code=404, detail="Subscription not found")
     #If the document exists then validate the owner
     if not user.is_superuser(current_user) and (retrieved_doc['owner_id'] != current_user.id):
@@ -432,6 +464,8 @@ def delete_subscription(
         ccf_logs(http_request, json_response, "service_monitoring_event.json", token_payload.get("sub"))
     except TypeError as error:
         logging.error(f"Error: {error}")
+    except AttributeError as error:
+            logging.error(f"Error: {error}")
 
     return http_response
     
