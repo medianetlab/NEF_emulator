@@ -13,14 +13,15 @@ from pydantic import BaseModel
 from app.api.api_v1.endpoints.paths import get_random_point
 from app.api.api_v1.endpoints.ue_movement import retrieve_ue_state
 from evolved5g.sdk import CAPIFLogger
+from app.core.config import settings
 
 #Create CAPIF Logger object
 def ccf_logs(input_request: Request, output_response: dict, service_api_description: str, invoker_id: str):
     
     try:
         capif_logger = CAPIFLogger(certificates_folder="app/core/certificates",
-                                    capif_host="capifcore",
-                                    capif_https_port="443"
+                                    capif_host=settings.CAPIF_HOST,
+                                    capif_https_port=settings.CAPIF_HTTPS_PORT
                                     )
 
         log_entries = []
