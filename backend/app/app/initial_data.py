@@ -18,10 +18,20 @@ def capif_service_description() -> None:
         with open('app/core/capif_files/service_monitoring_event.json', 'r') as file:
             json_data = json.load(file)
 
- 
-        json_data["aefProfiles"][0]['interfaceDescriptions'][0]["ipv4Addr"] = os.environ.get('NGINX_HOST')
-        json_data["aefProfiles"][0]['interfaceDescriptions'][0]["port"] = int(os.environ.get('NGINX_HTTPS'))
-        updated_json_str = json.dumps(json_data)
+        if os.environ.get("PRODUCTION") == "true":
+            json_data["aefProfiles"][0].update({"domainName": os.environ.get("DOMAIN_NAME")})
+            json_data["aefProfiles"][0].pop("interfaceDescriptions", None)
+            updated_json_str = json.dumps(json_data)
+        else:
+            json_data["aefProfiles"][0].update({
+                                                    "interfaceDescriptions": [{
+                                                        "ipv4Addr": os.environ.get('NGINX_HOST'),
+                                                        "port": int(os.environ.get('NGINX_HTTPS')),
+                                                        "securityMethods": ["OAUTH"]
+                                                    }]
+                                                })
+            json_data["aefProfiles"][0].pop("domainName", None)
+            updated_json_str = json.dumps(json_data)
 
         with open('app/core/capif_files/service_monitoring_event.json', 'w') as file:
             file.write(updated_json_str)
@@ -31,9 +41,21 @@ def capif_service_description() -> None:
             json_data = json.load(file)
 
  
-        json_data["aefProfiles"][0]['interfaceDescriptions'][0]["ipv4Addr"] = os.environ.get('NGINX_HOST')
-        json_data["aefProfiles"][0]['interfaceDescriptions'][0]["port"] = int(os.environ.get('NGINX_HTTPS'))
-        updated_json_str = json.dumps(json_data)
+        if os.environ.get("PRODUCTION") == "true":
+            json_data["aefProfiles"][0].update({"domainName": os.environ.get("DOMAIN_NAME")})
+            json_data["aefProfiles"][0].pop("interfaceDescriptions", None)
+
+            updated_json_str = json.dumps(json_data)
+        else:
+            json_data["aefProfiles"][0].update({
+                                                    "interfaceDescriptions": [{
+                                                        "ipv4Addr": os.environ.get('NGINX_HOST'),
+                                                        "port": int(os.environ.get('NGINX_HTTPS')),
+                                                        "securityMethods": ["OAUTH"]
+                                                    }]
+                                                })
+            json_data["aefProfiles"][0].pop("domainName", None)
+            updated_json_str = json.dumps(json_data)
 
         with open('app/core/capif_files/service_as_session_with_qos.json', 'w') as file:
             file.write(updated_json_str)
