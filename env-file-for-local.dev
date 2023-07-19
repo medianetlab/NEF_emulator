@@ -62,3 +62,10 @@ EXTERNAL_NET=true
 
 #Public Certificate for verifing access token
 USE_PUBLIC_KEY_VERIFICATION=true
+
+#Service Description files for K8s deployment
+#If you want use domainName in service descritpion files turn production to true and specify the domainName variable
+#Else interfaceDescriptions (ipv4, port) will be used in the service descritpion files declared in NGINX_HOST, NGINX_HTTPS variables
+
+PRODUCTION=true
+DOMAIN_NAME=nefemu.com
