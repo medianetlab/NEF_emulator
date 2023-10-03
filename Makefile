@@ -4,6 +4,7 @@ SHELL := /bin/bash
 
 prepare-dev-env:
 	cp env-file-for-local.dev .env
+	docker network create services_default
 
 
 # docker compose TASKS
