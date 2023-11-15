@@ -1,4 +1,9 @@
 # Changelog
+## v2.2.3
+***Summary:***
+> - *Minor fixes on service initialisation*
+<br><br>
+
 ## v2.2.2
 ***Summary:***
 > - *Split jwt token authorisation for NEF and CAPIF. If NEF is deployed as a standalone component then only nef token authorisation is required. If capif is integrated with nef, jwt token acquired from CAPIF is required [commit](https://github.com/medianetlab/NEF_emulator/commit/16483f55d2d14b61d804c00eb8774119e6acffdc)*
