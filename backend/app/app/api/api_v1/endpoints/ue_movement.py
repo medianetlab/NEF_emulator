@@ -1,4 +1,4 @@
-import threading, logging, time, requests
+import threading, logging, time, requests, csv
 from fastapi import APIRouter, Path, Depends, HTTPException
 from fastapi.encoders import jsonable_encoder
 from typing import Any
@@ -11,6 +11,8 @@ from app.api import deps
 from app.schemas import Msg
 from app.tools import monitoring_callbacks, timer
 from sqlalchemy.orm import Session
+from datetime import datetime
+
 
 #Dictionary holding threads that are running per user id.
 threads = {}
@@ -43,6 +45,10 @@ class BackgroundTasks(threading.Thread):
             "loss_of_connectivity" : False,
             "as_session_with_qos" : False
         }
+
+        with open(f"data_paper.csv", mode='a', newline='') as csv_file:
+            csv_writer = csv.writer(csv_file)
+            csv_writer.writerow(['ue', 'latitude', 'longitude', 'timestamp'])
 
         try:
             
@@ -102,7 +108,10 @@ class BackgroundTasks(threading.Thread):
                     logging.warning("Failed to update coordinates")
                     logging.warning(ex)
                 
-                
+                with open(f"data_paper.csv", mode='a', newline='') as csv_file:
+                    csv_writer = csv.writer(csv_file)
+                    csv_writer.writerow([supi, ues[f"{supi}"]["latitude"], ues[f"{supi}"]["longitude"], datetime.now()])
+
                 #MonitoringEvent API - Loss of connectivity
                 if not active_subscriptions.get("loss_of_connectivity"):
                     loss_of_connectivity_sub = crud_mongo.read_by_multiple_pairs(db_mongo, "MonitoringEvent", externalId = ues[f"{supi}"]["external_identifier"], monitoringType = "LOSS_OF_CONNECTIVITY")
