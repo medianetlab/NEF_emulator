@@ -87,6 +87,14 @@ services:
     networks:
       - services_default
 
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80" 
+    volumes:
+      - ./home/gerpapa/NEF_emulator/frontend:/app
 
   reverse_proxy:
     build:
