@@ -1,7 +1,7 @@
 // src/App.js
 
 import React, { useState, useEffect } from 'react';
-import { getUsers, getToken } from './utils/request_functions';
+import { getUsers, getToken } from './utils/api';
 
 const App = () => {
   const [users, setUsers] = useState([]);

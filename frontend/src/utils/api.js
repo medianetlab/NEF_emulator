@@ -21,7 +21,7 @@ export const getToken = async (username, password) => {
 
 export const getUsers = async (token) => {
   try {
-    const response = await fetch(`${BASE_URL}/Cells?skip=0&limit=100`, {
+    const response = await fetch(`${BASE_URL}/users?skip=0&limit=100`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -35,4 +35,18 @@ export const getUsers = async (token) => {
   }
 };
 
-// Add more API functions as needed
+useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const accessToken = await getToken('admin@my-email.com', 'pass');
+        const usersData = await getUsers(accessToken);
+        setUsers(usersData);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
