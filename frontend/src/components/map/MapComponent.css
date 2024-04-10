@@ -1,0 +1,12 @@
+/* map.css */
+
+.map-container {
+  height: 100vh; /* Full height of the viewport */
+  width: 100%; /* Full width of the viewport */
+}
+
+/* If you want to center the map */
+.map-container .leaflet-container {
+  height: 100%;
+  width: 100%;
+}

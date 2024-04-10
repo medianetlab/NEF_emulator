@@ -1,45 +1,49 @@
-// src/App.js
-
+// App.js
 import React, { useState, useEffect } from 'react';
-import { getUsers, getToken } from './utils/api';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import DashboardPage from './pages/dashboardPage/DashboardPage';
+import MapPage from './pages/mapPage/MapPage';
+import Sidebar from './components/sidebar/SidebarComponent';
+import { getToken } from './utils/api'; // Import getToken function from your api.js file
 
 const App = () => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState('');
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchToken = async () => {
       try {
-        const accessToken = await getToken('admin@my-email.com', 'pass');
-        const usersData = await getUsers(accessToken);
-        setUsers(usersData);
-        setLoading(false);
+        const accessToken = await getToken('admin@my-email.com', 'pass'); // Provide your username and password
+        setToken(accessToken);
       } catch (error) {
-        console.error('Error:', error);
-        setLoading(false);
+        console.error('Error fetching token:', error);
       }
     };
-
-    fetchData();
+    fetchToken();
   }, []);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
   return (
-    <div>
-      <h1>Users</h1>
-      <ul>
-        {users.map(user => (
-          <li key={user.id}>{user.name}</li>
-        ))}
-      </ul>
-    </div>
+    <Router>
+      <div className="app">
+        <Sidebar />
+        <Routes>
+          <Route
+            exact
+            path="/dashboard"
+            element={<DashboardPage token={token} />} // Pass the token as a prop
+          />
+          <Route
+            path="/map"
+            element={<MapPage token={token} />} // Pass the token as a prop
+          />
+        </Routes>
+      </div>
+    </Router>
   );
 };
 
 export default App;
+
+
 
 
 
