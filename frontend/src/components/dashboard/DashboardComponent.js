@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { getUsers } from '../../utils/api';
+import { getUsers, getCells } from '../../utils/api';
 
-const Dashboard = ({ token }) => {
+const DashboardComponent = ({ token }) => {
   const [users, setUsers] = useState([]);
+  const [cells, setCells] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchData();
-  }, [token]); // Trigger fetchData when token changes
+  }, [token]);
 
   const fetchData = async () => {
     try {
       const userData = await getUsers(token);
       setUsers(userData);
+
+      const cellsData = await getCells(token);
+      setCells(cellsData);
+
       setLoading(false);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -26,14 +31,36 @@ const Dashboard = ({ token }) => {
       {loading ? (
         <p>Loading...</p>
       ) : (
-        <ul>
-          {users.map(user => (
-            <li key={user.id}>{user.name}</li>
-          ))}
-        </ul>
+        <>
+          <div>
+            <h2>Users:</h2>
+            <ul>
+              {users.length > 0 ? (
+                users.map(user => (
+                  <li key={user.id}>{user.name}</li>
+                ))
+              ) : (
+                <p>No users found</p>
+              )}
+            </ul>
+          </div>
+          <div>
+            <h2>Cells:</h2>
+            <ul>
+              {cells.length > 0 ? (
+                cells.map(cell => (
+                  <li key={cell.id}>{cell.name}</li>
+                ))
+              ) : (
+                <p>No cells found</p>
+              )}
+            </ul>
+          </div>
+        </>
       )}
     </div>
   );
 };
 
-export default Dashboard;
+export default DashboardComponent;
+
