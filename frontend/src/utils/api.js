@@ -1,5 +1,6 @@
-const BASE_URL = 'http://localhost:8888/api/v1'; // Update protocol to 'https'
+const BASE_URL = 'http://localhost:8888/api/v1';
 
+// token for authenticating api calls
 export const getToken = async (username, password) => {
   try {
     const response = await fetch(`${BASE_URL}/login/access-token`, { // Concatenate base URL with endpoint
@@ -22,7 +23,7 @@ export const getToken = async (username, password) => {
 };
 
 
-
+// get users
 export const getUsers = async (token) => {
   try {
     const response = await fetch(`${BASE_URL}/users?skip=0&limit=100`, {
@@ -39,7 +40,7 @@ export const getUsers = async (token) => {
   }
 };
 
-
+// get cells
 export const getCells = async (token) => {
   try {
     const response = await fetch(`${BASE_URL}/Cells?skip=0&limit=100`, {
@@ -52,7 +53,58 @@ export const getCells = async (token) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    throw new Error('Error fetching users:', error);
+    throw new Error('Error fetching cells:', error);
   }
 };
 
+
+// get notifications
+export const getNotifications = async (token) => {
+  try {
+    const response = await fetch(`${BASE_URL}/utils/monitoring/notifications?skip=0&limit=100`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      }
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    throw new Error('Error fetching notifications:', error);
+  }
+};
+
+// get paths
+export const getPaths = async (token) => {
+  try {
+    const response = await fetch(`${BASE_URL}/paths?skip=0&limit=100`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      }
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    throw new Error('Error fetching paths:', error);
+  }
+};
+
+// get gNBs
+export const getGnbs = async (token) => {
+  try {
+    const response = await fetch(`${BASE_URL}/gNBs?skip=0&limit=100`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      }
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    throw new Error('Error fetching paths:', error);
+  }
+};

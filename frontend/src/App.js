@@ -1,4 +1,5 @@
 // App.js
+/*
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import DashboardPage from './pages/dashboardPage/DashboardPage';
@@ -9,10 +10,11 @@ import { getToken } from './utils/api';
 const App = () => {
   const [token, setToken] = useState('');
 
+  // get token for authentication -- pass it to other components
   useEffect(() => {
     const fetchToken = async () => {
       try {
-        const token = await getToken('admin@my-email.com', 'pass'); // Provide your username and password
+        const token = await getToken('admin@my-email.com', 'pass');
         setToken(token);
         console.log(token)
       } catch (error) {
@@ -43,6 +45,31 @@ const App = () => {
 };
 
 export default App;
+*/
+
+// App.js
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Layout from './components/layout/Layout';
+import DashboardPage from './pages/dashboardPage/DashboardPage';
+import MapPage from './pages/mapPage/MapPage';
+
+const App = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/map" element={<MapPage />} />
+        </Route>
+      </Routes>
+    </Router>
+  );
+};
+
+export default App;
+
+
 
 
 

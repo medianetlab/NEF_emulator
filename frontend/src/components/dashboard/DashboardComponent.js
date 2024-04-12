@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { getUsers, getCells } from '../../utils/api';
+import { getUsers, getCells, getNotifications, getPaths, getGnbs } from '../../utils/api';
 
 const DashboardComponent = ({ token }) => {
   const [users, setUsers] = useState([]);
   const [cells, setCells] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [paths, setPaths] = useState([]);
+  const [gnbs, setGnbs] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // get token from dashboard page
   useEffect(() => {
     fetchData();
   }, [token]);
 
+  // fetch data from api.js
   const fetchData = async () => {
     try {
       const userData = await getUsers(token);
@@ -17,6 +22,15 @@ const DashboardComponent = ({ token }) => {
 
       const cellsData = await getCells(token);
       setCells(cellsData);
+
+      const notificationsData = await getNotifications(token);
+      setNotifications(notificationsData);
+
+      const pathsData = await getPaths(token);
+      setPaths(pathsData);
+
+      const gnbsData = await getGnbs(token);
+      setGnbs(gnbsData);
 
       setLoading(false);
     } catch (error) {
@@ -33,14 +47,14 @@ const DashboardComponent = ({ token }) => {
       ) : (
         <>
           <div>
-            <h2>Users:</h2>
+            <h2>Paths:</h2>
             <ul>
-              {users.length > 0 ? (
-                users.map(user => (
-                  <li key={user.id}>{user.name}</li>
+              {gnbs.length > 0 ? (
+                gnbs.map(gnb => (
+                  <li key={gnb.id}>{gnb.name}</li>
                 ))
               ) : (
-                <p>No users found</p>
+                <p>No gnbs found</p>
               )}
             </ul>
           </div>

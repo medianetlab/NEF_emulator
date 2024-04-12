@@ -1,0 +1,22 @@
+/* layout.css */
+.layout {
+    display: flex;
+    height: 100vh;
+  }
+  
+  .sidebar {
+    flex: 0 0 250px; /* Fixed width */
+    background-color: #333;
+    color: white;
+  }
+  
+  .topbar {
+    background-color: #555;
+    color: white;
+  }
+  
+  .main {
+    flex: 1; /* Take remaining width */
+    padding: 20px;
+  }
+  
