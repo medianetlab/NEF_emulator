@@ -1,31 +1,7 @@
-/* App.css */
-.layout {
-  display: flex;
-  height: 100vh;
-}
-
-.sidebar {
-  flex: 0 0 250px; /* Fixed width */
-  background-color: #333;
-  color: white;
-}
-
-.topbar {
-  background-color: #555;
-  color: white;
-}
-
-.main {
-  flex: 1; /* Take remaining width */
-  padding: 20px;
-}
-
-/* Specific styles for Dashboard page */
-.dashboard-page .main {
-  background-color: #f0f0f0;
-}
-
-/* Specific styles for Map page */
-.map-page .main {
-  background-color: #e6f7ff;
+/* app.css */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f0f0f0; /* Example background color */
+  color: #333; /* Example text color */
 }

@@ -1,13 +1,16 @@
-// components/topbar/TopbarComponent.js
+// TopbarComponent.js
 import React from 'react';
+import './TopbarComponent.css'; // Import CSS file for styling
 
-const Topbar = () => {
+const TopbarComponent = () => {
   return (
     <div className="topbar">
-      <h1>Topbar</h1>
-      {/* Add any other content you want in the topbar */}
+      {/* Content of the top bar */}
+      Top Bar
     </div>
   );
 };
 
-export default Topbar;
+export default TopbarComponent;
+
+

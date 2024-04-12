@@ -1,22 +1,30 @@
 /* layout.css */
 .layout {
     display: flex;
-    height: 100vh;
+    height: 100vh; /* Ensure layout fills the entire viewport height */
   }
   
   .sidebar {
-    flex: 0 0 250px; /* Fixed width */
-    background-color: #333;
-    color: white;
+    width: 200px; /* Adjust width as needed */
+    background-color: #333; /* Example background color */
+    color: #fff; /* Example text color */
   }
   
   .topbar {
-    background-color: #555;
-    color: white;
+    height: 50px; /* Adjust height as needed */
+    background-color: #444; /* Example background color */
+    color: #fff; /* Example text color */
   }
   
   .main {
-    flex: 1; /* Take remaining width */
-    padding: 20px;
+    flex: 1; /* Ensure main area fills remaining space */
+    display: flex;
+    flex-direction: column; /* Align children vertically */
+  }
+  
+  .central-panel {
+    flex: 1; /* Ensure central panel fills remaining space */
+    overflow-y: auto; /* Enable vertical scrolling if content overflows */
+    padding: 20px; /* Example padding */
   }
   
