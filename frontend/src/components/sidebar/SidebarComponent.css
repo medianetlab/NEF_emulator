@@ -1,12 +1,10 @@
-/* SidebarComponent.css */
 .sidebar {
-    width: 250px; /* Adjust width as needed */
-    height: 100%;
-    background-color: #555; /* Example background color */
-    color: white;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 99; /* Ensure the sidebar is below the top bar */
-  }
-  
+  display: flex;
+  flex-direction: column; /* Ensure sidebar items stack vertically */
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  border-right: 1px solid #ccc; /* Example border */
+  padding: 10px; /* Example padding */
+}

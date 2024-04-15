@@ -1,5 +1,7 @@
+/* Styles specific to the central panel component */
 .central-panel {
-    flex: 1;
-    overflow: auto;
-  }
   
+  color: blue;
+}
+
+/* You can add additional styles as needed */

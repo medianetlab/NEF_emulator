@@ -1,26 +1,25 @@
-// components/layout/Layout.js
 import React from 'react';
-import { Outlet } from 'react-router-dom';
 import SidebarComponent from '../sidebar/SidebarComponent';
 import TopbarComponent from '../topbar/TopbarComponent';
-import CentralPanelComponent from '../central-panel/CentralPanelComponent';
-import './Layout.css'
+import CentralPanel from '../central-panel/CentralPanelComponent';
+import './Layout.css'; // Import CSS file
 
-const Layout = () => {
+const Layout = ({ token }) => {
   return (
     <div className="layout">
       <SidebarComponent />
-      <div className="main">
+      <div className="content">
         <TopbarComponent />
-        <CentralPanelComponent> {/* Render CentralPanelComponent */}
-          <Outlet /> {/* This will render the child routes */}
-        </CentralPanelComponent>
+        <CentralPanel token={token} />
       </div>
     </div>
   );
 };
 
 export default Layout;
+
+
+
 
 
 
