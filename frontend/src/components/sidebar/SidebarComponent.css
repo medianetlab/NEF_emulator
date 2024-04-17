@@ -1,10 +1,3 @@
 .sidebar {
-  display: flex;
-  flex-direction: column; /* Ensure sidebar items stack vertically */
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  border-right: 1px solid #ccc; /* Example border */
   padding: 10px; /* Example padding */
 }
