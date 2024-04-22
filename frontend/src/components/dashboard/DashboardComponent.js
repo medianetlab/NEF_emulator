@@ -1,5 +1,23 @@
+// DashboardComponent.js
+
 import React, { useState, useEffect } from 'react';
 import { getUsers, getCells, getNotifications, getPaths, getGnbs } from '../../utils/api';
+import './DashboardComponent.css';
+
+// Define the RowContainer component outside of the DashboardComponent
+const RowContainer = () => {
+  const numbersFromBackend = [1, 2, 3, 4];
+  
+  return (
+    <div className="row-container">
+      {numbersFromBackend.map((number, index) => (
+        <div key={index} className="box">
+          {number}
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const DashboardComponent = ({ token }) => {
   const [users, setUsers] = useState([]);
@@ -40,38 +58,9 @@ const DashboardComponent = ({ token }) => {
   };
 
   return (
-    <div className="dashboard">
-      <h1>Dashboard</h1>
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <>
-          <div>
-            <h2>Paths:</h2>
-            <ul>
-              {gnbs.length > 0 ? (
-                gnbs.map(gnb => (
-                  <li key={gnb.id}>{gnb.name}</li>
-                ))
-              ) : (
-                <p>No gnbs found</p>
-              )}
-            </ul>
-          </div>
-          <div>
-            <h2>Cells:</h2>
-            <ul>
-              {cells.length > 0 ? (
-                cells.map(cell => (
-                  <li key={cell.id}>{cell.name}</li>
-                ))
-              ) : (
-                <p>No cells found</p>
-              )}
-            </ul>
-          </div>
-        </>
-      )}
+    <div className="dashboard-component">
+      {/* Render the row container */}
+      <RowContainer />
     </div>
   );
 };
