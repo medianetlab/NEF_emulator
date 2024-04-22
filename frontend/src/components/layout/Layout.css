@@ -1,43 +1,30 @@
 /* Layout.css */
 .layout {
   display: flex;
-  height: 100vh;
-}
-
-.sidebar-column {
-  width: 15%;
-  display: flex;
-  flex-direction: column;
-  border-right: 1px solid #000; /* Add border to the right */
-}
-
-.logo-container {
-  height: 10%;
-  border-bottom: 1px solid #000; /* Add border to the bottom */
-}
-
-.sidebar {
-  flex: 1;
+  height: 100vh; /* Set layout height to fill viewport */
 }
 
 .main-column {
-  flex: 1;
+  flex: 1; /* Allow main column to grow to fill available space */
   display: flex;
   flex-direction: column;
 }
 
-.topbar {
-  height: 10%;
-  border-bottom: 1px solid #000; /* Add border to the bottom */
-  
+.central-panel {
+  flex: 1; /* Allow central panel to grow to fill available space */
+  display: flex;
+  flex-direction: column;
 }
 
-.central-panel {
-  flex: 1;
+.map-page {
+  flex: 1; /* Allow map page to grow to fill available space */
+  display: flex;
+  flex-direction: column;
 }
 
-
-.central-panel {
-  flex: 1;
+.map-container {
+  flex: 1; /* Allow map container to grow to fill available space */
+  display: flex;
+  flex-direction: column;
 }
 

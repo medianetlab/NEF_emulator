@@ -1,7 +1,8 @@
 /* Styles specific to the central panel component */
 .central-panel {
-  
-  color: blue;
+  flex: 1; /* Allow the central panel to take up remaining space */
+  display: flex; /* Use flexbox layout */
+  flex-direction: column; /* Stack child elements vertically */
+  justify-content: space-between; /* Distribute space evenly between child elements */
 }
 
-/* You can add additional styles as needed */

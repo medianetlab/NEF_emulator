@@ -6,12 +6,10 @@ import DashboardPage from '../../pages/dashboardPage/DashboardPage';
 
 const CentralPanel = ({ token }) => {
   return (
-    <div className="central-panel">
       <Routes>
         <Route path="/map" element={<MapPage token={token} />} />
         <Route path="/dashboard" element={<DashboardPage token={token} />} />
       </Routes>
-    </div>
   );
 };
 

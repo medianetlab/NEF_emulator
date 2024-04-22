@@ -5,7 +5,7 @@ import MapComponent from '../../components/map/MapComponent';
 const MapPage = ({ token }) => {
   return (
     <div className="map-page">
-      <MapComponent />
+      <MapComponent token={token}/>
     </div>
   );
 };

@@ -23,12 +23,7 @@ const App = () => {
 
   return (
     <Router>
-      <Routes>
-        <Route element={<Layout token={token} />}>
-          <Route path="/map" element={<MapPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-        </Route>
-      </Routes>
+        <Layout token={token} />
     </Router>
   );
 };

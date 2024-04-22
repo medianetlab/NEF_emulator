@@ -1,7 +1,7 @@
 import React from 'react';
 import SidebarComponent from '../sidebar/SidebarComponent';
 import TopbarComponent from '../topbar/TopbarComponent';
-import CentralPanelComponent from '../central-panel/CentralPanelComponent';
+import CentralPanel from '../central-panel/CentralPanelComponent';
 //import LogoContainerComponent from '../logo-container/LogoContainerComponent'; // Import LogoContainer
 import './Layout.css'; 
 
@@ -21,7 +21,7 @@ const Layout = ({ token }) => {
           <TopbarComponent />
         </div>
         <div className="central-panel">
-          <CentralPanelComponent token={token} />
+          <CentralPanel token={token} />
         </div>
       </div>
     </div>

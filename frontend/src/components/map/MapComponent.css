@@ -1,0 +1,6 @@
+/* MapComponent.css */ 
+.map-container {
+  height: 100%;
+  width: 100%;
+  background-color: blue; /* Add a background color for visibility */
+}
