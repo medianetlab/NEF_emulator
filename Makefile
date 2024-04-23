@@ -5,7 +5,6 @@ SHELL := /bin/bash
 prepare-dev-env:
 	cp env-file-for-local.dev .env
 
-
 # docker compose TASKS
 
 up:
@@ -61,7 +60,7 @@ upl: upd logs
 # DATABASE
 
 db-init: #simple scenario with 3 UEs, 3 Cells, 1 gNB
-	./backend/app/app/db/init_simple.sh
+	./backend/app/scripts/init_simple.sh
 
 
 db-reset:

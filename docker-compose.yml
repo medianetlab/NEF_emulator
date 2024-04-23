@@ -91,7 +91,7 @@ services:
       context: ./nginx
       dockerfile: Dockerfile.nginx
     image: nginx-nef
-    container_name: nginx
+    container_name: nginx-nef
     profiles: [ "debug", "dev" ]
     restart: unless-stopped
     env_file: .env
