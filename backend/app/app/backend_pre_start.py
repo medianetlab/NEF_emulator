@@ -26,8 +26,6 @@ def init() -> None:
         raise e
 
 
-    
-        
 def main() -> None:
     logger.info("Initializing service")
     init()
