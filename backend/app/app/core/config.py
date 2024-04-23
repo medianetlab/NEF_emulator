@@ -1,4 +1,5 @@
-import secrets, json
+import secrets
+import json
 from typing import Any, Dict, List, Optional, Union
 
 from pydantic import AnyHttpUrl, BaseSettings, EmailStr, HttpUrl, PostgresDsn, validator
@@ -25,13 +26,9 @@ class Settings(BaseSettings):
         raise ValueError(v)
 
     PROJECT_NAME: str
-    SENTRY_DSN: Optional[HttpUrl] = None
 
-    @validator("SENTRY_DSN", pre=True)
-    def sentry_dsn_can_be_blank(cls, v: str) -> Optional[str]:
-        if len(v) == 0:
-            return None
-        return v
+    FIRST_SUPERUSER: EmailStr
+    FIRST_SUPERUSER_PASSWORD: str
 
     POSTGRES_SERVER: str
     POSTGRES_USER: str
@@ -56,38 +53,8 @@ class Settings(BaseSettings):
     CAPIF_HTTP_PORT: str
     CAPIF_HTTPS_PORT: str
 
-    SMTP_TLS: bool = True
-    SMTP_PORT: Optional[int] = None
-    SMTP_HOST: Optional[str] = None
-    SMTP_USER: Optional[str] = None
-    SMTP_PASSWORD: Optional[str] = None
-    EMAILS_FROM_EMAIL: Optional[EmailStr] = None
-    EMAILS_FROM_NAME: Optional[str] = None
-
-    @validator("EMAILS_FROM_NAME")
-    def get_project_name(cls, v: Optional[str], values: Dict[str, Any]) -> str:
-        if not v:
-            return values["PROJECT_NAME"]
-        return v
-
-    EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
-    EMAIL_TEMPLATES_DIR: str = "/app/app/email-templates/build"
-    EMAILS_ENABLED: bool = False
-
-    @validator("EMAILS_ENABLED", pre=True)
-    def get_emails_enabled(cls, v: bool, values: Dict[str, Any]) -> bool:
-        return bool(
-            values.get("SMTP_HOST")
-            and values.get("SMTP_PORT")
-            and values.get("EMAILS_FROM_EMAIL")
-        )
-
-    # EMAIL_TEST_USER: EmailStr = "test@example.com"  # type: ignore
-    FIRST_SUPERUSER: EmailStr
-    FIRST_SUPERUSER_PASSWORD: str
-    USERS_OPEN_REGISTRATION: bool = False
-
     USE_PUBLIC_KEY_VERIFICATION: bool
+
     
     class Config:
         case_sensitive = True
@@ -95,17 +62,19 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
+
 class QoSSettings():
 
     def __init__(self) -> None:
         self.import_json()
-    
+
     def import_json(self):
         with open('app/core/config/qosCharacteristics.json') as json_file:
-            data = json.load(json_file)        
+            data = json.load(json_file)
             self._qos_characteristics = data
 
     def retrieve_settings(self):
         return self._qos_characteristics
+
 
 qosSettings = QoSSettings()

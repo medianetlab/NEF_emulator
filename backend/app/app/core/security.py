@@ -56,9 +56,9 @@ ALGORITHM = ("HS256", "RS256")
 #             nef_token, capif_token = param.split(',')
 #         except ValueError as ex:
 #             return {"token" : param}
-        
+
 #         return {"nef_token" : nef_token, "capif_token" : capif_token}
-    
+
 
 def create_access_token(
     subject: Union[str, Any], expires_delta: timedelta = None
@@ -70,7 +70,8 @@ def create_access_token(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
     to_encode = {"exp": expire, "sub": str(subject)}
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM[0])
+    encoded_jwt = jwt.encode(
+        to_encode, settings.SECRET_KEY, algorithm=ALGORITHM[0])
     return encoded_jwt
 
 
@@ -81,14 +82,15 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
+
 def extract_public_key(cert_path: str):
     try:
         with open(cert_path, 'r') as f:
             cert = f.read()
     except FileNotFoundError as e:
         print(e)
-        
+
     crtObj = crypto.load_certificate(crypto.FILETYPE_PEM, cert)
     pubKeyObject = crtObj.get_pubkey()
-    pubKeyString = crypto.dump_publickey(crypto.FILETYPE_PEM,pubKeyObject)
+    pubKeyString = crypto.dump_publickey(crypto.FILETYPE_PEM, pubKeyObject)
     return pubKeyString

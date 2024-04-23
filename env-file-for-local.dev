@@ -2,7 +2,7 @@
 # cp env-file-for-local.dev .env
 
 DOMAIN=localhost
-DOCKER_IMAGE_BACKEND=dimfrag/nef-backend
+DOCKER_IMAGE_BACKEND=nef-backend
 BACKEND_TAG=1.0
 DOCKER_IMAGE_FRONTEND=frontend
 # Backend
@@ -14,15 +14,8 @@ PROJECT_NAME=NEF_Emulator
 SECRET_KEY=2D47CF2958CEC7CC86C988E9F9684
 FIRST_SUPERUSER=admin@my-email.com
 FIRST_SUPERUSER_PASSWORD=pass
-SMTP_TLS=True
-SMTP_PORT=465
-SMTP_HOST=mail.host.com
-SMTP_USER=user
-SMTP_PASSWORD=pass
-EMAILS_FROM_EMAIL=user@my-email.com
-SENTRY_DSN=
-USERS_OPEN_REGISTRATION=true
 NEF_HOST=3gppnef
+
 # Postgres
 # info: POSTGRES_USER value ('postgres') is hard-coded in /pgadmin/servers.json
 POSTGRES_SERVER=db
@@ -44,7 +37,7 @@ MONGO_CLIENT=mongodb://mongo_nef:27017/
 MONGO_EXPRESS_ENABLE_ADMIN=true
 
 #Nginx
-DOCKER_IMAGE_PROXY=dimfrag/nef-nginx
+DOCKER_IMAGE_PROXY=nef-nginx
 PROXY_TAG=1.0
 NGINX_HTTP=8090
 NGINX_HTTPS=4443
@@ -58,14 +51,14 @@ NGINX_HOST=127.0.0.1
 CAPIF_HOST=capifcore
 CAPIF_HTTP_PORT=8080
 CAPIF_HTTPS_PORT=443
-EXTERNAL_NET=true
+EXTERNAL_NET=false
 
 #Public Certificate for verifing access token
-USE_PUBLIC_KEY_VERIFICATION=true
+USE_PUBLIC_KEY_VERIFICATION=false
 
 #Service Description files for K8s deployment
 #If you want use domainName in service descritpion files turn production to true and specify the domainName variable
 #Else interfaceDescriptions (ipv4, port) will be used in the service descritpion files declared in NGINX_HOST, NGINX_HTTPS variables
 
-PRODUCTION=true
+PRODUCTION=false
 DOMAIN_NAME=nefemu.com
