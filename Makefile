@@ -41,11 +41,11 @@ logs-dev:
 logs-debug:
 	docker compose --profile debug logs -f
 
-logs-backend:
-	docker compose logs -f backend
+logs-nef:
+	docker compose --profile dev logs -f nef
 
 logs-mongo:
-	docker compose logs -f mongo
+	docker compose --profile dev logs -f mongo
 
 ps:
 	docker ps -a

@@ -4,6 +4,7 @@ services:
 
   db:
     image: postgres:12
+    container_name: nef-postgres
     command: -c shared_buffers=256MB -c max_connections=200
     profiles: [ "debug", "dev" ]
     volumes:
@@ -17,6 +18,7 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4
+    container_name: nef-pgadmin
     profiles: [ "debug" ]
     ports:
       - "5050:5050"
@@ -29,8 +31,9 @@ services:
     networks:
       - services_default
 
-  mongo_nef:
+  mongo-nef:
     image: mongo:4.4.10
+    container_name: nef-mongo
     profiles: [ "debug", "dev" ]
     volumes:
       - app-mongo-db-data:/data/db
@@ -45,6 +48,7 @@ services:
 
   mongo-express:
     image: mongo-express:1.0.0-alpha.4
+    container_name: nef-express
     profiles: [ "debug" ]
     restart: always
     ports:
@@ -59,8 +63,9 @@ services:
     networks:
       - services_default
 
-  backend:
+  nef:
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    container_name: nef
     profiles: [ "debug", "dev" ]
     command: /start-reload.sh
     volumes:
@@ -81,11 +86,13 @@ services:
     networks:
       - services_default
 
-  reverse_proxy:
+  reverse-proxy:
     build:
-      context: nginx
+      context: ./nginx
       dockerfile: Dockerfile.nginx
     image: nginx-nef
+    container_name: nginx
+    profiles: [ "debug", "dev" ]
     restart: unless-stopped
     env_file: .env
     environment:
@@ -102,8 +109,8 @@ services:
       - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
       - ./nginx/certs:/etc/nginx/certs
     depends_on:
-      - backend
-      - mongo_nef
+      - nef
+      - mongo-nef
       - db
     networks:
       - services_default
@@ -115,6 +122,5 @@ networks:
 
 volumes:
   app-db-data:
-  pgadmin-data:
   app-mongo-db-data:
   nginxdata:
