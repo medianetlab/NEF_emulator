@@ -1,0 +1,16 @@
+.aspect-container {
+    width: calc(25% - 20px); /* Adjust as needed */
+    margin: 10px;
+    border: 1px solid #000;
+    padding: 10px;
+  }
+  
+  .topbar {
+    background-color: #ccc;
+    padding: 5px;
+  }
+  
+  .aspect-header {
+    text-align: center;
+  }
+  
