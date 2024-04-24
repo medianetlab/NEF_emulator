@@ -1,0 +1,61 @@
+.row-container {
+    display: flex;
+    justify-content: space-around; /* Adjust as needed */
+    align-items: center;
+    border-bottom: 1px solid #ccc; /* Optional: Add a border at the bottom of the row */
+    border-top: 1px solid #ccc;
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+    margin: 70px;
+  }
+  
+  .box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid black;
+    padding: 10px;
+    margin-right: 20px; /* Add margin between boxes */
+    flex-grow: 1; /* Allow boxes to flex more */
+  }
+  
+  .box img {
+    width: 50px; /* Adjust width of the logo */
+  }
+  
+  .box .number {
+    margin-left: auto; /* Push the number to the right side */
+  }
+  
+  
+  .content {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
+  
+  .left {
+    display: flex;
+    align-items: center;
+  }
+  
+  .right {
+    margin-left: auto; /* Push the number to the right */
+  }
+  
+  
+  
+  .logo {
+    width: 50px; /* Adjust the width of the logo */
+    height: 50px; /* Adjust the height of the logo */
+  }
+  
+  .description {
+    margin-top: 10px;
+  }
+  
+  .number {
+    font-size: 24px; /* Adjust the font size of the number */
+  }
+  
+  

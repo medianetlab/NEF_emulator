@@ -3,18 +3,7 @@
   /*height: 80%;*/
 }
 
-.row-container {
-  display: flex;
-}
 
-.box {
-  flex: 1; /* Make each box expand to fill available space equally */
-  height: 100px;
-  border: 1px solid #000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 10px;
-}
+
 
   
