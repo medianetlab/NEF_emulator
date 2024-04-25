@@ -1,9 +1,9 @@
 .dashboard-component {
-  /* Add styles specific to the dashboard component */
-  /*height: 80%;*/
+  display: flex;
+  flex-direction: column;
 }
 
-
-
-
-  
+.aspect-containers {
+  display: flex;
+  flex-direction: column;
+}

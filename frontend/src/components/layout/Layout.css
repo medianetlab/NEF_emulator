@@ -18,7 +18,7 @@
 }
 
 .logo-container {
-  height: 10%;
+  height: 70px;
   border-bottom: 1px solid #ccc; /* Add border to the bottom */
 }
 
@@ -50,7 +50,7 @@
 }
 
 .topbar {
-  height: 10%;
+  height: 70px;
   border-bottom: 1px solid #ccc; /* Add border to the bottom */
 }
 
