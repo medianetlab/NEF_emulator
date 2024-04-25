@@ -1,4 +1,4 @@
-from typing import Generator, Dict
+from typing import Generator
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
@@ -14,13 +14,17 @@ reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/login/access-token"
 )
 
-#Dependencies
+# Dependencies
+
+
 def get_db() -> Generator:
     try:
-        db = SessionLocal() #Only the code prior to and including the yield statement is executed before sending a response
-        yield db            #The yielded value is what is injected into path operations and other dependencies
+        # Only the code prior to and including the yield statement is executed before sending a response
+        db = SessionLocal()
+        yield db  # The yielded value is what is injected into path operations and other dependencies
     finally:
-        db.close()          #The code following the yield statement is executed after the response has been delivered
+        db.close()  # The code following the yield statement is executed after the response has been delivered
+
 
 def verify_with_public_key(token: str = Depends(reusable_oauth2)):
     '''
@@ -40,6 +44,7 @@ def verify_with_public_key(token: str = Depends(reusable_oauth2)):
         return payload
     else:
         return None
+
 
 def get_current_user(
     db: Session = Depends(get_db), token: str = Depends(reusable_oauth2)

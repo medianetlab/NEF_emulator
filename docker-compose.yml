@@ -1,11 +1,12 @@
-version: "3.9"
+version: "3.8"
 
 services:
 
   db:
     image: postgres:12
+    container_name: nef-postgres
     command: -c shared_buffers=256MB -c max_connections=200
-    profiles: ["debug", "dev"]
+    profiles: [ "debug", "dev" ]
     volumes:
       - app-db-data:/var/lib/postgresql/data/pgdata
     env_file:
@@ -15,11 +16,10 @@ services:
     networks:
       - services_default
 
-
-
   pgadmin:
     image: dpage/pgadmin4
-    profiles: ["debug"]
+    container_name: nef-pgadmin
+    profiles: [ "debug" ]
     ports:
       - "5050:5050"
     volumes:
@@ -31,9 +31,10 @@ services:
     networks:
       - services_default
 
-  mongo_nef:
+  mongo-nef:
     image: mongo:4.4.10
-    profiles: ["debug", "dev"]
+    container_name: nef-mongo
+    profiles: [ "debug", "dev" ]
     volumes:
       - app-mongo-db-data:/data/db
     restart: always
@@ -47,7 +48,8 @@ services:
 
   mongo-express:
     image: mongo-express:1.0.0-alpha.4
-    profiles: ["debug"]
+    container_name: nef-express
+    profiles: [ "debug" ]
     restart: always
     ports:
       - 8081:8081
@@ -61,10 +63,10 @@ services:
     networks:
       - services_default
 
-  
-  backend:
+  nef:
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
-    profiles: ["debug", "dev"]
+    container_name: nef
+    profiles: [ "debug", "dev" ]
     command: /start-reload.sh
     volumes:
       - ./backend/app:/app
@@ -73,26 +75,24 @@ services:
     environment:
       - SERVER_NAME=${DOMAIN?Variable not set}
       - SERVER_HOST=https://${DOMAIN?Variable not set}
-      # Allow explicit env var override for tests
-      - SMTP_HOST=${SMTP_HOST}
     build:
       context: ./backend
       dockerfile: Dockerfile.backend
       args:
         INSTALL_DEV: ${INSTALL_DEV-true}
-        INSTALL_JUPYTER: ${INSTALL_JUPYTER-true}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: always
     networks:
       - services_default
 
-
-  reverse_proxy:
+  reverse-proxy:
     build:
-      context: nginx
+      context: ./nginx
       dockerfile: Dockerfile.nginx
     image: nginx-nef
+    container_name: nginx-nef
+    profiles: [ "debug", "dev" ]
     restart: unless-stopped
     env_file: .env
     environment:
@@ -109,20 +109,18 @@ services:
       - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
       - ./nginx/certs:/etc/nginx/certs
     depends_on:
-      - backend
-      - mongo_nef
+      - nef
+      - mongo-nef
       - db
     networks:
       - services_default
     command: sh -c '/self-signed-crt.sh && /dynamic_ports.sh'
 
 networks:
-    services_default:
-      external: ${EXTERNAL_NET}
-
+  services_default:
+    external: ${EXTERNAL_NET}
 
 volumes:
   app-db-data:
-  pgadmin-data:
   app-mongo-db-data:
   nginxdata:
