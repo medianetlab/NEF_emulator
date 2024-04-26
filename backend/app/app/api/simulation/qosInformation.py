@@ -1,7 +1,5 @@
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Path, Request
-from fastapi.responses import JSONResponse
-from pymongo.database import Database
 from sqlalchemy.orm.session import Session
 from app.db.session import client
 from app import models

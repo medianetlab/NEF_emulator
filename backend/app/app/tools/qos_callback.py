@@ -1,6 +1,6 @@
 import requests, json, logging
 from app.crud import ue
-from app.api.api_v1.endpoints.qosInformation import qos_reference_match
+from app.api.simulation.qosInformation import qos_reference_match
 from app.db.session import SessionLocal
 from fastapi.encoders import jsonable_encoder
 

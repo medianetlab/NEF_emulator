@@ -10,8 +10,8 @@ from app import models, schemas, crud
 from app.api import deps
 from app.schemas import monitoringevent, UserPlaneNotificationData
 from pydantic import BaseModel
-from app.api.api_v1.endpoints.paths import get_random_point
-from app.api.api_v1.endpoints.ue_movement import retrieve_ue_state
+from app.api.simulation.paths import get_random_point
+from app.api.simulation.ue_movement import retrieve_ue_state
 from evolved5g.sdk import CAPIFLogger
 from app.core.config import settings
 

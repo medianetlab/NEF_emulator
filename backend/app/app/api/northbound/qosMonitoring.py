@@ -3,14 +3,13 @@ from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, Path, Request, Response
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from pymongo.database import Database
 from sqlalchemy.orm import Session
 from app import models, schemas
 from app.api import deps
 from app.crud import crud_mongo, user, ue
 from app.db.session import client
-from .utils import add_notifications, ccf_logs
-from .qosInformation import qos_reference_match
+from app.api.simulation.utils import add_notifications, ccf_logs
+from app.api.simulation.qosInformation import qos_reference_match
 
 router = APIRouter()
 db_collection= 'QoSMonitoring'

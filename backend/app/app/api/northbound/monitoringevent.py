@@ -8,8 +8,8 @@ from app.crud import crud_mongo, user, ue
 from app.api import deps
 from app import tools
 from app.db.session import client
-from app.api.api_v1.endpoints.utils import add_notifications, ccf_logs
-from .ue_movement import retrieve_ue_state, retrieve_ue
+from app.api.simulation.utils import add_notifications, ccf_logs
+from app.api.simulation.ue_movement import retrieve_ue_state, retrieve_ue
 import logging
 
 router = APIRouter()
