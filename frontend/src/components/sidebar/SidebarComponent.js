@@ -1,17 +1,22 @@
+// SidebarComponent.js
 import React from 'react';
+import { CSidebar, CSidebarNav, CSidebarNavItem } from '@coreui/react';
 import { Link } from 'react-router-dom';
-import './SidebarComponent.css'; // Import CSS file for styling
 
-const Sidebar = () => {
+const SidebarComponent = () => {
   return (
-    <div className="sidebar">
-      <h2>Sidebar</h2>
-      <ul>
-        <li><Link to="/dashboard">Dashboard</Link></li>
-        <li><Link to="/map">Map</Link></li>
-      </ul>
-    </div>
+    <CSidebar>
+      <CSidebarNav>
+        <CSidebarNavItem>
+          <Link to="/dashboard" className="nav-link">Dashboard</Link>
+        </CSidebarNavItem>
+        <CSidebarNavItem>
+          <Link to="/map" className="nav-link">Map</Link>
+        </CSidebarNavItem>
+      </CSidebarNav>
+    </CSidebar>
   );
 };
 
-export default Sidebar;
+export default SidebarComponent; // Make sure to export SidebarComponent
+

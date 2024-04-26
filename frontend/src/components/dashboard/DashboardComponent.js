@@ -1,26 +1,54 @@
 import React from 'react';
-import './DashboardComponent.css';
-import RowContainer from './RowContainer';
-import UsersContainer from './UEContainer';
-import CellsContainer from './CellsContainer';
-import PathsContainer from './PathsContainer';
-import GnbsContainer from './GnbsContainer';
+//import './DashboardComponent.css';
+import { CCard, CCardBody, CCardTitle, CCardText, CImg } from '@coreui/react'; // Import necessary CoreUI components
 
 const DashboardComponent = ({ token }) => {
   return (
     <div className="dashboard-component">
-      <RowContainer token={token} />
-      <div className="aspect-containers">
-        <UsersContainer token={token} />
-        <CellsContainer token={token} />
-        <PathsContainer token={token} />
-        <GnbsContainer token={token} />
+      <div className="card-container">
+        {/* First Card */}
+        <CCard className="dashboard-card">
+          <CCardBody>
+            <CImg src="assets/UE.png" alt="Cell Image" className="card-logo" />
+            <CCardTitle>Cells</CCardTitle>
+            <CCardText>Card content</CCardText>
+          </CCardBody>
+        </CCard>
+        
+        {/* Second Card */}
+        <CCard className="dashboard-card">
+          <CCardBody>
+            <CImg src="assets/UE.png" alt="UE Image" className="card-logo" />
+            <CCardTitle>UEs</CCardTitle>
+            <CCardText>Card content</CCardText>
+          </CCardBody>
+        </CCard>
+        
+        {/* Third Card */}
+        <CCard className="dashboard-card">
+          <CCardBody>
+            <CImg src="assets/UE.png" alt="GNB Image" className="card-logo" />
+            <CCardTitle>GNBs</CCardTitle>
+            <CCardText>Card content</CCardText>
+          </CCardBody>
+        </CCard>
+        
+        {/* Fourth Card */}
+        <CCard className="dashboard-card">
+          <CCardBody>
+            <CImg src="assets/UE.png" alt="Path Image" className="card-logo" />
+            <CCardTitle>Paths</CCardTitle>
+            <CCardText>Card content</CCardText>
+          </CCardBody>
+        </CCard>
       </div>
     </div>
   );
 };
 
 export default DashboardComponent;
+
+
 
 
 

@@ -1,0 +1,10 @@
+@mixin avatar($width) {
+  width: $width;
+  height: $width;
+  font-size: $width * .4;
+
+  .avatar-status {
+    width: divide($width, 3.75);
+    height: divide($width, 3.75);
+  }
+}

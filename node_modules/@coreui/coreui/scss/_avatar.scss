@@ -1,0 +1,49 @@
+.avatar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  @include border-radius(50em);
+  @include transition($avatar-transition);
+  @include avatar($avatar-width);
+}
+
+.avatar-img {
+  width: 100%;
+  height: auto;
+  @include border-radius(50em);
+}
+
+.avatar-status {
+  position: absolute;
+  @include ltr-rtl("right", 0);
+  bottom: 0;
+  display: block;
+  border: 1px solid $white;
+  @include border-radius(50em);
+}
+
+@each $width, $value in $avatar-widths {
+  .avatar-#{$width} {
+    @include avatar($value);
+  }
+}
+
+.avatars-stack {
+  display: flex;
+
+  .avatar {
+    @include ltr-rtl("margin-right", - ($avatar-width * .4));
+
+    &:hover {
+      @include ltr-rtl("margin-right", 0);
+    }
+  }
+
+  @each $width, $value in $avatar-widths {
+    .avatar-#{$width} {
+      @include ltr-rtl("margin-right", - ($value * .4));
+    }
+  }
+}

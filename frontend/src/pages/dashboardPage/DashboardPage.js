@@ -1,16 +1,19 @@
 // DashboardPage.js
-import React, { useState, useEffect } from 'react';
-import DashboardComponent from '../../components/dashboard/DashboardComponent';
 
-const DashboardPage = ({ token }) => {
+import React from 'react';
+import DashboardComponent from '../../components/dashboard/DashboardComponent'; // Import DashboardComponent
+import { CContainer } from '@coreui/react'; // Import necessary CoreUI components
+
+export const DashboardPage = ({ token }) => {
   return (
-    <div className="dashboard-page">
-      <DashboardComponent token={token}/> {}
-    </div>
+    <CContainer>
+      <DashboardComponent token={token} />
+    </CContainer>
   );
 };
 
-export default DashboardPage;
+//export default DashboardPage;
+
 
 
 
