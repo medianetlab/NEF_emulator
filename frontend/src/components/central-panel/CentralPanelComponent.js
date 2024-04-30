@@ -1,18 +1,19 @@
+// CentralPanel.js
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import MapPage from '../../pages/mapPage/MapPage';
-import DashboardPage from '../../pages/dashboardPage/DashboardPage';
+import MapComponent from '../map/MapComponent';
+import DashboardComponent from '../dashboard/DashboardComponent';
 
-const CentralPanelComponent = ({ token }) => {
+const CentralPanelComponent = ({ page }) => {
   return (
-    <Routes>
-      <Route path="/map" element={<MapPage token={token} />} />
-      <Route path="/dashboard" element={<DashboardPage token={token} />} />
-    </Routes>
+    <div className="central-panel">
+      {page === 'map' ? <MapComponent /> : <DashboardComponent />}
+    </div>
   );
 };
 
 export default CentralPanelComponent;
+
+
 
 
 

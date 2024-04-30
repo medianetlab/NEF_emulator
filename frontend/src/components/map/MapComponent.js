@@ -3,9 +3,8 @@ import React from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import { CCard, CCardBody } from '@coreui/react';
 import 'leaflet/dist/leaflet.css';
-//import './MapComponent.css';
 
-const Map = () => {
+const MapComponent = () => {
   return (
     <CCard className="map-card">
       <CCardBody>
@@ -26,4 +25,4 @@ const Map = () => {
   );
 };
 
-export default Map;
+export default MapComponent;

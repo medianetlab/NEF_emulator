@@ -1,22 +1,19 @@
-// SidebarComponent.js
+// Sidebar.js
 import React from 'react';
-import { CSidebar, CSidebarNav, CSidebarNavItem } from '@coreui/react';
-import { Link } from 'react-router-dom';
+import {CSidebar, CSidebarNav, CSidebarNavItem} from '@coreui/react';
 
-const SidebarComponent = () => {
+const SidebarComponent = ({ setPage }) => {
   return (
     <CSidebar>
       <CSidebarNav>
-        <CSidebarNavItem>
-          <Link to="/dashboard" className="nav-link">Dashboard</Link>
-        </CSidebarNavItem>
-        <CSidebarNavItem>
-          <Link to="/map" className="nav-link">Map</Link>
-        </CSidebarNavItem>
+        <CSidebarNavItem onClick={() => setPage('map')}>Map</CSidebarNavItem>
+        <CSidebarNavItem onClick={() => setPage('dashboard')}>Dashboard</CSidebarNavItem>
       </CSidebarNav>
     </CSidebar>
   );
 };
 
-export default SidebarComponent; // Make sure to export SidebarComponent
+export default SidebarComponent;
+
+
 
