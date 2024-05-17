@@ -5,7 +5,7 @@ const DashboardComponent = () => {
   return (
     <div className="dashboard">
       <h1>Dashboard Component</h1>
-      {/* Add dashboard implementation here */}
+      {}
     </div>
   );
 };
