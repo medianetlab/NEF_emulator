@@ -10,8 +10,8 @@ from app import models, schemas, crud
 from app.api import deps
 from app.schemas import monitoringevent, UserPlaneNotificationData
 from pydantic import BaseModel
-from app.api.api_v1.endpoints.paths import get_random_point
-from app.api.api_v1.endpoints.ue_movement import retrieve_ue_state
+from app.api.simulation.paths import get_random_point
+from app.api.simulation.ue_movement import retrieve_ue_state
 from evolved5g.sdk import CAPIFLogger
 from app.core.config import settings
 
@@ -288,14 +288,14 @@ def get_test(
         raise HTTPException(status_code=409, detail=f"Failed to send the callback request. Error: {ex}")
 
 @router.post("/session-with-qos/callback")
-def create_item(item: UserPlaneNotificationData, request: Request):
+def qos_callback(item: UserPlaneNotificationData, request: Request):
 
     http_response = JSONResponse(content={'ack' : 'TRUE'}, status_code=200)
     add_notifications(request, http_response, True)
     return http_response 
 
 @router.post("/monitoring/callback")
-def create_item(item: monitoringevent.MonitoringNotification, request: Request):
+def monitoring_callback(item: monitoringevent.MonitoringNotification, request: Request):
 
     http_response = JSONResponse(content={'ack' : 'TRUE'}, status_code=200)
     add_notifications(request, http_response, True)

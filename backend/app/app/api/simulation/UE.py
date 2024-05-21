@@ -1,14 +1,12 @@
 from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, Path
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
-from sqlalchemy import null
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.api import deps
-from app.api.api_v1.endpoints.utils import retrieve_ue_state
-from app.api.api_v1.endpoints.paths import get_random_point
+from app.api.simulation.utils import retrieve_ue_state
+from app.api.simulation.paths import get_random_point
 
 router = APIRouter()
 

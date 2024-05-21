@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from starlette.middleware.cors import CORSMiddleware
-from app.api.api_v1.api import api_router, nef_router
+from app.api.api import api_router, nef_router
 from app.core.config import settings
 import time
 
