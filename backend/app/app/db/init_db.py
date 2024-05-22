@@ -6,7 +6,7 @@ from app.db import base  # noqa: F401
 from app.db.base_class import Base  # noqa
 from app.db.session import *
 from fastapi.encoders import jsonable_encoder
-from app.api.api_v1.endpoints.paths import get_random_point
+from app.api.simulation.paths import get_random_point
 # make sure all SQL Alchemy models are imported (app.db.base) before initializing DB
 # otherwise, SQL Alchemy might fail to initialize relationships properly
 # for more details: https://github.com/tiangolo/full-stack-fastapi-postgresql/issues/28
