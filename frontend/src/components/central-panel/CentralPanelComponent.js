@@ -12,9 +12,3 @@ const CentralPanelComponent = ({ page }) => {
 };
 
 export default CentralPanelComponent;
-
-
-
-
-
-

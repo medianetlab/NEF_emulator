@@ -6,8 +6,7 @@ const SidebarComponent = ({ setPage }) => {
   return (
     <CSidebar>
       <CSidebarNav>
-        <CSidebarNavItem onClick={() => setPage('map')}>Map</CSidebarNavItem>
-        <CSidebarNavItem onClick={() => setPage('dashboard')}>Dashboard</CSidebarNavItem>
+ 
       </CSidebarNav>
     </CSidebar>
   );

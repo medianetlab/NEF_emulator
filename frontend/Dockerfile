@@ -1,5 +1,5 @@
 # Use official Node.js image as a base
-FROM node:14-alpine
+FROM node:20-alpine
 
 # Set the working directory in the container
 WORKDIR /app
@@ -23,4 +23,4 @@ ENV PORT=80
 EXPOSE 80
 
 # Command to run the app
-CMD ["npm", "start"]
+#CMD ["npm", "start"]

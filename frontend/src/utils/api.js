@@ -18,7 +18,7 @@ export const getToken = async (username, password) => {
     return data.access_token;
   } catch (error) {
     console.error('Error fetching token:', error);
-    throw error; // Rethrow the error to propagate it further if needed
+    throw error; // Rethrow the error
   }
 };
 
@@ -108,3 +108,4 @@ export const getGnbs = async (token) => {
     throw new Error('Error fetching paths:', error);
   }
 };
+
