@@ -1,36 +1,26 @@
-// Layout.js
-import React, {useState} from 'react';
-import {CContainer, CRow, CCol}  from '@coreui/react';
-import SidebarComponent from '../sidebar/SidebarComponent';
-import TopbarComponent from '../topbar/TopbarComponent';
-import CentralPanelComponent from '../central-panel/CentralPanelComponent';
+// src/layout/Layout.js
+import React, { useState } from 'react';
+import Sidebar from '../sidebar/SidebarComponent';
+import Topbar from '../topbar/TopbarComponent';
+import MainContent from '../central-panel/CentralPanelComponent';
+import './Layout.css';
 
-const Layout = () => {
-  const [page, setPage] = useState('map');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
+const Layout = ({ children }) => {
   return (
-    <CContainer fluid className={`layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-      <CRow>
-        <CCol sm={3} md={2} className="sidebar-column">
-          <SidebarComponent setPage={setPage} />
-        </CCol>
-        <CCol>
-          <div className="main-content">
-            <TopbarComponent toggleSidebar={toggleSidebar} />
-            <CentralPanelComponent page={page} />
-          </div>
-        </CCol>
-      </CRow>
-    </CContainer>
+    <div className="app-layout">
+      <Topbar />
+      <div className="content-wrapper">
+        <Sidebar />
+        <main className="main-content">
+          {children}
+        </main>
+      </div>
+    </div>
   );
 };
 
 export default Layout;
+
 
 
 

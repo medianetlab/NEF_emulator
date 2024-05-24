@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import {Route, Switch} from 'react-router-dom';
+import Dashboard from './components/dashboard/DashboardComponent';
+import Map from './components/map/MapComponent';
 import Layout from './components/layout/Layout';
 import { getToken } from './utils/api';
 import './App.css';
@@ -20,10 +22,15 @@ const App = () => {
   }, []);
 
   return (
-    <Router>
-      <Layout token={token} />
-    </Router>
+    <Layout>
+      <Switch>
+        <Route path="/dashboard" component={Dashboard} />
+        <Route path="/map" component={Map} />
+        <Route path="/" component={Dashboard} />
+      </Switch>
+    </Layout>
   );
+
 };
 
 export default App;

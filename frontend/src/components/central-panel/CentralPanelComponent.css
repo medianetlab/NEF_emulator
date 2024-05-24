@@ -1,0 +1,19 @@
+.main-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  
+  .main-content h1 {
+    margin-bottom: 20px;
+  }
+  
+  .map-container, .dashboard-container {
+    height: calc(100vh - 76px); /* Adjust height according to the header */
+    overflow: auto;
+  }
+  
+  .card {
+    margin-bottom: 20px;
+  }
+  

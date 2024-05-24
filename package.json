@@ -1,18 +1,22 @@
 {
   "dependencies": {
-    "@coreui/coreui": "^5.0.0",
+    "@coreui/coreui": "^5.0.1",
     "@coreui/icons": "^3.0.1",
     "@coreui/react": "^5.0.0",
+    "@coreui/react-chartjs": "^3.0.0",
+    "@react-leaflet/core": "^2.1.0",
     "axios": "^1.6.8",
     "bootstrap": "^5.3.3",
     "classnames": "^2.5.1",
     "leaflet": "^1.9.4",
     "prop-types": "^15.8.1",
     "react-bootstrap": "^2.10.2",
+    "react-chartjs-2": "^5.2.0",
     "react-icons": "^5.1.0",
     "react-leaflet": "^4.2.1",
     "react-router-dom": "^6.23.0"
-  },"scripts": {
+  },
+  "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
