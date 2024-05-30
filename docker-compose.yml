@@ -116,6 +116,27 @@ services:
       - services_default
     command: sh -c '/self-signed-crt.sh && /dynamic_ports.sh'
 
+  capif-provider:
+    image: capif-provider-nef
+    container_name: capif-provider
+    profiles: [ "debug", "dev" ]
+    command: /capif-provider/init.sh
+    # command: tail -f /dev/null
+    volumes:
+      - ./capif-provider:/capif-provider
+    env_file:
+      - .env
+    build:
+      context: ./capif-provider
+      dockerfile: Dockerfile.capif
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      # - "capifcore:host-gateway"
+      # - "register:host-gateway"
+    restart: always
+    networks:
+      - services_default
+
 networks:
   services_default:
     external: ${EXTERNAL_NET}

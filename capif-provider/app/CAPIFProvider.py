@@ -185,7 +185,7 @@ class CAPIFProviderConnector:
 
     def __register_to_capif(self, role):
 
-        url = self.register_url + "/register"
+        url = self.register_url + "register"
         print(url)
         payload = dict()
         payload["username"] = self.capif_username

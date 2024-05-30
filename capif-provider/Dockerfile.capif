@@ -1,0 +1,13 @@
+FROM python:3.10-alpine
+
+WORKDIR /capif-provider/
+
+COPY ./requirements.txt  ./requirements.txt
+
+RUN pip install --no-cache-dir --upgrade -r ./requirements.txt
+
+COPY . ./
+ENV PYTHONPATH=/capif-provider
+
+COPY ./init.sh ./init.sh
+RUN chmod 700 init.sh
