@@ -70,6 +70,7 @@ services:
     command: /start-reload.sh
     volumes:
       - ./backend/app:/app
+      - shared-data:/app/app/core/certificates
     env_file:
       - .env
     environment:
@@ -124,6 +125,7 @@ services:
     # command: tail -f /dev/null
     volumes:
       - ./capif-provider:/capif-provider
+      - shared-data:/capif-provider/certificates
     env_file:
       - .env
     build:
@@ -145,3 +147,4 @@ volumes:
   app-db-data:
   app-mongo-db-data:
   nginxdata:
+  shared-data:

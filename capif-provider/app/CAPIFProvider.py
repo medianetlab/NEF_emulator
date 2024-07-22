@@ -97,6 +97,19 @@ class CAPIFProviderConnector:
         self.csr_country_name = csr_country_name
         self.csr_email_address = csr_email_address
 
+    def __store_certificate(self) -> None:
+        """
+        Retrieves and stores the cert_server.pem from CAPIF
+        """
+        print("Retrieve capif_cert_server.pem , process may take a few minutes")
+        cmd = "openssl s_client -connect {0}:{1}  | openssl x509 -text > {2}/capif_cert_server.pem".format(
+            self.capif_host,
+            self.capif_https_port,
+            self.certificates_folder
+        )
+        os.system(cmd)
+        print("cert_server.pem succesfully generated!")
+        
     def __create_private_and_public_keys(self, api_prov_func_role) -> bytes:
         """
         Creates 2 keys in folder folder_to_store_certificates. An api_prov_func_role_private.key and a api_prov_func_role_private.public.csr key"
@@ -279,16 +292,14 @@ class CAPIFProviderConnector:
             json.dump(data, outfile)
 
     def register_and_onboard_provider(self) -> None:
-        role = "provider"
 
-        # 1. Create public and private key at provider
-        public_key = self.__create_private_and_public_keys(
-            api_prov_func_role=role)
+        # 0. retrieve and store the .pem certificate from CAPIF
+        self.__store_certificate()
 
-        # 2. Register of provider at CCF
+        # 1. Register of provider at CCF
         registration_response = self.__register_to_capif()
 
-        # 3. Obtain Access Token
+        # 2. Obtain Access Token
         get_auth_response = self.__perform_authorization()
         ca_root_string, auth_token = get_auth_response["ca_root"], get_auth_response["access_token"]
         ccf_publish_url = get_auth_response["ccf_publish_url"]
@@ -296,12 +307,10 @@ class CAPIFProviderConnector:
         with open(self.certificates_folder + "ca.crt", "wb+") as ca_root:
             ca_root.write(bytes(ca_root_string, "utf-8"))
 
-        onboarding_response = self.__onboard_exposer_to_capif(
-            auth_token
-        )
-        self.__write_to_file(
-            onboarding_response, registration_response, ccf_publish_url
-        )
+        # 3. Onboard Provider
+        onboarding_response = self.__onboard_exposer_to_capif(auth_token)
+        
+        self.__write_to_file(onboarding_response, registration_response, ccf_publish_url)
         print("Onboarding complete")
 
     def publish_services(self, service_api_description_json_full_path) -> dict:
