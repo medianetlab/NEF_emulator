@@ -133,7 +133,7 @@ services:
       - "host.docker.internal:host-gateway"
       # - "capifcore:host-gateway"
       # - "register:host-gateway"
-    restart: always
+    restart: on-failure
     networks:
       - services_default
 

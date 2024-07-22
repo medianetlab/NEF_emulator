@@ -239,19 +239,12 @@ class CAPIFProviderConnector:
         :return: the access_token from CAPIF
         """
 
-        url = self.register_url + "/getauth"
+        url = self.register_url + "getauth"
         payload = dict()
         payload["username"] = "customUser"
         payload["password"] = "password"
 
-        response = requests.request(
-            "POST",
-            url,
-            headers={"Content-Type": "application/json"},
-            data=json.dumps(payload),
-            verify=False,
-            timeout=10
-        )
+        response = requests.get(url, auth=HTTPBasicAuth(payload["username"], payload["password"]), verify=False, timeout=10)
         response.raise_for_status()
         response_payload = json.loads(response.text)
         print(response_payload["message"])
