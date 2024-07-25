@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import {Route, Switch} from 'react-router-dom';
-import Dashboard from './components/dashboard/DashboardComponent';
-import Map from './components/map/MapComponent';
-import Layout from './components/layout/Layout';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import {
+  CContainer,
+  CHeader,
+  CHeaderBrand,
+  CSidebar,
+  CSidebarBrand,
+  CSidebarNav,
+  CSidebarToggler,
+  CNavItem,
+  CNavLink,
+  CNavTitle
+} from '@coreui/react';
+import Dashboard from './components/Dashboard';
+import MapView from './components/MapView';
 import { getToken } from './utils/api';
-import './App.css';
+import './App.css'; // Import the CSS file
 
 const App = () => {
   const [token, setToken] = useState('');
@@ -22,15 +33,38 @@ const App = () => {
   }, []);
 
   return (
-    <Layout>
-      <Switch>
-        <Route path="/dashboard" component={Dashboard} />
-        <Route path="/map" component={Map} />
-        <Route path="/" component={Dashboard} />
-      </Switch>
-    </Layout>
+    <Router>
+      <div className="app">
+        <CSidebar unfoldable className="sidebar">
+          <CSidebarBrand className="d-md-down-none" to="/">
+            <img src="/home/gerpapa/NEF_emulator/backend/app/app/static/NEF_logo_400x160.svg" alt="NEF Logo" className="sidebar-logo"/>
+          </CSidebarBrand>
+          <CSidebarNav>
+            <CNavTitle>Dashboard</CNavTitle>
+            <CNavItem>
+              <CNavLink href="/dashboard">Dashboard</CNavLink>
+            </CNavItem>
+            <CNavTitle>Map</CNavTitle>
+            <CNavItem>
+              <CNavLink href="/map">Map</CNavLink>
+            </CNavItem>
+          </CSidebarNav>
+          <CSidebarToggler className="d-lg-down-none" />
+        </CSidebar>
+        <div className="wrapper d-flex flex-column min-vh-100 bg-light">
+          <CHeader>
+            <CHeaderBrand href="/">NEF</CHeaderBrand>
+          </CHeader>
+          <CContainer lg>
+            <Routes>
+              <Route path="/dashboard" element={<Dashboard token={token} />} />
+              <Route path="/map" element={<MapView />} />
+            </Routes>
+          </CContainer>
+        </div>
+      </div>
+    </Router>
   );
-
 };
 
 export default App;

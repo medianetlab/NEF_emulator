@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 const BASE_URL = 'http://localhost:8888/api/v1';
 
 // token for authenticating api calls
@@ -22,90 +24,100 @@ export const getToken = async (username, password) => {
   }
 };
 
+//========================================== GNBS ===========================================
+// get gnbs
+export const getGNBs = async (token) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/gNBs?skip=0&limit=100`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json'
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching gNBs:', error);
+    throw error;
+  }
+};
+
+// get gnbs
+export const deleteGNB = async (token, gnb_id) => {
+  try {
+    const response = await axios.delete(`${BASE_URL}/${gnb_id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json'
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting gNB:', error);
+    throw error;
+  }
+};
+//============================================================================================
+
+// get ues
+export const getUEs = async (token) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/UEs?skip=0&limit=100`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json'
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching gNBs:', error);
+    throw error;
+  }
+};
 
 // get users
 export const getUsers = async (token) => {
   try {
-    const response = await fetch(`${BASE_URL}/users?skip=0&limit=100`, {
-      method: 'GET',
+    const response = await axios.get(`${BASE_URL}/users?skip=0&limit=100`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json'
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json'
       }
     });
-    const data = await response.json();
-    return data;
+    return response.data;
   } catch (error) {
-    throw new Error('Error fetching users:', error);
+    console.error('Error fetching gNBs:', error);
+    throw error;
   }
 };
 
 // get cells
 export const getCells = async (token) => {
   try {
-    const response = await fetch(`${BASE_URL}/Cells?skip=0&limit=100`, {
-      method: 'GET',
+    const response = await axios.get(`${BASE_URL}/Cells?skip=0&limit=100`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json'
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json'
       }
     });
-    const data = await response.json();
-    return data;
+    return response.data;
   } catch (error) {
-    throw new Error('Error fetching cells:', error);
-  }
-};
-
-
-// get notifications
-export const getNotifications = async (token) => {
-  try {
-    const response = await fetch(`${BASE_URL}/utils/monitoring/notifications?skip=0&limit=100`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json'
-      }
-    });
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    throw new Error('Error fetching notifications:', error);
+    console.error('Error fetching gNBs:', error);
+    throw error;
   }
 };
 
 // get paths
 export const getPaths = async (token) => {
   try {
-    const response = await fetch(`${BASE_URL}/paths?skip=0&limit=100`, {
-      method: 'GET',
+    const response = await axios.get(`${BASE_URL}/paths?skip=0&limit=100`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json'
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json'
       }
     });
-    const data = await response.json();
-    return data;
+    return response.data;
   } catch (error) {
-    throw new Error('Error fetching paths:', error);
+    console.error('Error fetching gNBs:', error);
+    throw error;
   }
 };
-
-// get gNBs
-export const getGnbs = async (token) => {
-  try {
-    const response = await fetch(`${BASE_URL}/gNBs?skip=0&limit=100`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json'
-      }
-    });
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    throw new Error('Error fetching paths:', error);
-  }
-};
-

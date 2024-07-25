@@ -1,7 +1,29 @@
-/* app.css */
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background-color: #f0f0f0; /* Example background color */
-  color: #333; /* Example text color */
+.app {
+  display: flex;
+  flex-direction: row;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 250px;
+}
+
+.sidebar-logo {
+  max-width: 100%;
+  padding: 10px;
+}
+
+.wrapper {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.c-header {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background-color: #ffffff;
+  border-bottom: 1px solid #dee2e6;
 }
