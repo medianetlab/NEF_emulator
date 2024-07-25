@@ -1,16 +1,14 @@
 // src/components/DeleteConfirmationModal.js
 
 import React from 'react';
-import { CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CButton } from '@coreui/react';
+import { CModal, CModalHeader, CModalBody, CModalFooter, CButton } from '@coreui/react';
 
-const DeleteConfirmationModal = ({ show, handleClose, handleDelete }) => {
+const DeleteConfirmationModal = ({ visible, handleClose, handleDelete }) => {
   return (
-    <CModal show={show} onClose={handleClose}>
-      <CModalHeader closeButton>
-        <CModalTitle>Confirm gNB deletion?</CModalTitle>
-      </CModalHeader>
+    <CModal visible={visible} onClose={handleClose}>
+      <CModalHeader closeButton>Confirm Delete</CModalHeader>
       <CModalBody>
-        If you proceed, the gNB will be permanently removed. This change can't be undone.
+        Are you sure you want to delete this gNB?
       </CModalBody>
       <CModalFooter>
         <CButton color="secondary" onClick={handleClose}>Cancel</CButton>

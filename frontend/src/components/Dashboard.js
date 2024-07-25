@@ -1,14 +1,16 @@
+// src/components/Dashboard.js
+
 import React, { useEffect, useState } from 'react';
-import { getGNBs, getCells, getUEs, getPaths, addGNB, editGNB, deleteGNB } from '../utils/api';
-import { CCard, CCardHeader, CCardBody, CTable, CTableHead, CTableRow, CTableHeaderCell, CTableBody, CTableDataCell, CButton, CCardTitle } from '@coreui/react';
+import { getGNBs, addGNB, editGNB, deleteGNB } from '../utils/api';
+import {
+  CCard, CCardHeader, CCardBody, CTable, CTableHead, CTableRow, CTableHeaderCell,
+  CTableBody, CTableDataCell, CButton, CCardTitle
+} from '@coreui/react';
 import GNBFormModal from './GNBFormModal';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 const Dashboard = ({ token }) => {
   const [gnbs, setGnbs] = useState([]);
-  const [cells, setCells] = useState([]);
-  const [ues, setUes] = useState([]);
-  const [paths, setPaths] = useState([]);
   const [showGNBModal, setShowGNBModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [currentGNB, setCurrentGNB] = useState(null);
@@ -18,16 +20,9 @@ const Dashboard = ({ token }) => {
     const fetchData = async () => {
       try {
         const gnbsData = await getGNBs(token);
-        const cellsData = await getCells(token);
-        const uesData = await getUEs(token);
-        const pathsData = await getPaths(token);
-
         setGnbs(gnbsData);
-        setCells(cellsData);
-        setUes(uesData);
-        setPaths(pathsData);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching gNBs:', error);
       }
     };
 
@@ -44,7 +39,12 @@ const Dashboard = ({ token }) => {
     setShowGNBModal(true);
   };
 
-  const handleDeleteGNB = async () => {
+  const handleDeleteGNB = (gnbId) => {
+    setGNBToDelete(gnbId);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteGNB = async () => {
     try {
       await deleteGNB(token, gnbToDelete);
       setGnbs(gnbs.filter(gnb => gnb.id !== gnbToDelete));
@@ -73,7 +73,10 @@ const Dashboard = ({ token }) => {
     <>
       <CCard>
         <CCardHeader>
-          <CCardTitle>gNBs <CButton color="success" className="float-right" onClick={handleAddGNB}>+</CButton></CCardTitle>
+          <CCardTitle>
+            gNBs
+            <CButton color="success" className="float-right" onClick={handleAddGNB}>+</CButton>
+          </CCardTitle>
         </CCardHeader>
         <CCardBody>
           <CTable hover>
@@ -97,7 +100,7 @@ const Dashboard = ({ token }) => {
                   <CTableDataCell>{gnb.location}</CTableDataCell>
                   <CTableDataCell>
                     <CButton color="info" onClick={() => handleEditGNB(gnb)}>Edit</CButton>
-                    <CButton color="danger" onClick={() => { setGNBToDelete(gnb.id); setShowDeleteModal(true); }}>Delete</CButton>
+                    <CButton color="danger" onClick={() => handleDeleteGNB(gnb.id)}>Delete</CButton>
                   </CTableDataCell>
                 </CTableRow>
               ))}
@@ -106,24 +109,20 @@ const Dashboard = ({ token }) => {
         </CCardBody>
       </CCard>
 
-      {/* Similar components for Cells, UEs, and Paths can be added here */}
-
       <GNBFormModal
-        show={showGNBModal}
+        visible={showGNBModal}
         handleClose={() => setShowGNBModal(false)}
         handleSubmit={handleGNBSubmit}
         initialData={currentGNB}
       />
 
       <DeleteConfirmationModal
-        show={showDeleteModal}
+        visible={showDeleteModal}
         handleClose={() => setShowDeleteModal(false)}
-        handleDelete={handleDeleteGNB}
+        handleDelete={confirmDeleteGNB}
       />
     </>
   );
 };
 
 export default Dashboard;
-
-

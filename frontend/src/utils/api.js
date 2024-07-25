@@ -25,13 +25,12 @@ export const getToken = async (username, password) => {
 };
 
 //========================================== GNBS ===========================================
-// get gnbs
+
 export const getGNBs = async (token) => {
   try {
     const response = await axios.get(`${BASE_URL}/gNBs?skip=0&limit=100`, {
       headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json'
+        'Authorization': `Bearer ${token}`
       }
     });
     return response.data;
@@ -41,115 +40,88 @@ export const getGNBs = async (token) => {
   }
 };
 
-// delete gnbs
-export const deleteGNB = async (token, gnb_id) => {
+export const addGNB = async (token) => {
   try {
-    const response = await axios.delete(`${BASE_URL}/${gnb_id}`, {
+    const response = await axios.post(`${BASE_URL}/gNBs`, {
       headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json'
+        'Authorization': `Bearer ${token}`
       }
     });
     return response.data;
+  } catch (error) {
+    console.error('Error adding gNB:', error);
+    throw error;
+  }
+};
+
+export const editGNB = async (token, gnb) => {
+  try {
+    const response = await axios.put(`${BASE_URL}/gNBs/${gnb.id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error editing gNB:', error);
+    throw error;
+  }
+};
+
+export const deleteGNB = async (token, gnbId) => {
+  try {
+    await axios.delete(`${BASE_URL}/gNBs/${gnbId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
   } catch (error) {
     console.error('Error deleting gNB:', error);
     throw error;
   }
 };
 
-// edit gnb
-export const editGNB = async (token, gnb_id) => {
-  try {
-    const response = await axios.put(`${BASE_URL}/${gnb_id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json'
-      }
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error deleting gNB:', error);
-    throw error;
-  }
-};
+// Similarly, update other API calls to include the Authorization header and correct paths
+// For example:
 
-// add gnb
-export const addGNB = async (token, gnb_id) => {
-  try {
-    const response = await axios.post(`${BASE_URL}/${gnb_id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json'
-      }
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error deleting gNB:', error);
-    throw error;
-  }
-};
-//============================================================================================
-
-// get ues
-export const getUEs = async (token) => {
-  try {
-    const response = await axios.get(`${BASE_URL}/UEs?skip=0&limit=100`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json'
-      }
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching gNBs:', error);
-    throw error;
-  }
-};
-
-// get users
-export const getUsers = async (token) => {
-  try {
-    const response = await axios.get(`${BASE_URL}/users?skip=0&limit=100`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json'
-      }
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching gNBs:', error);
-    throw error;
-  }
-};
-
-// get cells
 export const getCells = async (token) => {
   try {
-    const response = await axios.get(`${BASE_URL}/Cells?skip=0&limit=100`, {
+    const response = await axios.get(`${BASE_URL}/cells?skip=0&limit=100`, {
       headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json'
+        'Authorization': `Bearer ${token}`
       }
     });
     return response.data;
   } catch (error) {
-    console.error('Error fetching gNBs:', error);
+    console.error('Error fetching cells:', error);
     throw error;
   }
 };
 
-// get paths
+export const getUEs = async (token) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/ues?skip=0&limit=100`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching UEs:', error);
+    throw error;
+  }
+};
+
 export const getPaths = async (token) => {
   try {
     const response = await axios.get(`${BASE_URL}/paths?skip=0&limit=100`, {
       headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json'
+        'Authorization': `Bearer ${token}`
       }
     });
     return response.data;
   } catch (error) {
-    console.error('Error fetching gNBs:', error);
+    console.error('Error fetching paths:', error);
     throw error;
   }
 };

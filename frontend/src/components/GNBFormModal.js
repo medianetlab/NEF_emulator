@@ -1,64 +1,84 @@
 // src/components/GNBFormModal.js
 
 import React, { useState, useEffect } from 'react';
-import { CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CButton, CForm, CFormLabel, CFormInput } from '@coreui/react';
+import {
+  CModal, CModalHeader, CModalBody, CModalFooter, CButton,
+  CForm, CFormLabel, CFormInput, CFormTextarea
+} from '@coreui/react';
 
-const GNBFormModal = ({ show, handleClose, handleSubmit, initialData = {} }) => {
-  const [gnb, setGNB] = useState({
+const GNBFormModal = ({ show, handleClose, handleSubmit, initialData }) => {
+  const [formData, setFormData] = useState({
     id: '',
     gNB_id: '',
     name: '',
-    location: '',
-    description: ''
+    description: '',
+    location: ''
   });
 
   useEffect(() => {
     if (initialData) {
-      setGNB(initialData);
+      setFormData(initialData);
+    } else {
+      setFormData({
+        id: '',
+        gNB_id: '',
+        name: '',
+        description: '',
+        location: ''
+      });
     }
   }, [initialData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setGNB({ ...gnb, [name]: value });
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const onSubmit = () => {
-    handleSubmit(gnb);
+  const handleFormSubmit = () => {
+    handleSubmit(formData);
   };
 
   return (
-    <CModal show={show} onClose={handleClose}>
-      <CModalHeader closeButton>
-        <CModalTitle>{gnb.id ? 'Edit gNB' : 'Add new gNB'}</CModalTitle>
-      </CModalHeader>
+    <CModal visible={show} onClose={handleClose}>
+      <CModalHeader closeButton>{formData.id ? 'Edit gNB' : 'Add gNB'}</CModalHeader>
       <CModalBody>
         <CForm>
-          <div className="mb-3">
-            <CFormLabel htmlFor="gNB_id">gNB_id</CFormLabel>
-            <CFormInput id="gNB_id" name="gNB_id" value={gnb.gNB_id} onChange={handleChange} />
-          </div>
-          <div className="mb-3">
-            <CFormLabel htmlFor="name">Name</CFormLabel>
-            <CFormInput id="name" name="name" value={gnb.name} onChange={handleChange} />
-          </div>
-          <div className="mb-3">
-            <CFormLabel htmlFor="location">Location</CFormLabel>
-            <CFormInput id="location" name="location" value={gnb.location} onChange={handleChange} />
-          </div>
-          <div className="mb-3">
-            <CFormLabel htmlFor="description">Description</CFormLabel>
-            <CFormInput id="description" name="description" value={gnb.description} onChange={handleChange} />
-          </div>
+          <CFormInput
+            id="gNB_id"
+            name="gNB_id"
+            label="gNB_id"
+            value={formData.gNB_id}
+            onChange={handleChange}
+          />
+          <CFormInput
+            id="name"
+            name="name"
+            label="Name"
+            value={formData.name}
+            onChange={handleChange}
+          />
+          <CFormTextarea
+            id="description"
+            name="description"
+            label="Description"
+            value={formData.description}
+            onChange={handleChange}
+          />
+          <CFormInput
+            id="location"
+            name="location"
+            label="Location"
+            value={formData.location}
+            onChange={handleChange}
+          />
         </CForm>
       </CModalBody>
       <CModalFooter>
         <CButton color="secondary" onClick={handleClose}>Cancel</CButton>
-        <CButton color="primary" onClick={onSubmit}>{gnb.id ? 'Save' : 'Create'}</CButton>
+        <CButton color="primary" onClick={handleFormSubmit}>Save</CButton>
       </CModalFooter>
     </CModal>
   );
 };
 
 export default GNBFormModal;
-
