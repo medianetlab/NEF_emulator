@@ -41,10 +41,42 @@ export const getGNBs = async (token) => {
   }
 };
 
-// get gnbs
+// delete gnbs
 export const deleteGNB = async (token, gnb_id) => {
   try {
     const response = await axios.delete(`${BASE_URL}/${gnb_id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json'
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting gNB:', error);
+    throw error;
+  }
+};
+
+// edit gnb
+export const editGNB = async (token, gnb_id) => {
+  try {
+    const response = await axios.put(`${BASE_URL}/${gnb_id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json'
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting gNB:', error);
+    throw error;
+  }
+};
+
+// add gnb
+export const addGNB = async (token, gnb_id) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/${gnb_id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: 'application/json'
