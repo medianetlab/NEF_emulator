@@ -1,12 +1,10 @@
-// src/components/GNBFormModal.js
-
 import React, { useState, useEffect } from 'react';
 import {
   CModal, CModalHeader, CModalBody, CModalFooter, CButton,
   CForm, CFormLabel, CFormInput, CFormTextarea
 } from '@coreui/react';
 
-const GNBFormModal = ({ show, handleClose, handleSubmit, initialData }) => {
+const GNBFormModal = ({ visible, handleClose, handleSubmit, initialData }) => {
   const [formData, setFormData] = useState({
     id: '',
     gNB_id: '',
@@ -39,7 +37,7 @@ const GNBFormModal = ({ show, handleClose, handleSubmit, initialData }) => {
   };
 
   return (
-    <CModal visible={show} onClose={handleClose}>
+    <CModal visible={visible} onClose={handleClose}>
       <CModalHeader closeButton>{formData.id ? 'Edit gNB' : 'Add gNB'}</CModalHeader>
       <CModalBody>
         <CForm>

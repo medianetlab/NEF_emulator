@@ -20,12 +20,13 @@ export const getToken = async (username, password) => {
     return data.access_token;
   } catch (error) {
     console.error('Error fetching token:', error);
-    throw error; // Rethrow the error
+    throw error;
   }
 };
 
 //========================================== GNBS ===========================================
 
+// get gNBs
 export const getGNBs = async (token) => {
   try {
     const response = await axios.get(`${BASE_URL}/gNBs?skip=0&limit=100`, {
@@ -40,6 +41,7 @@ export const getGNBs = async (token) => {
   }
 };
 
+// add new gNBs
 export const addGNB = async (token) => {
   try {
     const response = await axios.post(`${BASE_URL}/gNBs`, {
@@ -54,6 +56,7 @@ export const addGNB = async (token) => {
   }
 };
 
+// update gNBs
 export const editGNB = async (token, gnb) => {
   try {
     const response = await axios.put(`${BASE_URL}/gNBs/${gnb.id}`, {
@@ -68,6 +71,7 @@ export const editGNB = async (token, gnb) => {
   }
 };
 
+//delete gNBs
 export const deleteGNB = async (token, gnbId) => {
   try {
     await axios.delete(`${BASE_URL}/gNBs/${gnbId}`, {
@@ -81,9 +85,7 @@ export const deleteGNB = async (token, gnbId) => {
   }
 };
 
-// Similarly, update other API calls to include the Authorization header and correct paths
-// For example:
-
+// get cells
 export const getCells = async (token) => {
   try {
     const response = await axios.get(`${BASE_URL}/Cells?skip=0&limit=100`, {
@@ -98,6 +100,7 @@ export const getCells = async (token) => {
   }
 };
 
+// get ues
 export const getUEs = async (token) => {
   try {
     const response = await axios.get(`${BASE_URL}/UEs?skip=0&limit=100`, {
@@ -112,6 +115,7 @@ export const getUEs = async (token) => {
   }
 };
 
+// get paths
 export const getPaths = async (token) => {
   try {
     const response = await axios.get(`${BASE_URL}/paths?skip=0&limit=100`, {
