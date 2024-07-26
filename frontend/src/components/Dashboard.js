@@ -1,9 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-  getGNBs, getCells, getUEs, getPaths, addGNB, editGNB, deleteGNB, addCell, editCell,
-  deleteCell, addUE, editUE, deleteUE, addPath, editPath, deletePath
-} from '../utils/api';
-import {
   CCard, CCardHeader, CCardBody, CTable, CTableHead, CTableRow, CTableHeaderCell,
   CTableBody, CTableDataCell, CButton, CCardTitle, CRow, CCol
 } from '@coreui/react';
@@ -12,6 +8,9 @@ import CellFormModal from './CellFormModal';
 import UEFormModal from './UEFormModal';
 import PathFormModal from './PathFormModal';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
+import {
+  fetchData, handleAdd, handleEdit, handleDelete, confirmDelete, handleSubmit
+} from './DashboardUtils';
 
 const Dashboard = ({ token }) => {
   const [gnbs, setGnbs] = useState([]);
@@ -30,174 +29,17 @@ const Dashboard = ({ token }) => {
   const [entityToDelete, setEntityToDelete] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [gnbsData, cellsData, uesData, pathsData] = await Promise.all([
-          getGNBs(token),
-          getCells(token),
-          getUEs(token),
-          getPaths(token),
-        ]);
-        setGnbs(gnbsData);
-        setCells(cellsData);
-        setUEs(uesData);
-        setPaths(pathsData);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-
-    fetchData();
+    fetchData(token, setGnbs, setCells, setUEs, setPaths);
   }, [token]);
 
-  const handleAdd = (type) => {
-    setCurrentEntity(null);
-    setEntityType(type);
-    switch(type) {
-      case 'GNB':
-        setShowGNBModal(true);
-        break;
-      case 'Cell':
-        setShowCellModal(true);
-        break;
-      case 'UE':
-        setShowUEModal(true);
-        break;
-      case 'Path':
-        setShowPathModal(true);
-        break;
-      default:
-        break;
-    }
+  const closeModals = () => {
+    setShowGNBModal(false);
+    setShowCellModal(false);
+    setShowUEModal(false);
+    setShowPathModal(false);
+    setShowDeleteModal(false);
   };
 
-  const handleEdit = (type, entity) => {
-    setCurrentEntity(entity);
-    setEntityType(type);
-    switch(type) {
-      case 'GNB':
-        setShowGNBModal(true);
-        break;
-      case 'Cell':
-        setShowCellModal(true);
-        break;
-      case 'UE':
-        setShowUEModal(true);
-        break;
-      case 'Path':
-        setShowPathModal(true);
-        break;
-      default:
-        break;
-    }
-  };
-
-
-  const handleDelete = (type, entity) => {
-    let id;
-  
-    switch (type) {
-      case 'GNB':
-        id = entity.gNB_id;
-        break;
-      case 'Cell':
-        id = entity.cell_id;
-        break;
-      case 'UE':
-        id = entity.supi;
-        break;
-      case 'Path':
-        id = entity.id;
-        break;
-      default:
-        console.error('Invalid entity type');
-        return; 
-    }
-  
-    setEntityToDelete({ type, id });
-    setShowDeleteModal(true);
-  };
-
-
-  const confirmDelete = async () => {
-    try {
-      const { type, id } = entityToDelete;
-      switch(type) {
-        case 'GNB':
-          await deleteGNB(token, id);
-          setGnbs(gnbs.filter(gnb => gnb.gNB_id !== id));
-          break;
-        case 'Cell':
-          await deleteCell(token, id);
-          setCells(cells.filter(cell => cell.cell_id !== id));
-          break;
-        case 'UE':
-          await deleteUE(token, id);
-          setUEs(ues.filter(ue => ue.supi !== id));
-          break;
-        case 'Path':
-          await deletePath(token, id);
-          setPaths(paths.filter(path => path.id !== id));
-          break;
-        default:
-          break;
-      }
-      setShowDeleteModal(false);
-    } catch (error) {
-      console.error('Error deleting:', error);
-    }
-  };
-
-  const handleSubmit = async (entity) => {
-    try {
-      switch(entityType) {
-        case 'GNB':
-          if (entity.id) {
-            const updatedGNB = await editGNB(token, entity);
-            setGnbs(gnbs.map(item => item.id === updatedGNB.id ? updatedGNB : item));
-          } else {
-            const newGNB = await addGNB(token, entity);
-            setGnbs([...gnbs, newGNB]);
-          }
-          setShowGNBModal(false);
-          break;
-        case 'Cell':
-          if (entity.id) {
-            const updatedCell = await editCell(token, entity);
-            setCells(cells.map(item => item.id === updatedCell.id ? updatedCell : item));
-          } else {
-            const newCell = await addCell(token, entity);
-            setCells([...cells, newCell]);
-          }
-          setShowCellModal(false);
-          break;
-        case 'UE':
-          if (entity.supi) {
-            const updatedUE = await editUE(token, entity);
-            setUEs(ues.map(item => item.supi === updatedUE.supi ? updatedUE : item));
-          } else {
-            const newUE = await addUE(token, entity);
-            setUEs([...ues, newUE]);
-          }
-          setShowUEModal(false);
-          break;
-        case 'Path':
-          if (entity.id) {
-            const updatedPath = await editPath(token, entity);
-            setPaths(paths.map(item => item.id === updatedPath.id ? updatedPath : item));
-          } else {
-            const newPath = await addPath(token, entity);
-            setPaths([...paths, newPath]);
-          }
-          setShowPathModal(false);
-          break;
-        default:
-          break;
-      }
-    } catch (error) {
-      console.error('Error submitting:', error);
-    }
-  };
 
   const gNBColumns = [
     { header: 'id', accessor: item => item.id },
@@ -280,67 +122,67 @@ const Dashboard = ({ token }) => {
         title="gNBs"
         data={gnbs}
         columns={gNBColumns}
-        onAdd={() => handleAdd('GNB')}
-        onEdit={entity => handleEdit('GNB', entity)}
-        onDelete={entity => handleDelete('GNB', entity)}
+        onAdd={() => handleAdd('GNB', setCurrentEntity, setEntityType, setShowGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
+        onEdit={entity => handleEdit('GNB', entity, setCurrentEntity, setEntityType, setShowGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
+        onDelete={entity => handleDelete('GNB', entity, setEntityToDelete, setShowDeleteModal)}
       />
       <DataTable 
         title="Cells"
         data={cells}
         columns={cellColumns}
-        onAdd={() => handleAdd('Cell')}
-        onEdit={entity => handleEdit('Cell', entity)}
-        onDelete={entity => handleDelete('Cell', entity)}
+        onAdd={() => handleAdd('Cell', setCurrentEntity, setEntityType, setShowGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
+        onEdit={entity => handleEdit('Cell', entity, setCurrentEntity, setEntityType, setShowGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
+        onDelete={entity => handleDelete('Cell', entity, setEntityToDelete, setShowDeleteModal)}
       />
       <DataTable 
         title="UEs"
         data={ues}
         columns={ueColumns}
-        onAdd={() => handleAdd('UE')}
-        onEdit={entity => handleEdit('UE', entity)}
-        onDelete={entity => handleDelete('UE', entity)}
+        onAdd={() => handleAdd('UE', setCurrentEntity, setEntityType, setShowGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
+        onEdit={entity => handleEdit('UE', entity, setCurrentEntity, setEntityType, setShowGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
+        onDelete={entity => handleDelete('UE', entity, setEntityToDelete, setShowDeleteModal)}
       />
       <DataTable 
         title="Paths"
         data={paths}
         columns={pathColumns}
-        onAdd={() => handleAdd('Path')}
-        onEdit={entity => handleEdit('Path', entity)}
-        onDelete={entity => handleDelete('Path', entity)}
+        onAdd={() => handleAdd('Path', setCurrentEntity, setEntityType, setShowGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
+        onEdit={entity => handleEdit('Path', entity, setCurrentEntity, setEntityType, setShowGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
+        onDelete={entity => handleDelete('Path', entity, setEntityToDelete, setShowDeleteModal)}
       />
 
       <GNBFormModal
         visible={showGNBModal}
         handleClose={() => setShowGNBModal(false)}
-        handleSubmit={handleSubmit}
+        handleSubmit={entity => handleSubmit(entity, 'GNB', token, setGnbs, setCells, setUEs, setPaths, closeModals)}
         initialData={currentEntity}
       />
 
       <CellFormModal
         visible={showCellModal}
         handleClose={() => setShowCellModal(false)}
-        handleSubmit={handleSubmit}
+        handleSubmit={entity => handleSubmit(entity, 'Cell', token, setGnbs, setCells, setUEs, setPaths, closeModals)}
         initialData={currentEntity}
       />
 
       <UEFormModal
         visible={showUEModal}
         handleClose={() => setShowUEModal(false)}
-        handleSubmit={handleSubmit}
+        handleSubmit={entity => handleSubmit(entity, 'UE', token, setGnbs, setCells, setUEs, setPaths, closeModals)}
         initialData={currentEntity}
       />
 
       <PathFormModal
         visible={showPathModal}
         handleClose={() => setShowPathModal(false)}
-        handleSubmit={handleSubmit}
+        handleSubmit={entity => handleSubmit(entity, 'Path', token, setGnbs, setCells, setUEs, setPaths, closeModals)}
         initialData={currentEntity}
       />
 
       <DeleteConfirmationModal
         visible={showDeleteModal}
         handleClose={() => setShowDeleteModal(false)}
-        handleDelete={confirmDelete}
+        handleDelete={() => confirmDelete(token, entityToDelete, setGnbs, setCells, setUEs, setPaths, setShowDeleteModal)}
       />
     </>
   );

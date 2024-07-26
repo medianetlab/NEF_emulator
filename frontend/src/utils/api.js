@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const BASE_URL = 'http://localhost:8888/api/v1';
 
-// token for authenticating API calls
+// Get token
 export const getToken = async (username, password) => {
   try {
     const response = await fetch(`${BASE_URL}/login/access-token`, {
@@ -24,9 +24,7 @@ export const getToken = async (username, password) => {
   }
 };
 
-//========================================== GNBS ===========================================
-
-// Get gNBs
+// GNBs
 export const getGNBs = async (token) => {
   try {
     const response = await axios.get(`${BASE_URL}/gNBs?skip=0&limit=100`, {
@@ -41,7 +39,6 @@ export const getGNBs = async (token) => {
   }
 };
 
-// Add new gNB
 export const addGNB = async (token, gnb) => {
   try {
     const response = await axios.post(`${BASE_URL}/gNBs`, gnb, {
@@ -56,7 +53,6 @@ export const addGNB = async (token, gnb) => {
   }
 };
 
-// Edit gNB
 export const editGNB = async (token, gnb) => {
   try {
     const response = await axios.put(`${BASE_URL}/gNBs/${gnb.gNB_id}`, gnb, {
@@ -71,7 +67,6 @@ export const editGNB = async (token, gnb) => {
   }
 };
 
-// Delete gNB
 export const deleteGNB = async (token, gnbId) => {
   try {
     await axios.delete(`${BASE_URL}/gNBs/${gnbId}`, {
@@ -85,9 +80,7 @@ export const deleteGNB = async (token, gnbId) => {
   }
 };
 
-//========================================== CELLS ===========================================
-
-// Get Cells
+// Cells
 export const getCells = async (token) => {
   try {
     const response = await axios.get(`${BASE_URL}/Cells?skip=0&limit=100`, {
@@ -102,7 +95,6 @@ export const getCells = async (token) => {
   }
 };
 
-// Add new Cell
 export const addCell = async (token, cell) => {
   try {
     const response = await axios.post(`${BASE_URL}/Cells`, cell, {
@@ -112,27 +104,25 @@ export const addCell = async (token, cell) => {
     });
     return response.data;
   } catch (error) {
-    console.error('Error adding Cell:', error);
+    console.error('Error adding cell:', error);
     throw error;
   }
 };
 
-// Edit Cell
 export const editCell = async (token, cell) => {
   try {
-    const response = await axios.put(`${BASE_URL}/Cells/${cell.id}`, cell, {
+    const response = await axios.put(`${BASE_URL}/Cells/${cell.cell_id}`, cell, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
     return response.data;
   } catch (error) {
-    console.error('Error editing Cell:', error);
+    console.error('Error editing cell:', error);
     throw error;
   }
 };
 
-// Delete Cell
 export const deleteCell = async (token, cellId) => {
   try {
     await axios.delete(`${BASE_URL}/Cells/${cellId}`, {
@@ -141,14 +131,12 @@ export const deleteCell = async (token, cellId) => {
       }
     });
   } catch (error) {
-    console.error('Error deleting Cell:', error);
+    console.error('Error deleting cell:', error);
     throw error;
   }
 };
 
-//========================================== UES ===========================================
-
-// Get UEs
+// UEs
 export const getUEs = async (token) => {
   try {
     const response = await axios.get(`${BASE_URL}/UEs?skip=0&limit=100`, {
@@ -163,7 +151,6 @@ export const getUEs = async (token) => {
   }
 };
 
-// Add new UE
 export const addUE = async (token, ue) => {
   try {
     const response = await axios.post(`${BASE_URL}/UEs`, ue, {
@@ -178,7 +165,6 @@ export const addUE = async (token, ue) => {
   }
 };
 
-// Edit UE
 export const editUE = async (token, ue) => {
   try {
     const response = await axios.put(`${BASE_URL}/UEs/${ue.supi}`, ue, {
@@ -193,7 +179,6 @@ export const editUE = async (token, ue) => {
   }
 };
 
-// Delete UE
 export const deleteUE = async (token, ueSupi) => {
   try {
     await axios.delete(`${BASE_URL}/UEs/${ueSupi}`, {
@@ -207,9 +192,7 @@ export const deleteUE = async (token, ueSupi) => {
   }
 };
 
-//========================================== PATHS ===========================================
-
-// Get Paths
+// Paths
 export const getPaths = async (token) => {
   try {
     const response = await axios.get(`${BASE_URL}/paths?skip=0&limit=100`, {
@@ -224,7 +207,6 @@ export const getPaths = async (token) => {
   }
 };
 
-// Add new Path
 export const addPath = async (token, path) => {
   try {
     const response = await axios.post(`${BASE_URL}/paths`, path, {
@@ -234,12 +216,11 @@ export const addPath = async (token, path) => {
     });
     return response.data;
   } catch (error) {
-    console.error('Error adding Path:', error);
+    console.error('Error adding path:', error);
     throw error;
   }
 };
 
-// Edit Path
 export const editPath = async (token, path) => {
   try {
     const response = await axios.put(`${BASE_URL}/paths/${path.id}`, path, {
@@ -249,12 +230,11 @@ export const editPath = async (token, path) => {
     });
     return response.data;
   } catch (error) {
-    console.error('Error editing Path:', error);
+    console.error('Error editing path:', error);
     throw error;
   }
 };
 
-// Delete Path
 export const deletePath = async (token, pathId) => {
   try {
     await axios.delete(`${BASE_URL}/paths/${pathId}`, {
@@ -263,7 +243,7 @@ export const deletePath = async (token, pathId) => {
       }
     });
   } catch (error) {
-    console.error('Error deleting Path:', error);
+    console.error('Error deleting path:', error);
     throw error;
   }
 };
