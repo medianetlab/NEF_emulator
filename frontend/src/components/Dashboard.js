@@ -1,16 +1,19 @@
 // src/components/Dashboard.js
 
 import React, { useEffect, useState } from 'react';
-import { getGNBs, addGNB, editGNB, deleteGNB } from '../utils/api';
+import { getGNBs, getCells, getUEs, getPaths, addGNB, editGNB, deleteGNB } from '../utils/api';
 import {
   CCard, CCardHeader, CCardBody, CTable, CTableHead, CTableRow, CTableHeaderCell,
-  CTableBody, CTableDataCell, CButton, CCardTitle
+  CTableBody, CTableDataCell, CButton, CCardTitle, CRow, CCol
 } from '@coreui/react';
 import GNBFormModal from './GNBFormModal';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 const Dashboard = ({ token }) => {
   const [gnbs, setGnbs] = useState([]);
+  const [cells, setCells] = useState([]);
+  const [ues, setUEs] = useState([]);
+  const [paths, setPaths] = useState([]);
   const [showGNBModal, setShowGNBModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [currentGNB, setCurrentGNB] = useState(null);
@@ -21,8 +24,14 @@ const Dashboard = ({ token }) => {
       try {
         const gnbsData = await getGNBs(token);
         setGnbs(gnbsData);
+        const cellsData = await getCells(token);
+        setCells(cellsData);
+        const uesData = await getUEs(token);
+        setUEs(uesData);
+        const pathsData = await getPaths(token);
+        setPaths(pathsData);
       } catch (error) {
-        console.error('Error fetching gNBs:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
@@ -71,6 +80,41 @@ const Dashboard = ({ token }) => {
 
   return (
     <>
+      <CRow className="mb-4">
+        <CCol sm="3">
+          <CCard>
+            <CCardBody>
+              <CCardTitle>gNBs</CCardTitle>
+              <h4>{gnbs.length}</h4>
+            </CCardBody>
+          </CCard>
+        </CCol>
+        <CCol sm="3">
+          <CCard>
+            <CCardBody>
+              <CCardTitle>Cells</CCardTitle>
+              <h4>{cells.length}</h4>
+            </CCardBody>
+          </CCard>
+        </CCol>
+        <CCol sm="3">
+          <CCard>
+            <CCardBody>
+              <CCardTitle>UEs</CCardTitle>
+              <h4>{ues.length}</h4>
+            </CCardBody>
+          </CCard>
+        </CCol>
+        <CCol sm="3">
+          <CCard>
+            <CCardBody>
+              <CCardTitle>Paths</CCardTitle>
+              <h4>{paths.length}</h4>
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
+
       <CCard>
         <CCardHeader>
           <CCardTitle>
@@ -126,3 +170,4 @@ const Dashboard = ({ token }) => {
 };
 
 export default Dashboard;
+

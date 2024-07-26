@@ -86,7 +86,7 @@ export const deleteGNB = async (token, gnbId) => {
 
 export const getCells = async (token) => {
   try {
-    const response = await axios.get(`${BASE_URL}/cells?skip=0&limit=100`, {
+    const response = await axios.get(`${BASE_URL}/Cells?skip=0&limit=100`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -100,7 +100,7 @@ export const getCells = async (token) => {
 
 export const getUEs = async (token) => {
   try {
-    const response = await axios.get(`${BASE_URL}/ues?skip=0&limit=100`, {
+    const response = await axios.get(`${BASE_URL}/UEs?skip=0&limit=100`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
