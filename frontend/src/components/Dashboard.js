@@ -1,10 +1,11 @@
-// src/components/Dashboard.js
-
 import React, { useEffect, useState } from 'react';
-import { getGNBs, getCells, getUEs, getPaths, addGNB, editGNB, deleteGNB } from '../utils/api';
+import {
+  getGNBs, getCells, getUEs, getPaths, addGNB, editGNB, deleteGNB, addCell, editCell,
+  deleteCell, addUE, editUE, deleteUE, addPath, editPath, deletePath
+} from '../utils/api';
 import {
   CCard, CCardHeader, CCardBody, CTable, CTableHead, CTableRow, CTableHeaderCell,
-  CTableBody, CTableDataCell, CButton, CCardTitle
+  CTableBody, CTableDataCell, CButton, CCardTitle, CRow, CCol
 } from '@coreui/react';
 import GNBFormModal from './GNBFormModal';
 import CellFormModal from './CellFormModal';
@@ -24,23 +25,22 @@ const Dashboard = ({ token }) => {
   const [showPathModal, setShowPathModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const [currentGNB, setCurrentGNB] = useState(null);
-  const [currentCell, setCurrentCell] = useState(null);
-  const [currentUE, setCurrentUE] = useState(null);
-  const [currentPath, setCurrentPath] = useState(null);
-
-  const [gnbToDelete, setGNBToDelete] = useState(null);
+  const [currentEntity, setCurrentEntity] = useState(null);
+  const [entityType, setEntityType] = useState('');
+  const [entityToDelete, setEntityToDelete] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const gnbsData = await getGNBs(token);
+        const [gnbsData, cellsData, uesData, pathsData] = await Promise.all([
+          getGNBs(token),
+          getCells(token),
+          getUEs(token),
+          getPaths(token),
+        ]);
         setGnbs(gnbsData);
-        const cellsData = await getCells(token);
         setCells(cellsData);
-        const uesData = await getUEs(token);
         setUEs(uesData);
-        const pathsData = await getPaths(token);
         setPaths(pathsData);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -50,226 +50,314 @@ const Dashboard = ({ token }) => {
     fetchData();
   }, [token]);
 
-  const handleAddGNB = () => {
-    setCurrentGNB(null);
-    setShowGNBModal(true);
+  const handleAdd = (type) => {
+    setCurrentEntity(null);
+    setEntityType(type);
+    switch(type) {
+      case 'GNB':
+        setShowGNBModal(true);
+        break;
+      case 'Cell':
+        setShowCellModal(true);
+        break;
+      case 'UE':
+        setShowUEModal(true);
+        break;
+      case 'Path':
+        setShowPathModal(true);
+        break;
+      default:
+        break;
+    }
   };
 
-  const handleEditGNB = (gnb) => {
-    setCurrentGNB(gnb);
-    setShowGNBModal(true);
+  const handleEdit = (type, entity) => {
+    setCurrentEntity(entity);
+    setEntityType(type);
+    switch(type) {
+      case 'GNB':
+        setShowGNBModal(true);
+        break;
+      case 'Cell':
+        setShowCellModal(true);
+        break;
+      case 'UE':
+        setShowUEModal(true);
+        break;
+      case 'Path':
+        setShowPathModal(true);
+        break;
+      default:
+        break;
+    }
   };
 
-  const handleDeleteGNB = (gnbId) => {
-    setGNBToDelete(gnbId);
+  const handleDelete = (type, entity) => {
+    setEntityToDelete({ type, id: entity.id });
     setShowDeleteModal(true);
   };
 
-  const confirmDeleteGNB = async () => {
+  const confirmDelete = async () => {
     try {
-      await deleteGNB(token, gnbToDelete);
-      setGnbs(gnbs.filter(gnb => gnb.id !== gnbToDelete));
+      const { type, id } = entityToDelete;
+      switch(type) {
+        case 'GNB':
+          await deleteGNB(token, id);
+          setGnbs(gnbs.filter(gnb => gnb.id !== id));
+          break;
+        case 'Cell':
+          await deleteCell(token, id);
+          setCells(cells.filter(cell => cell.id !== id));
+          break;
+        case 'UE':
+          await deleteUE(token, id);
+          setUEs(ues.filter(ue => ue.supi !== id));
+          break;
+        case 'Path':
+          await deletePath(token, id);
+          setPaths(paths.filter(path => path.id !== id));
+          break;
+        default:
+          break;
+      }
       setShowDeleteModal(false);
     } catch (error) {
-      console.error('Error deleting gNB:', error);
+      console.error('Error deleting:', error);
     }
   };
 
-  const handleGNBSubmit = async (gnb) => {
+  const handleSubmit = async (entity) => {
     try {
-      if (gnb.id) {
-        const updatedGNB = await editGNB(token, gnb);
-        setGnbs(gnbs.map(item => (item.id === updatedGNB.id ? updatedGNB : item)));
-      } else {
-        const newGNB = await addGNB(token, gnb);
-        setGnbs([...gnbs, newGNB]);
+      switch(entityType) {
+        case 'GNB':
+          if (entity.id) {
+            const updatedGNB = await editGNB(token, entity);
+            setGnbs(gnbs.map(item => item.id === updatedGNB.id ? updatedGNB : item));
+          } else {
+            const newGNB = await addGNB(token, entity);
+            setGnbs([...gnbs, newGNB]);
+          }
+          setShowGNBModal(false);
+          break;
+        case 'Cell':
+          if (entity.id) {
+            const updatedCell = await editCell(token, entity);
+            setCells(cells.map(item => item.id === updatedCell.id ? updatedCell : item));
+          } else {
+            const newCell = await addCell(token, entity);
+            setCells([...cells, newCell]);
+          }
+          setShowCellModal(false);
+          break;
+        case 'UE':
+          if (entity.supi) {
+            const updatedUE = await editUE(token, entity);
+            setUEs(ues.map(item => item.supi === updatedUE.supi ? updatedUE : item));
+          } else {
+            const newUE = await addUE(token, entity);
+            setUEs([...ues, newUE]);
+          }
+          setShowUEModal(false);
+          break;
+        case 'Path':
+          if (entity.id) {
+            const updatedPath = await editPath(token, entity);
+            setPaths(paths.map(item => item.id === updatedPath.id ? updatedPath : item));
+          } else {
+            const newPath = await addPath(token, entity);
+            setPaths([...paths, newPath]);
+          }
+          setShowPathModal(false);
+          break;
+        default:
+          break;
       }
-      setShowGNBModal(false);
     } catch (error) {
-      console.error('Error submitting gNB:', error);
+      console.error('Error submitting:', error);
     }
   };
+
+  const gNBColumns = [
+    { header: 'id', accessor: item => item.id },
+    { header: 'gNB_id', accessor: item => item.gNB_id },
+    { header: 'name', accessor: item => item.name },
+    { header: 'description', accessor: item => item.description },
+    { header: 'location', accessor: item => item.location }
+  ];
+
+  const cellColumns = [
+    { header: 'id', accessor: item => item.id },
+    { header: 'cell_id', accessor: item => item.cell_id },
+    { header: 'name', accessor: item => item.name },
+    { header: 'description', accessor: item => item.description },
+    { header: 'gnb', accessor: item => item.gnb }
+  ];
+
+  const ueColumns = [
+    { header: 'supi', accessor: item => item.supi },
+    { header: 'name', accessor: item => item.name },
+    { header: 'ext.identifier', accessor: item => item['ext.identifier'] },
+    { header: 'Cell_id', accessor: item => item.cell_id },
+    { header: 'ip_address_v4', accessor: item => item.ip_address_v4 },
+    { header: 'path_id', accessor: item => item.path_id },
+    { header: 'speed', accessor: item => item.speed }
+  ];
+
+  const pathColumns = [
+    { header: 'id', accessor: item => item.id },
+    { header: 'description', accessor: item => item.description },
+    { header: 'color', accessor: item => item.color }
+  ];
 
   return (
     <>
-      <CCard>
-        <CCardHeader>
-          <CCardTitle>
-            gNBs
-            <CButton color="success" className="float-right" onClick={handleAddGNB}>+</CButton>
-          </CCardTitle>
-        </CCardHeader>
-        <CCardBody>
-          <CTable hover>
-            <CTableHead>
-              <CTableRow>
-                <CTableHeaderCell>id</CTableHeaderCell>
-                <CTableHeaderCell>gNB_id</CTableHeaderCell>
-                <CTableHeaderCell>name</CTableHeaderCell>
-                <CTableHeaderCell>description</CTableHeaderCell>
-                <CTableHeaderCell>location</CTableHeaderCell>
-                <CTableHeaderCell>actions</CTableHeaderCell>
-              </CTableRow>
-            </CTableHead>
-            <CTableBody>
-              {gnbs.map((gnb) => (
-                <CTableRow key={gnb.id}>
-                  <CTableDataCell>{gnb.id}</CTableDataCell>
-                  <CTableDataCell>{gnb.gNB_id}</CTableDataCell>
-                  <CTableDataCell>{gnb.name}</CTableDataCell>
-                  <CTableDataCell>{gnb.description}</CTableDataCell>
-                  <CTableDataCell>{gnb.location}</CTableDataCell>
-                  <CTableDataCell>
-                    <CButton color="info" onClick={() => handleEditGNB(gnb)}>Edit</CButton>
-                    <CButton color="danger" onClick={() => handleDeleteGNB(gnb.id)}>Delete</CButton>
-                  </CTableDataCell>
-                </CTableRow>
-              ))}
-            </CTableBody>
-          </CTable>
-        </CCardBody>
-      </CCard>
+      <CRow className="mb-4">
+        <CCol md="3">
+          <CCard>
+            <CCardHeader>
+              <CCardTitle>gNBs</CCardTitle>
+            </CCardHeader>
+            <CCardBody>
+              <h2>{gnbs.length}</h2>
+            </CCardBody>
+          </CCard>
+        </CCol>
+        <CCol md="3">
+          <CCard>
+            <CCardHeader>
+              <CCardTitle>Cells</CCardTitle>
+            </CCardHeader>
+            <CCardBody>
+              <h2>{cells.length}</h2>
+            </CCardBody>
+          </CCard>
+        </CCol>
+        <CCol md="3">
+          <CCard>
+            <CCardHeader>
+              <CCardTitle>UEs</CCardTitle>
+            </CCardHeader>
+            <CCardBody>
+              <h2>{ues.length}</h2>
+            </CCardBody>
+          </CCard>
+        </CCol>
+        <CCol md="3">
+          <CCard>
+            <CCardHeader>
+              <CCardTitle>Paths</CCardTitle>
+            </CCardHeader>
+            <CCardBody>
+              <h2>{paths.length}</h2>
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
 
-      <CCard>
-        <CCardHeader>
-          <CCardTitle>Cells</CCardTitle>
-        </CCardHeader>
-        <CCardBody>
-          <CTable hover>
-            <CTableHead>
-              <CTableRow>
-                <CTableHeaderCell>id</CTableHeaderCell>
-                <CTableHeaderCell>cell_id</CTableHeaderCell>
-                <CTableHeaderCell>name</CTableHeaderCell>
-                <CTableHeaderCell>description</CTableHeaderCell>
-                <CTableHeaderCell>gnb</CTableHeaderCell>
-                <CTableHeaderCell>actions</CTableHeaderCell>
-              </CTableRow>
-            </CTableHead>
-            <CTableBody>
-              {cells.map((cell) => (
-                <CTableRow key={cell.id}>
-                  <CTableDataCell>{cell.id}</CTableDataCell>
-                  <CTableDataCell>{cell.cell_id}</CTableDataCell>
-                  <CTableDataCell>{cell.name}</CTableDataCell>
-                  <CTableDataCell>{cell.description}</CTableDataCell>
-                  <CTableDataCell>{cell.gnb}</CTableDataCell>
-                  <CTableDataCell>
-                    <CButton color="info" onClick={() => setCurrentCell(cell)}>Edit</CButton>
-                    <CButton color="danger" onClick={() => setCurrentCell(cell.id)}>Delete</CButton>
-                  </CTableDataCell>
-                </CTableRow>
-              ))}
-            </CTableBody>
-          </CTable>
-        </CCardBody>
-      </CCard>
-
-      <CCard>
-        <CCardHeader>
-          <CCardTitle>UEs</CCardTitle>
-        </CCardHeader>
-        <CCardBody>
-          <CTable hover>
-            <CTableHead>
-              <CTableRow>
-                <CTableHeaderCell>supi</CTableHeaderCell>
-                <CTableHeaderCell>name</CTableHeaderCell>
-                <CTableHeaderCell>ext.identifier</CTableHeaderCell>
-                <CTableHeaderCell>Cell_id</CTableHeaderCell>
-                <CTableHeaderCell>ip_address_v4</CTableHeaderCell>
-                <CTableHeaderCell>path_id</CTableHeaderCell>
-                <CTableHeaderCell>speed</CTableHeaderCell>
-                <CTableHeaderCell>actions</CTableHeaderCell>
-              </CTableRow>
-            </CTableHead>
-            <CTableBody>
-              {ues.map((ue) => (
-                <CTableRow key={ue.supi}>
-                  <CTableDataCell>{ue.supi}</CTableDataCell>
-                  <CTableDataCell>{ue.name}</CTableDataCell>
-                  <CTableDataCell>{ue['ext.identifier']}</CTableDataCell>
-                  <CTableDataCell>{ue.cell_id}</CTableDataCell>
-                  <CTableDataCell>{ue.ip_address_v4}</CTableDataCell>
-                  <CTableDataCell>{ue.path_id}</CTableDataCell>
-                  <CTableDataCell>{ue.speed}</CTableDataCell>
-                  <CTableDataCell>
-                    <CButton color="info" onClick={() => setCurrentUE(ue)}>Edit</CButton>
-                    <CButton color="danger" onClick={() => setCurrentUE(ue.supi)}>Delete</CButton>
-                  </CTableDataCell>
-                </CTableRow>
-              ))}
-            </CTableBody>
-          </CTable>
-        </CCardBody>
-      </CCard>
-
-      <CCard>
-        <CCardHeader>
-          <CCardTitle>Paths</CCardTitle>
-        </CCardHeader>
-        <CCardBody>
-          <CTable hover>
-            <CTableHead>
-              <CTableRow>
-                <CTableHeaderCell>id</CTableHeaderCell>
-                <CTableHeaderCell>description</CTableHeaderCell>
-                <CTableHeaderCell>color</CTableHeaderCell>
-                <CTableHeaderCell>actions</CTableHeaderCell>
-              </CTableRow>
-            </CTableHead>
-            <CTableBody>
-              {paths.map((path) => (
-                <CTableRow key={path.id}>
-                  <CTableDataCell>{path.id}</CTableDataCell>
-                  <CTableDataCell>{path.description}</CTableDataCell>
-                  <CTableDataCell>{path.color}</CTableDataCell>
-                  <CTableDataCell>
-                    <CButton color="info" onClick={() => setCurrentPath(path)}>Edit</CButton>
-                    <CButton color="danger" onClick={() => setCurrentPath(path.id)}>Delete</CButton>
-                  </CTableDataCell>
-                </CTableRow>
-              ))}
-            </CTableBody>
-          </CTable>
-        </CCardBody>
-      </CCard>
+      <DataTable 
+        title="gNBs"
+        data={gnbs}
+        columns={gNBColumns}
+        onAdd={() => handleAdd('GNB')}
+        onEdit={entity => handleEdit('GNB', entity)}
+        onDelete={entity => handleDelete('GNB', entity)}
+      />
+      <DataTable 
+        title="Cells"
+        data={cells}
+        columns={cellColumns}
+        onAdd={() => handleAdd('Cell')}
+        onEdit={entity => handleEdit('Cell', entity)}
+        onDelete={entity => handleDelete('Cell', entity)}
+      />
+      <DataTable 
+        title="UEs"
+        data={ues}
+        columns={ueColumns}
+        onAdd={() => handleAdd('UE')}
+        onEdit={entity => handleEdit('UE', entity)}
+        onDelete={entity => handleDelete('UE', entity)}
+      />
+      <DataTable 
+        title="Paths"
+        data={paths}
+        columns={pathColumns}
+        onAdd={() => handleAdd('Path')}
+        onEdit={entity => handleEdit('Path', entity)}
+        onDelete={entity => handleDelete('Path', entity)}
+      />
 
       <GNBFormModal
         visible={showGNBModal}
         handleClose={() => setShowGNBModal(false)}
-        handleSubmit={handleGNBSubmit}
-        initialData={currentGNB}
+        handleSubmit={handleSubmit}
+        initialData={currentEntity}
       />
 
       <CellFormModal
         visible={showCellModal}
         handleClose={() => setShowCellModal(false)}
-        handleSubmit={handleGNBSubmit}
-        initialData={currentCell}
+        handleSubmit={handleSubmit}
+        initialData={currentEntity}
       />
 
       <UEFormModal
         visible={showUEModal}
         handleClose={() => setShowUEModal(false)}
-        handleSubmit={handleGNBSubmit}
-        initialData={currentUE}
+        handleSubmit={handleSubmit}
+        initialData={currentEntity}
       />
 
       <PathFormModal
         visible={showPathModal}
         handleClose={() => setShowPathModal(false)}
-        handleSubmit={handleGNBSubmit}
-        initialData={currentPath}
+        handleSubmit={handleSubmit}
+        initialData={currentEntity}
       />
 
       <DeleteConfirmationModal
         visible={showDeleteModal}
         handleClose={() => setShowDeleteModal(false)}
-        handleDelete={confirmDeleteGNB}
+        handleDelete={confirmDelete}
       />
     </>
   );
 };
+
+const DataTable = ({ title, data, columns, onAdd, onEdit, onDelete }) => (
+  <CCard>
+    <CCardHeader>
+      <CCardTitle>
+        {title}
+        <CButton color="success" className="float-right" onClick={onAdd}>+</CButton>
+      </CCardTitle>
+    </CCardHeader>
+    <CCardBody>
+      <CTable hover>
+        <CTableHead>
+          <CTableRow>
+            {columns.map((col, index) => (
+              <CTableHeaderCell key={index}>{col.header}</CTableHeaderCell>
+            ))}
+            <CTableHeaderCell>actions</CTableHeaderCell>
+          </CTableRow>
+        </CTableHead>
+        <CTableBody>
+          {data.map((item) => (
+            <CTableRow key={item.id}>
+              {columns.map((col, index) => (
+                <CTableDataCell key={index}>{col.accessor(item)}</CTableDataCell>
+              ))}
+              <CTableDataCell>
+                <CButton color="info" onClick={() => onEdit(item)}>Edit</CButton>
+                <CButton color="danger" onClick={() => onDelete(item)}>Delete</CButton>
+              </CTableDataCell>
+            </CTableRow>
+          ))}
+        </CTableBody>
+      </CTable>
+    </CCardBody>
+  </CCard>
+);
 
 export default Dashboard;
