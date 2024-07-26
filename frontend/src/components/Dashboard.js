@@ -4,9 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { getGNBs, getCells, getUEs, getPaths, addGNB, editGNB, deleteGNB } from '../utils/api';
 import {
   CCard, CCardHeader, CCardBody, CTable, CTableHead, CTableRow, CTableHeaderCell,
-  CTableBody, CTableDataCell, CButton, CCardTitle, CRow, CCol
+  CTableBody, CTableDataCell, CButton, CCardTitle
 } from '@coreui/react';
 import GNBFormModal from './GNBFormModal';
+import CellFormModal from './CellFormModal';
+import UEFormModal from './UEFormModal';
+import PathFormModal from './PathFormModal';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 const Dashboard = ({ token }) => {
@@ -14,9 +17,18 @@ const Dashboard = ({ token }) => {
   const [cells, setCells] = useState([]);
   const [ues, setUEs] = useState([]);
   const [paths, setPaths] = useState([]);
+
   const [showGNBModal, setShowGNBModal] = useState(false);
+  const [showCellModal, setShowCellModal] = useState(false);
+  const [showUEModal, setShowUEModal] = useState(false);
+  const [showPathModal, setShowPathModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
   const [currentGNB, setCurrentGNB] = useState(null);
+  const [currentCell, setCurrentCell] = useState(null);
+  const [currentUE, setCurrentUE] = useState(null);
+  const [currentPath, setCurrentPath] = useState(null);
+
   const [gnbToDelete, setGNBToDelete] = useState(null);
 
   useEffect(() => {
@@ -80,41 +92,6 @@ const Dashboard = ({ token }) => {
 
   return (
     <>
-      <CRow className="mb-4">
-        <CCol sm="3">
-          <CCard>
-            <CCardBody>
-              <CCardTitle>gNBs</CCardTitle>
-              <h4>{gnbs.length}</h4>
-            </CCardBody>
-          </CCard>
-        </CCol>
-        <CCol sm="3">
-          <CCard>
-            <CCardBody>
-              <CCardTitle>Cells</CCardTitle>
-              <h4>{cells.length}</h4>
-            </CCardBody>
-          </CCard>
-        </CCol>
-        <CCol sm="3">
-          <CCard>
-            <CCardBody>
-              <CCardTitle>UEs</CCardTitle>
-              <h4>{ues.length}</h4>
-            </CCardBody>
-          </CCard>
-        </CCol>
-        <CCol sm="3">
-          <CCard>
-            <CCardBody>
-              <CCardTitle>Paths</CCardTitle>
-              <h4>{paths.length}</h4>
-            </CCardBody>
-          </CCard>
-        </CCol>
-      </CRow>
-
       <CCard>
         <CCardHeader>
           <CCardTitle>
@@ -153,11 +130,137 @@ const Dashboard = ({ token }) => {
         </CCardBody>
       </CCard>
 
+      <CCard>
+        <CCardHeader>
+          <CCardTitle>Cells</CCardTitle>
+        </CCardHeader>
+        <CCardBody>
+          <CTable hover>
+            <CTableHead>
+              <CTableRow>
+                <CTableHeaderCell>id</CTableHeaderCell>
+                <CTableHeaderCell>cell_id</CTableHeaderCell>
+                <CTableHeaderCell>name</CTableHeaderCell>
+                <CTableHeaderCell>description</CTableHeaderCell>
+                <CTableHeaderCell>gnb</CTableHeaderCell>
+                <CTableHeaderCell>actions</CTableHeaderCell>
+              </CTableRow>
+            </CTableHead>
+            <CTableBody>
+              {cells.map((cell) => (
+                <CTableRow key={cell.id}>
+                  <CTableDataCell>{cell.id}</CTableDataCell>
+                  <CTableDataCell>{cell.cell_id}</CTableDataCell>
+                  <CTableDataCell>{cell.name}</CTableDataCell>
+                  <CTableDataCell>{cell.description}</CTableDataCell>
+                  <CTableDataCell>{cell.gnb}</CTableDataCell>
+                  <CTableDataCell>
+                    <CButton color="info" onClick={() => setCurrentCell(cell)}>Edit</CButton>
+                    <CButton color="danger" onClick={() => setCurrentCell(cell.id)}>Delete</CButton>
+                  </CTableDataCell>
+                </CTableRow>
+              ))}
+            </CTableBody>
+          </CTable>
+        </CCardBody>
+      </CCard>
+
+      <CCard>
+        <CCardHeader>
+          <CCardTitle>UEs</CCardTitle>
+        </CCardHeader>
+        <CCardBody>
+          <CTable hover>
+            <CTableHead>
+              <CTableRow>
+                <CTableHeaderCell>supi</CTableHeaderCell>
+                <CTableHeaderCell>name</CTableHeaderCell>
+                <CTableHeaderCell>ext.identifier</CTableHeaderCell>
+                <CTableHeaderCell>Cell_id</CTableHeaderCell>
+                <CTableHeaderCell>ip_address_v4</CTableHeaderCell>
+                <CTableHeaderCell>path_id</CTableHeaderCell>
+                <CTableHeaderCell>speed</CTableHeaderCell>
+                <CTableHeaderCell>actions</CTableHeaderCell>
+              </CTableRow>
+            </CTableHead>
+            <CTableBody>
+              {ues.map((ue) => (
+                <CTableRow key={ue.supi}>
+                  <CTableDataCell>{ue.supi}</CTableDataCell>
+                  <CTableDataCell>{ue.name}</CTableDataCell>
+                  <CTableDataCell>{ue['ext.identifier']}</CTableDataCell>
+                  <CTableDataCell>{ue.cell_id}</CTableDataCell>
+                  <CTableDataCell>{ue.ip_address_v4}</CTableDataCell>
+                  <CTableDataCell>{ue.path_id}</CTableDataCell>
+                  <CTableDataCell>{ue.speed}</CTableDataCell>
+                  <CTableDataCell>
+                    <CButton color="info" onClick={() => setCurrentUE(ue)}>Edit</CButton>
+                    <CButton color="danger" onClick={() => setCurrentUE(ue.supi)}>Delete</CButton>
+                  </CTableDataCell>
+                </CTableRow>
+              ))}
+            </CTableBody>
+          </CTable>
+        </CCardBody>
+      </CCard>
+
+      <CCard>
+        <CCardHeader>
+          <CCardTitle>Paths</CCardTitle>
+        </CCardHeader>
+        <CCardBody>
+          <CTable hover>
+            <CTableHead>
+              <CTableRow>
+                <CTableHeaderCell>id</CTableHeaderCell>
+                <CTableHeaderCell>description</CTableHeaderCell>
+                <CTableHeaderCell>color</CTableHeaderCell>
+                <CTableHeaderCell>actions</CTableHeaderCell>
+              </CTableRow>
+            </CTableHead>
+            <CTableBody>
+              {paths.map((path) => (
+                <CTableRow key={path.id}>
+                  <CTableDataCell>{path.id}</CTableDataCell>
+                  <CTableDataCell>{path.description}</CTableDataCell>
+                  <CTableDataCell>{path.color}</CTableDataCell>
+                  <CTableDataCell>
+                    <CButton color="info" onClick={() => setCurrentPath(path)}>Edit</CButton>
+                    <CButton color="danger" onClick={() => setCurrentPath(path.id)}>Delete</CButton>
+                  </CTableDataCell>
+                </CTableRow>
+              ))}
+            </CTableBody>
+          </CTable>
+        </CCardBody>
+      </CCard>
+
       <GNBFormModal
         visible={showGNBModal}
         handleClose={() => setShowGNBModal(false)}
         handleSubmit={handleGNBSubmit}
         initialData={currentGNB}
+      />
+
+      <CellFormModal
+        visible={showCellModal}
+        handleClose={() => setShowCellModal(false)}
+        handleSubmit={handleGNBSubmit}
+        initialData={currentCell}
+      />
+
+      <UEFormModal
+        visible={showUEModal}
+        handleClose={() => setShowUEModal(false)}
+        handleSubmit={handleGNBSubmit}
+        initialData={currentUE}
+      />
+
+      <PathFormModal
+        visible={showPathModal}
+        handleClose={() => setShowPathModal(false)}
+        handleSubmit={handleGNBSubmit}
+        initialData={currentPath}
       />
 
       <DeleteConfirmationModal
