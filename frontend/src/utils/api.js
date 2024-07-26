@@ -2,10 +2,10 @@ import axios from 'axios';
 
 const BASE_URL = 'http://localhost:8888/api/v1';
 
-// token for authenticating api calls
+// token for authenticating API calls
 export const getToken = async (username, password) => {
   try {
-    const response = await fetch(`${BASE_URL}/login/access-token`, { // Concatenate base URL with endpoint
+    const response = await fetch(`${BASE_URL}/login/access-token`, {
       method: 'POST',
       headers: {
         'accept': 'application/json',
@@ -26,7 +26,7 @@ export const getToken = async (username, password) => {
 
 //========================================== GNBS ===========================================
 
-// get gNBs
+// Get gNBs
 export const getGNBs = async (token) => {
   try {
     const response = await axios.get(`${BASE_URL}/gNBs?skip=0&limit=100`, {
@@ -41,10 +41,10 @@ export const getGNBs = async (token) => {
   }
 };
 
-// add new gNBs
-export const addGNB = async (token) => {
+// Add new gNB
+export const addGNB = async (token, gnb) => {
   try {
-    const response = await axios.post(`${BASE_URL}/gNBs`, {
+    const response = await axios.post(`${BASE_URL}/gNBs`, gnb, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -56,10 +56,10 @@ export const addGNB = async (token) => {
   }
 };
 
-// update gNBs
+// Edit gNB
 export const editGNB = async (token, gnb) => {
   try {
-    const response = await axios.put(`${BASE_URL}/gNBs/${gnb.id}`, {
+    const response = await axios.put(`${BASE_URL}/gNBs/${gnb.gNB_id}`, gnb, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -71,7 +71,7 @@ export const editGNB = async (token, gnb) => {
   }
 };
 
-//delete gNBs
+// Delete gNB
 export const deleteGNB = async (token, gnbId) => {
   try {
     await axios.delete(`${BASE_URL}/gNBs/${gnbId}`, {
@@ -85,7 +85,9 @@ export const deleteGNB = async (token, gnbId) => {
   }
 };
 
-// get cells
+//========================================== CELLS ===========================================
+
+// Get Cells
 export const getCells = async (token) => {
   try {
     const response = await axios.get(`${BASE_URL}/Cells?skip=0&limit=100`, {
@@ -100,7 +102,53 @@ export const getCells = async (token) => {
   }
 };
 
-// get ues
+// Add new Cell
+export const addCell = async (token, cell) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/Cells`, cell, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error adding Cell:', error);
+    throw error;
+  }
+};
+
+// Edit Cell
+export const editCell = async (token, cell) => {
+  try {
+    const response = await axios.put(`${BASE_URL}/Cells/${cell.id}`, cell, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error editing Cell:', error);
+    throw error;
+  }
+};
+
+// Delete Cell
+export const deleteCell = async (token, cellId) => {
+  try {
+    await axios.delete(`${BASE_URL}/Cells/${cellId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  } catch (error) {
+    console.error('Error deleting Cell:', error);
+    throw error;
+  }
+};
+
+//========================================== UES ===========================================
+
+// Get UEs
 export const getUEs = async (token) => {
   try {
     const response = await axios.get(`${BASE_URL}/UEs?skip=0&limit=100`, {
@@ -115,7 +163,53 @@ export const getUEs = async (token) => {
   }
 };
 
-// get paths
+// Add new UE
+export const addUE = async (token, ue) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/UEs`, ue, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error adding UE:', error);
+    throw error;
+  }
+};
+
+// Edit UE
+export const editUE = async (token, ue) => {
+  try {
+    const response = await axios.put(`${BASE_URL}/UEs/${ue.supi}`, ue, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error editing UE:', error);
+    throw error;
+  }
+};
+
+// Delete UE
+export const deleteUE = async (token, ueSupi) => {
+  try {
+    await axios.delete(`${BASE_URL}/UEs/${ueSupi}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  } catch (error) {
+    console.error('Error deleting UE:', error);
+    throw error;
+  }
+};
+
+//========================================== PATHS ===========================================
+
+// Get Paths
 export const getPaths = async (token) => {
   try {
     const response = await axios.get(`${BASE_URL}/paths?skip=0&limit=100`, {
@@ -126,6 +220,50 @@ export const getPaths = async (token) => {
     return response.data;
   } catch (error) {
     console.error('Error fetching paths:', error);
+    throw error;
+  }
+};
+
+// Add new Path
+export const addPath = async (token, path) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/paths`, path, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error adding Path:', error);
+    throw error;
+  }
+};
+
+// Edit Path
+export const editPath = async (token, path) => {
+  try {
+    const response = await axios.put(`${BASE_URL}/paths/${path.id}`, path, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error editing Path:', error);
+    throw error;
+  }
+};
+
+// Delete Path
+export const deletePath = async (token, pathId) => {
+  try {
+    await axios.delete(`${BASE_URL}/paths/${pathId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  } catch (error) {
+    console.error('Error deleting Path:', error);
     throw error;
   }
 };

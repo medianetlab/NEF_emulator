@@ -92,10 +92,32 @@ const Dashboard = ({ token }) => {
     }
   };
 
+
   const handleDelete = (type, entity) => {
-    setEntityToDelete({ type, id: entity.id });
+    let id;
+  
+    switch (type) {
+      case 'GNB':
+        id = entity.gNB_id;
+        break;
+      case 'Cell':
+        id = entity.cell_id;
+        break;
+      case 'UE':
+        id = entity.supi;
+        break;
+      case 'Path':
+        id = entity.id;
+        break;
+      default:
+        console.error('Invalid entity type');
+        return; 
+    }
+  
+    setEntityToDelete({ type, id });
     setShowDeleteModal(true);
   };
+
 
   const confirmDelete = async () => {
     try {
@@ -103,11 +125,11 @@ const Dashboard = ({ token }) => {
       switch(type) {
         case 'GNB':
           await deleteGNB(token, id);
-          setGnbs(gnbs.filter(gnb => gnb.id !== id));
+          setGnbs(gnbs.filter(gnb => gnb.gNB_id !== id));
           break;
         case 'Cell':
           await deleteCell(token, id);
-          setCells(cells.filter(cell => cell.id !== id));
+          setCells(cells.filter(cell => cell.cell_id !== id));
           break;
         case 'UE':
           await deleteUE(token, id);
