@@ -24,7 +24,7 @@ export const getToken = async (username, password) => {
   }
 };
 
-// GNBs
+//---------------------------------------------------------- GNBs-----------------
 export const getGNBs = async (token) => {
   try {
     const response = await axios.get(`${BASE_URL}/gNBs?skip=0&limit=100`, {
@@ -79,6 +79,8 @@ export const deleteGNB = async (token, gnbId) => {
     throw error;
   }
 };
+
+//-------------------------------------------------------------------------
 
 // Cells
 export const getCells = async (token) => {

@@ -1,9 +1,8 @@
-// src/components/DeleteConfirmationModal.js
 
 import React from 'react';
 import { CModal, CModalHeader, CModalBody, CModalFooter, CButton } from '@coreui/react';
 
-const DeleteConfirmationModal = ({ visible, handleClose, handleDelete }) => {
+const ConfirmDeleteModal = ({ visible, handleClose, handleDelete }) => {
   return (
     <CModal visible={visible} onClose={handleClose}>
       <CModalHeader closeButton>Confirm Delete</CModalHeader>
@@ -18,4 +17,4 @@ const DeleteConfirmationModal = ({ visible, handleClose, handleDelete }) => {
   );
 };
 
-export default DeleteConfirmationModal;
+export default ConfirmDeleteModal;

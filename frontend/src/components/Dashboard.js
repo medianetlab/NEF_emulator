@@ -3,13 +3,16 @@ import {
   CCard, CCardHeader, CCardBody, CTable, CTableHead, CTableRow, CTableHeaderCell,
   CTableBody, CTableDataCell, CButton, CCardTitle, CRow, CCol
 } from '@coreui/react';
-import GNBFormModal from './GNBFormModal';
+import AddGNBModal from './AddGNBModal';
+import EditGNBModal from './EditGNBModal';
 import CellFormModal from './CellFormModal';
 import UEFormModal from './UEFormModal';
 import PathFormModal from './PathFormModal';
-import DeleteConfirmationModal from './DeleteConfirmationModal';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 import {
-  fetchData, handleAdd, handleEdit, handleDelete, confirmDelete, handleSubmit
+  fetchData, handleAdd, handleEdit, handleDelete, confirmDelete, handleSubmit,
+  handleAddEntity,
+  handleEditEntity
 } from './DashboardUtils';
 
 const Dashboard = ({ token }) => {
@@ -18,7 +21,8 @@ const Dashboard = ({ token }) => {
   const [ues, setUEs] = useState([]);
   const [paths, setPaths] = useState([]);
 
-  const [showGNBModal, setShowGNBModal] = useState(false);
+  const [showAddGNBModal, setShowAddGNBModal] = useState(false);
+  const [showEditGNBModal, setShowEditGNBModal] = useState(false);
   const [showCellModal, setShowCellModal] = useState(false);
   const [showUEModal, setShowUEModal] = useState(false);
   const [showPathModal, setShowPathModal] = useState(false);
@@ -33,7 +37,8 @@ const Dashboard = ({ token }) => {
   }, [token]);
 
   const closeModals = () => {
-    setShowGNBModal(false);
+    setShowAddGNBModal(false);
+    setShowEditGNBModal(false);
     setShowCellModal(false);
     setShowUEModal(false);
     setShowPathModal(false);
@@ -122,39 +127,45 @@ const Dashboard = ({ token }) => {
         title="gNBs"
         data={gnbs}
         columns={gNBColumns}
-        onAdd={() => handleAdd('GNB', setCurrentEntity, setEntityType, setShowGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
-        onEdit={entity => handleEdit('GNB', entity, setCurrentEntity, setEntityType, setShowGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
+        onAdd={() => handleAdd('GNB', setCurrentEntity, setEntityType, setShowAddGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
+        onEdit={entity => handleEdit('GNB', entity, setCurrentEntity, setEntityType, setShowEditGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
         onDelete={entity => handleDelete('GNB', entity, setEntityToDelete, setShowDeleteModal)}
       />
       <DataTable 
         title="Cells"
         data={cells}
         columns={cellColumns}
-        onAdd={() => handleAdd('Cell', setCurrentEntity, setEntityType, setShowGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
-        onEdit={entity => handleEdit('Cell', entity, setCurrentEntity, setEntityType, setShowGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
+        onAdd={() => handleAdd('Cell', setCurrentEntity, setEntityType, setShowAddGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
+        onEdit={entity => handleEdit('Cell', entity, setCurrentEntity, setEntityType, setShowEditGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
         onDelete={entity => handleDelete('Cell', entity, setEntityToDelete, setShowDeleteModal)}
       />
       <DataTable 
         title="UEs"
         data={ues}
         columns={ueColumns}
-        onAdd={() => handleAdd('UE', setCurrentEntity, setEntityType, setShowGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
-        onEdit={entity => handleEdit('UE', entity, setCurrentEntity, setEntityType, setShowGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
+        onAdd={() => handleAdd('UE', setCurrentEntity, setEntityType, setShowAddGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
+        onEdit={entity => handleEdit('UE', entity, setCurrentEntity, setEntityType, setShowEditGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
         onDelete={entity => handleDelete('UE', entity, setEntityToDelete, setShowDeleteModal)}
       />
       <DataTable 
         title="Paths"
         data={paths}
         columns={pathColumns}
-        onAdd={() => handleAdd('Path', setCurrentEntity, setEntityType, setShowGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
-        onEdit={entity => handleEdit('Path', entity, setCurrentEntity, setEntityType, setShowGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
+        onAdd={() => handleAdd('Path', setCurrentEntity, setEntityType, setShowAddGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
+        onEdit={entity => handleEdit('Path', entity, setCurrentEntity, setEntityType, setShowEditGNBModal, setShowCellModal, setShowUEModal, setShowPathModal)}
         onDelete={entity => handleDelete('Path', entity, setEntityToDelete, setShowDeleteModal)}
       />
 
-      <GNBFormModal
-        visible={showGNBModal}
-        handleClose={() => setShowGNBModal(false)}
-        handleSubmit={entity => handleSubmit(entity, 'GNB', token, setGnbs, setCells, setUEs, setPaths, closeModals)}
+      <AddGNBModal
+        visible={showAddGNBModal}
+        handleClose={() => setShowAddGNBModal(false)}
+        handleSubmit={entity => handleAddEntity(entity, 'GNB', token, setGnbs, setCells, setUEs, setPaths, closeModals)}
+      />
+
+      <EditGNBModal
+        visible={showEditGNBModal}
+        handleClose={() => setShowEditGNBModal(false)}
+        handleSubmit={entity => handleEditEntity(entity, 'GNB', token, setGnbs, setCells, setUEs, setPaths, closeModals)}
         initialData={currentEntity}
       />
 
@@ -179,11 +190,12 @@ const Dashboard = ({ token }) => {
         initialData={currentEntity}
       />
 
-      <DeleteConfirmationModal
+      <ConfirmDeleteModal
         visible={showDeleteModal}
         handleClose={() => setShowDeleteModal(false)}
         handleDelete={() => confirmDelete(token, entityToDelete, setGnbs, setCells, setUEs, setPaths, setShowDeleteModal)}
       />
+
     </>
   );
 };
