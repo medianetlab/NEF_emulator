@@ -132,6 +132,7 @@ export const handleAddEntity = async (entity, entityType, token, setGnbs, setCel
         break;
       case 'Cell':
         //delete data.cell_id;
+        console.log(data);
         const newCell = await addCell(token, data);
         setCells(prevCells => [...prevCells, newCell]);
         break;

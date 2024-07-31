@@ -4,32 +4,22 @@ import {
   CForm, CFormInput, CFormTextarea
 } from '@coreui/react';
 
-const CellFormModal = ({ visible, handleClose, handleSubmit, initialData }) => {
+const EditPathModal = ({ visible, handleClose, handleSubmit, initialData }) => {
   const [formData, setFormData] = useState({
     id: '',
-    cell_id: '',
-    name: '',
     description: '',
-    gnb: ''
+    color: ''
   });
 
   useEffect(() => {
     if (initialData) {
       setFormData(initialData);
-    } else {
-      setFormData({
-        id: '',
-        cell_id: '',
-        name: '',
-        description: '',
-        gnb: ''
-      });
     }
-  }, [initialData]);
+  }, [initialData, visible]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleFormSubmit = () => {
@@ -38,22 +28,16 @@ const CellFormModal = ({ visible, handleClose, handleSubmit, initialData }) => {
 
   return (
     <CModal visible={visible} onClose={handleClose}>
-      <CModalHeader closeButton>{formData.id ? 'Edit Cell' : 'Add Cell'}</CModalHeader>
+      <CModalHeader closeButton>Edit Path</CModalHeader>
       <CModalBody>
         <CForm>
           <CFormInput
-            id="cell_id"
-            name="cell_id"
-            label="Cell ID"
-            value={formData.cell_id}
+            id="id"
+            name="id"
+            label="ID"
+            value={formData.id}
             onChange={handleChange}
-          />
-          <CFormInput
-            id="name"
-            name="name"
-            label="Name"
-            value={formData.name}
-            onChange={handleChange}
+            disabled
           />
           <CFormTextarea
             id="description"
@@ -63,10 +47,10 @@ const CellFormModal = ({ visible, handleClose, handleSubmit, initialData }) => {
             onChange={handleChange}
           />
           <CFormInput
-            id="gnb"
-            name="gnb"
-            label="gNB"
-            value={formData.gnb}
+            id="color"
+            name="color"
+            label="Color"
+            value={formData.color}
             onChange={handleChange}
           />
         </CForm>
@@ -79,4 +63,4 @@ const CellFormModal = ({ visible, handleClose, handleSubmit, initialData }) => {
   );
 };
 
-export default CellFormModal;
+export default EditPathModal;

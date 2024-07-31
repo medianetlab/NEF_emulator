@@ -4,7 +4,7 @@ import {
   CForm, CFormInput
 } from '@coreui/react';
 
-const UEFormModal = ({ visible, handleClose, handleSubmit, initialData }) => {
+const AddUEModal = ({ visible, handleClose, handleSubmit }) => {
   const [formData, setFormData] = useState({
     supi: '',
     name: '',
@@ -16,24 +16,20 @@ const UEFormModal = ({ visible, handleClose, handleSubmit, initialData }) => {
   });
 
   useEffect(() => {
-    if (initialData) {
-      setFormData(initialData);
-    } else {
-      setFormData({
-        supi: '',
-        name: '',
-        ext_identifier: '',
-        cell_id: '',
-        ip_address_v4: '',
-        path_id: '',
-        speed: ''
-      });
-    }
-  }, [initialData]);
+    setFormData({
+      supi: '',
+      name: '',
+      ext_identifier: '',
+      cell_id: '',
+      ip_address_v4: '',
+      path_id: '',
+      speed: ''
+    });
+  }, [visible]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleFormSubmit = () => {
@@ -42,7 +38,7 @@ const UEFormModal = ({ visible, handleClose, handleSubmit, initialData }) => {
 
   return (
     <CModal visible={visible} onClose={handleClose}>
-      <CModalHeader closeButton>{formData.supi ? 'Edit UE' : 'Add UE'}</CModalHeader>
+      <CModalHeader closeButton>Add UE</CModalHeader>
       <CModalBody>
         <CForm>
           <CFormInput
@@ -62,7 +58,7 @@ const UEFormModal = ({ visible, handleClose, handleSubmit, initialData }) => {
           <CFormInput
             id="ext_identifier"
             name="ext_identifier"
-            label="Ext. Identifier"
+            label="External Identifier"
             value={formData.ext_identifier}
             onChange={handleChange}
           />
@@ -76,7 +72,7 @@ const UEFormModal = ({ visible, handleClose, handleSubmit, initialData }) => {
           <CFormInput
             id="ip_address_v4"
             name="ip_address_v4"
-            label="IP Address v4"
+            label="IP Address (v4)"
             value={formData.ip_address_v4}
             onChange={handleChange}
           />
@@ -104,4 +100,4 @@ const UEFormModal = ({ visible, handleClose, handleSubmit, initialData }) => {
   );
 };
 
-export default UEFormModal;
+export default AddUEModal;

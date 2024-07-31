@@ -1,31 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import {
   CModal, CModalHeader, CModalBody, CModalFooter, CButton,
-  CForm, CFormInput
+  CForm, CFormInput, CFormTextarea
 } from '@coreui/react';
 
-const PathFormModal = ({ visible, handleClose, handleSubmit, initialData }) => {
+const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
   const [formData, setFormData] = useState({
-    id: '',
     description: '',
     color: ''
   });
 
   useEffect(() => {
-    if (initialData) {
-      setFormData(initialData);
-    } else {
-      setFormData({
-        id: '',
-        description: '',
-        color: ''
-      });
-    }
-  }, [initialData]);
+    setFormData({
+      description: '',
+      color: ''
+    });
+  }, [visible]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleFormSubmit = () => {
@@ -34,10 +28,10 @@ const PathFormModal = ({ visible, handleClose, handleSubmit, initialData }) => {
 
   return (
     <CModal visible={visible} onClose={handleClose}>
-      <CModalHeader closeButton>{formData.id ? 'Edit Path' : 'Add Path'}</CModalHeader>
+      <CModalHeader closeButton>Add Path</CModalHeader>
       <CModalBody>
         <CForm>
-          <CFormInput
+          <CFormTextarea
             id="description"
             name="description"
             label="Description"
@@ -61,4 +55,4 @@ const PathFormModal = ({ visible, handleClose, handleSubmit, initialData }) => {
   );
 };
 
-export default PathFormModal;
+export default AddPathModal;
