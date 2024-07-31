@@ -84,7 +84,7 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, cellData }) 
             label="Cell ID"
             value={formData.cell_id}
             onChange={handleChange}
-            disabled // Disable
+           // disabled // Disable
           />
           <CFormInput
             id="name"

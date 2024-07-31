@@ -146,7 +146,7 @@ const Dashboard = ({ token }) => {
         onEdit={entity => handleEdit('Cell', entity, setCurrentEntity, setEntityType, setShowEditGNBModal, setShowEditCellModal, setShowEditUEModal, setShowEditPathModal)}
         onDelete={entity => handleDelete('Cell', entity, setEntityToDelete, setShowDeleteModal)}
       />
-      <DataTable 
+      <DataTable
         title="UEs"
         data={ues}
         columns={ueColumns}
