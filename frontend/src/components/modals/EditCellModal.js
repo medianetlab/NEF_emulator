@@ -38,17 +38,18 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, cellData }) 
     }
   }, [visible, token]);
 
+  
   // Pre-fill form data when modal opens and cellData is provided
   useEffect(() => {
     if (visible && cellData) {
       setFormData({
-        cell_id: cellData.cell_id,
-        name: cellData.name,
-        description: cellData.description,
+        cell_id: cellData.cell_id || '',
+        name: cellData.name || '',
+        description: cellData.description || '',
         gNB_id: cellData.gNB_id || '',
-        latitude: cellData.latitude,
-        longitude: cellData.longitude,
-        radius: cellData.radius
+        latitude: cellData.latitude || 0,
+        longitude: cellData.longitude || 0,
+        radius: cellData.radius || ''
       });
     }
   }, [visible, cellData]);
@@ -66,7 +67,7 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, cellData }) 
     const dataToSubmit = {
       ...formData,
       radius: parseFloat(formData.radius), // Convert radius to number
-      gNB_id: parseFloat(formData.gNB_id) // Ensure gNB_id is in correct format
+      gNB_id: parseFloat(formData.gNB_id) // Convert gNB_id to number to remove any quotes
     };
 
     handleSubmit(dataToSubmit);
@@ -83,7 +84,7 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, cellData }) 
             label="Cell ID"
             value={formData.cell_id}
             onChange={handleChange}
-            //disabled
+            disabled // Disable
           />
           <CFormInput
             id="name"
@@ -165,4 +166,3 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, cellData }) 
 };
 
 export default EditCellModal;
-

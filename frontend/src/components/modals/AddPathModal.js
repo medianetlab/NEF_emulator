@@ -4,7 +4,7 @@ import {
   CForm, CFormInput, CFormTextarea
 } from '@coreui/react';
 
-const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
+const AddPathModal = ({ visible, handleClose, handleSubmit}) => {
   const [formData, setFormData] = useState({
     description: '',
     color: ''

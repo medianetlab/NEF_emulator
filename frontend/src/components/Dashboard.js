@@ -167,6 +167,7 @@ const Dashboard = ({ token }) => {
         visible={showAddGNBModal}
         handleClose={() => setShowAddGNBModal(false)}
         handleSubmit={entity => handleAddEntity(entity, 'GNB', token, setGnbs, setCells, setUEs, setPaths, closeModals)}
+        token={token}
       />
 
       <EditGNBModal
@@ -174,6 +175,7 @@ const Dashboard = ({ token }) => {
         handleClose={() => setShowEditGNBModal(false)}
         handleSubmit={entity => handleEditEntity(entity, 'GNB', token, setGnbs, setCells, setUEs, setPaths, closeModals)}
         initialData={currentEntity}
+        token={token}
       />
 
       <AddCellModal
@@ -195,6 +197,7 @@ const Dashboard = ({ token }) => {
         visible={showAddUEModal}
         handleClose={() => setShowAddUEModal(false)}
         handleSubmit={entity => handleAddEntity(entity, 'UE', token, setGnbs, setCells, setUEs, setPaths, closeModals)}
+        token={token}
       />
 
       <EditUEsModal
@@ -202,12 +205,14 @@ const Dashboard = ({ token }) => {
         handleClose={() => setShowEditUEModal(false)}
         handleSubmit={entity => handleEditEntity(entity, 'UE', token, setGnbs, setCells, setUEs, setPaths, closeModals)}
         initialData={currentEntity}
+        token={token}
       />
 
       <AddPathModal
         visible={showAddPathModal}
         handleClose={() => setShowAddPathModal(false)}
         handleSubmit={entity => handleAddEntity(entity, 'Path', token, setGnbs, setCells, setUEs, setPaths, closeModals)}
+        token={token}
       />
 
       <EditPathModal
@@ -215,6 +220,7 @@ const Dashboard = ({ token }) => {
         handleClose={() => setShowEditPathModal(false)}
         handleSubmit={entity => handleEditEntity(entity, 'Path', token, setGnbs, setCells, setUEs, setPaths, closeModals)}
         initialData={currentEntity}
+        token={token}
       />
 
       <ConfirmDeleteModal
