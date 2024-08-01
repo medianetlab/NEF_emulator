@@ -24,7 +24,6 @@ export const getToken = async (username, password) => {
   }
 };
 
-
 export const getGNBs = async (token) => {
   try {
     const response = await axios.get(`${BASE_URL}/gNBs?skip=0&limit=100`, {

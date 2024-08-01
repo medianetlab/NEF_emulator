@@ -4,7 +4,7 @@ import {
   CForm, CFormInput, CFormTextarea, CFormSelect
 } from '@coreui/react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
-import { getGNBs } from '../../utils/api';  // Import the renamed function
+import { getGNBs } from '../../utils/api'; 
 
 // Custom hook to handle map click events
 const MapClickHandler = ({ setLatLng }) => {

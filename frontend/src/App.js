@@ -15,7 +15,7 @@ import {
 import Dashboard from './components/Dashboard';
 import MapView from './components/MapView';
 import { getToken } from './utils/api';
-import './App.css'; // Import the CSS file
+import './App.css';
 
 const App = () => {
   const [token, setToken] = useState('');
