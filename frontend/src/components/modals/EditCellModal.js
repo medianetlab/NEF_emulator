@@ -4,14 +4,13 @@ import {
   CForm, CFormInput, CFormTextarea, CFormSelect
 } from '@coreui/react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
-import { getGNBs } from '../../utils/api';  // Import the renamed function
+import { getGNBs } from '../../utils/api';
 
-// Custom hook to handle map click events
 const MapClickHandler = ({ setLatLng }) => {
   useMapEvents({
     click(event) {
-      const { lat, lng } = event.latlng;  // Use lat and lng
-      setLatLng({ latitude: lat, longitude: lng });  // Map lat to latitude and lng to longitude
+      const { lat, lng } = event.latlng;
+      setLatLng({ latitude: lat, longitude: lng });
     }
   });
   return null;
@@ -27,21 +26,21 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, cellData }) 
     longitude: 0,
     radius: ''
   });
+
   const [gnbs, setGnbs] = useState([]);
 
   // Fetch gNBs when modal is visible
   useEffect(() => {
     if (visible) {
-      getGNBs(token)  // Use getGnbs to fetch gNBs
+      getGNBs(token)
         .then(setGnbs)
         .catch(err => console.error("Failed to fetch gNBs", err));
     }
   }, [visible, token]);
 
-  
-  // Pre-fill form data when modal opens and cellData is provided
+  // Pre-fill form data when modal opens
   useEffect(() => {
-    if (visible && cellData) {
+    if (cellData && visible) {
       setFormData({
         cell_id: cellData.cell_id || '',
         name: cellData.name || '',
@@ -66,8 +65,8 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, cellData }) 
   const handleFormSubmit = () => {
     const dataToSubmit = {
       ...formData,
-      radius: parseFloat(formData.radius), // Convert radius to number
-      gNB_id: parseFloat(formData.gNB_id) // Convert gNB_id to number to remove any quotes
+      radius: parseFloat(formData.radius),
+      gNB_id: parseFloat(formData.gNB_id)
     };
 
     handleSubmit(dataToSubmit);
@@ -84,7 +83,7 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, cellData }) 
             label="Cell ID"
             value={formData.cell_id}
             onChange={handleChange}
-           // disabled // Disable
+            disabled // Disable editing for Cell ID
           />
           <CFormInput
             id="name"

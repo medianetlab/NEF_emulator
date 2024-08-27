@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import {
-  CModal, CModalHeader, CModalBody, CModalFooter, CButton,
-  CForm, CFormInput
-} from '@coreui/react';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { CModal, CModalHeader, CModalBody, CModalFooter, CButton, CForm, CFormInput } from '@coreui/react';
+import 'leaflet/dist/leaflet.css';
+
+const MapClickHandler = ({ setPosition }) => {
+  useMapEvents({
+    click(e) {
+      setPosition(e.latlng);
+    }
+  });
+
+  return null;
+};
 
 const EditUEModal = ({ visible, handleClose, handleSubmit, initialData }) => {
   const [formData, setFormData] = useState({
@@ -12,12 +21,17 @@ const EditUEModal = ({ visible, handleClose, handleSubmit, initialData }) => {
     cell_id: '',
     ip_address_v4: '',
     path_id: '',
-    speed: ''
+    speed: '',
+    position: { lat: 51.505, lng: -0.09 } // Default position
   });
 
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData);
+      setFormData(prev => ({
+        ...prev,
+        ...initialData,
+        position: initialData.position || { lat: 51.505, lng: -0.09 }
+      }));
     }
   }, [initialData, visible]);
 
@@ -28,6 +42,10 @@ const EditUEModal = ({ visible, handleClose, handleSubmit, initialData }) => {
 
   const handleFormSubmit = () => {
     handleSubmit(formData);
+  };
+
+  const setPosition = (latlng) => {
+    setFormData(prev => ({ ...prev, position: latlng }));
   };
 
   return (
@@ -85,6 +103,19 @@ const EditUEModal = ({ visible, handleClose, handleSubmit, initialData }) => {
             value={formData.speed}
             onChange={handleChange}
           />
+          <div className="mt-3">
+            <label className="form-label">Location</label>
+            <div style={{ height: '400px', width: '100%' }}>
+              <MapContainer center={formData.position} zoom={13} style={{ height: '100%', width: '100%' }}>
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                />
+                <MapClickHandler setPosition={setPosition} />
+                <Marker position={formData.position} />
+              </MapContainer>
+            </div>
+          </div>
         </CForm>
       </CModalBody>
       <CModalFooter>

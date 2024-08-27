@@ -1,29 +1,25 @@
-.app {
+/* App.css */
+.app-container {
   display: flex;
-  flex-direction: row;
 }
 
 .sidebar {
-  display: flex;
-  flex-direction: column;
-  width: 250px;
+  width: 250px; 
+  background-color: #f8f9fa; 
+  height: 100vh; 
+  position: fixed; 
+  top: 0;
+  left: 0;
+  z-index: 1000; 
+  transition: width 0.3s ease; 
 }
 
-.sidebar-logo {
-  max-width: 100%;
-  padding: 10px;
+.main-content {
+  /*margin-left: 250px; */
+  flex: 1;
+  transition: margin-left 0.3s ease;
 }
 
-.wrapper {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.c-header {
-  display: flex;
-  align-items: center;
-  padding: 1rem;
-  background-color: #ffffff;
-  border-bottom: 1px solid #dee2e6;
+.main-content.no-sidebar {
+  margin-left: 0; /* No offset if there was a sidebar to handle */
 }
