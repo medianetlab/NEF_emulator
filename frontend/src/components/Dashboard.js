@@ -54,35 +54,35 @@ const Dashboard = ({ token }) => {
   };
 
   const gNBColumns = [
-    { header: 'id', accessor: item => item.id },
-    { header: 'gNB_id', accessor: item => item.gNB_id },
-    { header: 'name', accessor: item => item.name },
-    { header: 'description', accessor: item => item.description },
-    { header: 'location', accessor: item => item.location }
+    { header: 'ID', accessor: item => item.id },
+    { header: 'gNB ID', accessor: item => item.gNB_id },
+    { header: 'Name', accessor: item => item.name },
+    { header: 'Description', accessor: item => item.description },
+    { header: 'Location', accessor: item => item.location }
   ];
 
   const cellColumns = [
-    { header: 'id', accessor: item => item.id },
-    { header: 'cell_id', accessor: item => item.cell_id },
-    { header: 'name', accessor: item => item.name },
-    { header: 'description', accessor: item => item.description },
-    { header: 'gnb', accessor: item => item.gnb }
+    { header: 'ID', accessor: item => item.id },
+    { header: 'Cell ID', accessor: item => item.cell_id },
+    { header: 'Name', accessor: item => item.name },
+    { header: 'Description', accessor: item => item.description },
+    { header: 'gNB', accessor: item => item.gnb }
   ];
 
   const ueColumns = [
-    { header: 'supi', accessor: item => item.supi },
-    { header: 'name', accessor: item => item.name },
-    { header: 'ext_identifier', accessor: item => item.ext_identifier },
-    { header: 'cell_id', accessor: item => item.cell_id },
-    { header: 'ip_address_v4', accessor: item => item.ip_address_v4 },
-    { header: 'path_id', accessor: item => item.path_id },
-    { header: 'speed', accessor: item => item.speed }
+    { header: 'SUPI', accessor: item => item.supi },
+    { header: 'Name', accessor: item => item.name },
+    { header: 'Ext Identifier', accessor: item => item.ext_identifier },
+    { header: 'Cell ID', accessor: item => item.cell_id },
+    { header: 'IP Address (v4)', accessor: item => item.ip_address_v4 },
+    { header: 'Path ID', accessor: item => item.path_id },
+    { header: 'Speed', accessor: item => item.speed }
   ];
 
   const pathColumns = [
-    { header: 'id', accessor: item => item.id },
-    { header: 'description', accessor: item => item.description },
-    { header: 'color', accessor: item => item.color }
+    { header: 'ID', accessor: item => item.id },
+    { header: 'Description', accessor: item => item.description },
+    { header: 'Color', accessor: item => item.color }
   ];
 
   return (
@@ -94,7 +94,9 @@ const Dashboard = ({ token }) => {
               <CCardTitle>gNBs</CCardTitle>
             </CCardHeader>
             <CCardBody>
-              <h2>{gnbs.length}</h2>
+              <CButton color="success" className="w-100 fs-3 d-flex justify-content-center align-items-center">
+                {gnbs.length}
+              </CButton>
             </CCardBody>
           </CCard>
         </CCol>
@@ -104,7 +106,9 @@ const Dashboard = ({ token }) => {
               <CCardTitle>Cells</CCardTitle>
             </CCardHeader>
             <CCardBody>
-              <h2>{cells.length}</h2>
+              <CButton color="info" className="w-100 fs-3 d-flex justify-content-center align-items-center">
+                {cells.length}
+              </CButton>
             </CCardBody>
           </CCard>
         </CCol>
@@ -114,7 +118,9 @@ const Dashboard = ({ token }) => {
               <CCardTitle>UEs</CCardTitle>
             </CCardHeader>
             <CCardBody>
-              <h2>{ues.length}</h2>
+              <CButton color="warning" className="w-100 fs-3 d-flex justify-content-center align-items-center">
+                {ues.length}
+              </CButton>
             </CCardBody>
           </CCard>
         </CCol>
@@ -124,7 +130,9 @@ const Dashboard = ({ token }) => {
               <CCardTitle>Paths</CCardTitle>
             </CCardHeader>
             <CCardBody>
-              <h2>{paths.length}</h2>
+              <CButton color="danger" className="w-100 fs-3 d-flex justify-content-center align-items-center">
+                {paths.length}
+              </CButton>
             </CCardBody>
           </CCard>
         </CCol>
@@ -228,17 +236,16 @@ const Dashboard = ({ token }) => {
         handleClose={() => setShowDeleteModal(false)}
         handleDelete={() => confirmDelete(token, entityToDelete, setGnbs, setCells, setUEs, setPaths, setShowDeleteModal)}
       />
-
     </>
   );
 };
 
 const DataTable = ({ title, data, columns, onAdd, onEdit, onDelete }) => (
-  <CCard>
+  <CCard className="mb-4">
     <CCardHeader>
       <CCardTitle>
         {title}
-        <CButton color="success" className="float-right" onClick={onAdd}>+</CButton>
+        <CButton color="primary" className="float-end" onClick={onAdd}>Add {title.slice(0, -1)}</CButton>
       </CCardTitle>
     </CCardHeader>
     <CCardBody>
@@ -259,7 +266,7 @@ const DataTable = ({ title, data, columns, onAdd, onEdit, onDelete }) => (
               ))}
               <CTableDataCell>
                 <CButton color="info" onClick={() => onEdit(item)}>Edit</CButton>
-                <CButton color="danger" onClick={() => onDelete(item)}>Delete</CButton>
+                <CButton color="danger" className="ms-2" onClick={() => onDelete(item)}>Delete</CButton>
               </CTableDataCell>
             </CTableRow>
           ))}

@@ -24,6 +24,38 @@ export const getToken = async (username, password) => {
   }
 };
 
+// scenario
+export const importScenario = async (data, token) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/utils/import/scenario`, data, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error importing scenario:', error);
+    throw error;
+  }
+};
+
+export const exportScenario = async (token) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/utils/export/scenario`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error exporting scenario:', error);
+    throw error;
+  }
+};
+
+
+// gnbs
 export const getGNBs = async (token) => {
   try {
     const response = await axios.get(`${BASE_URL}/gNBs?skip=0&limit=100`, {

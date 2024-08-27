@@ -1,25 +1,145 @@
 /* App.css */
 .app-container {
   display: flex;
+  height: 100vh;
 }
 
+/* Sidebar Styles */
 .sidebar {
-  width: 250px; 
-  background-color: #f8f9fa; 
-  height: 100vh; 
-  position: fixed; 
-  top: 0;
-  left: 0;
-  z-index: 1000; 
-  transition: width 0.3s ease; 
+  background-color: #2c3e50;  /* Dark Navy Blue */
+  color: #ecf0f1;  /* Light Gray */
+  width: 250px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
+.sidebar a {
+  color: #ecf0f1;
+  text-decoration: none;
+  display: block;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.sidebar a:hover {
+  background-color: #34495e;  /* Slightly darker blue-gray */
+}
+
+/* Top Bar Styles */
+.header {
+  background-color: #3498db;  /* Lighter Blue */
+  color: #fff;
+  padding: 15px;
+  font-size: 1.5em;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Main Content Area */
 .main-content {
-  /*margin-left: 250px; */
   flex: 1;
-  transition: margin-left 0.3s ease;
+  background-color: #ecf0f1;  /* Light Gray */
+  padding: 20px;
+  overflow-y: auto;
 }
 
-.main-content.no-sidebar {
-  margin-left: 0; /* No offset if there was a sidebar to handle */
+/* Button Styles */
+.button {
+  border-radius: 20px;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  font-size: 1em;
+}
+
+.button.edit {
+  background-color: #3498db;
+  color: #fff;
+}
+
+.button.delete {
+  background-color: #e74c3c;
+  color: #fff;
+}
+
+.button.add {
+  background-color: #27ae60;
+  color: #fff;
+}
+
+.button:hover {
+  opacity: 0.8;
+}
+
+/* Table and Card Styling */
+.table-container {
+  background-color: #fff;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table th,
+table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+/* Section Header Colors */
+.section-header.gNBs {
+  background-color: #8e44ad; /* Purple */
+  color: #fff;
+  padding: 10px;
+  border-radius: 10px 10px 0 0;
+}
+
+.section-header.Cells {
+  background-color: #2980b9; /* Blue */
+  color: #fff;
+  padding: 10px;
+  border-radius: 10px 10px 0 0;
+}
+
+.section-header.Ues {
+  background-color: #f39c12; /* Yellow */
+  color: #fff;
+  padding: 10px;
+  border-radius: 10px 10px 0 0;
+}
+
+.section-header.Paths {
+  background-color: #e74c3c; /* Red */
+  color: #fff;
+  padding: 10px;
+  border-radius: 10px 10px 0 0;
+}
+
+/* Profile Icon */
+.profile-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #bdc3c7;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
 }

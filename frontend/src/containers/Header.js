@@ -1,18 +1,15 @@
-import React from 'react';
-import { CHeader, CHeaderBrand, CHeaderToggler } from '@coreui/react';
-import { FaUserCircle } from 'react-icons/fa'; // Example import for the user icon
+// In Header Component
+import { CHeader, CHeaderBrand } from '@coreui/react';
+import { FaUserCircle } from 'react-icons/fa'; // Example using react-icons
 
 const Header = () => {
   return (
-    <CHeader>
+    <CHeader className="header">
       <CHeaderBrand href="/">NEF</CHeaderBrand>
-      <CHeaderToggler className="d-lg-none" />
-      <div className="ml-auto">
-        <FaUserCircle size={24} style={{ cursor: 'pointer' }} />
-        {/* Implement your profile and logout popup functionality here */}
+      <div className="profile-icon">
+        <FaUserCircle />
       </div>
     </CHeader>
   );
 };
-
 export default Header;
