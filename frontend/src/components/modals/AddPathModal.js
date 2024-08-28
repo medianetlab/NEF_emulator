@@ -78,7 +78,7 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
   };
 
   return (
-    <CModal visible={visible} onClose={handleClose}>
+    <CModal visible={visible} onClose={handleClose} size="lg">
       <CModalHeader closeButton>Add Path</CModalHeader>
       <CModalBody>
         <CForm>
@@ -124,13 +124,18 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
                 />
                 <MapClickHandler
                   setStart={(latlng) => {
-                    if (!formData.start || formData.end) {
-                      setFormData(prev => ({ ...prev, start: latlng, end: null }));
-                    } else {
-                      setFormData(prev => ({ ...prev, end: latlng }));
-                    }
+                    setFormData(prev => ({
+                      ...prev,
+                      start: latlng,
+                      end: prev.end && !prev.start ? null : prev.end
+                    }));
                   }}
-                  setEnd={(latlng) => setFormData(prev => ({ ...prev, end: latlng }))}
+                  setEnd={(latlng) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      end: latlng
+                    }));
+                  }}
                 />
                 {formData.start && <Marker position={[formData.start.lat, formData.start.lng]} />}
                 {formData.end && <Marker position={[formData.end.lat, formData.end.lng]} />}
@@ -150,4 +155,3 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
 };
 
 export default AddPathModal;
-

@@ -1,4 +1,4 @@
-/* App.css */
+/* App Container */
 .app-container {
   display: flex;
   height: 100vh;
@@ -13,8 +13,16 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  transition: width 0.3s ease, margin-left 0.3s ease; /* Smooth transition */
 }
 
+.sidebar-hidden {
+  width: 0; /* Hide the sidebar */
+  overflow: hidden; /* Prevent content overflow */
+  transition: width 0.3s ease, margin-left 0.3s ease; /* Smooth transition */
+}
+
+/* Sidebar Links */
 .sidebar a {
   color: #ecf0f1;
   text-decoration: none;
@@ -40,6 +48,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 50px;
 }
 
 /* Main Content Area */
@@ -48,6 +57,12 @@
   background-color: #ecf0f1;  /* Light Gray */
   padding: 20px;
   overflow-y: auto;
+  transition: margin-left 0.3s ease; /* Smooth transition */
+}
+
+/* Adjust margin for content when sidebar is hidden */
+.sidebar-hidden ~ .main-content {
+  margin-left: 0;
 }
 
 /* Button Styles */
@@ -142,4 +157,14 @@ table tr:nth-child(even) {
   justify-content: center;
   align-items: center;
   cursor: pointer;
+}
+
+.c-header {
+  padding-left: 20px; /* Ensure some padding around icons */
+  padding-right: 20px;
+}
+
+.c-header-nav {
+  display: flex;
+  align-items: center;
 }

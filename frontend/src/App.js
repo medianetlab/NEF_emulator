@@ -26,6 +26,7 @@ const App = () => {
   const [token, setToken] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sidebarVisible, setSidebarVisible] = useState(true);
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -42,6 +43,8 @@ const App = () => {
     fetchToken();
   }, []);
 
+
+  //-------------- functions ------------------
   const handleSwaggerClick = (url) => {
     window.open(url, '_blank');
   };
@@ -49,6 +52,12 @@ const App = () => {
   const handleRedocClick = (url) => {
     window.open(url, '_blank');
   };
+
+  const handleToggleSidebar = () => {
+    setSidebarVisible(!sidebarVisible);
+  };
+
+  //--------------------------------------------
 
   return (
     <Router>
@@ -73,7 +82,7 @@ const App = () => {
             <CNavItem>
               <CNavLink href="/export">Export</CNavLink>
             </CNavItem>
-            <CNavTitle>Docs</CNavTitle>
+            <CNavTitle>Documentation</CNavTitle>
             <CNavItem>
               <CDropdown>
                 <CDropdownToggle color="link">Swagger UI</CDropdownToggle>
@@ -103,8 +112,8 @@ const App = () => {
           </CSidebarNav>
         </CSidebar>
         <div className="main-content">
-          <Header />
-          <CContainer lg>
+          <Header onToggleSidebar={handleToggleSidebar}/>
+          <CContainer lg className="main-container">
             {loading ? (
               <p>Loading...</p>
             ) : error ? (
@@ -115,7 +124,6 @@ const App = () => {
                 <Route path="/map" element={<MapView token={token} />} />
                 <Route path="/import" element={<ImportView token={token}/>} />
                 <Route path="/export" element={<ExportView token={token}/>} />
-                {/* Add any additional routes here */}
               </Routes>
             )}
           </CContainer>

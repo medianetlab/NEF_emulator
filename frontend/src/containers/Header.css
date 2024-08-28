@@ -1,50 +1,32 @@
-/* Header.css */
+.app-container {
+  display: flex;
+}
 
-.header-brand {
-    display: flex;
-    align-items: center;
-    padding: 0 1rem;
-  }
-  
-  .header-logo img {
-    max-height: 50px; /* Adjust the height as needed */
-    width: auto;
-  }
-  
-  .header-profile {
-    display: flex;
-    align-items: center;
-    position: relative;
-  }
-  
-  .header-profile .fa-user-circle {
-    font-size: 24px;
-    cursor: pointer;
-  }
-  
-  .profile-menu {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
-    min-width: 150px;
-  }
-  
-  .profile-menu button {
-    display: block;
-    width: 100%;
-    padding: 8px 12px;
-    border: none;
-    background: none;
-    text-align: left;
-    cursor: pointer;
-  }
-  
-  .profile-menu button:hover {
-    background: #f1f1f1;
-  }
-  
+.sidebar {
+  width: 250px;
+  transition: width 0.3s;
+}
+
+.sidebar-hidden .sidebar {
+  width: 0;
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  transition: margin-left 0.3s;
+}
+
+.sidebar-hidden .main-content {
+  margin-left: 0;
+}
+
+.c-header {
+  padding-left: 20px; /* Ensure some padding around icons */
+  padding-right: 20px;
+}
+
+.c-header-nav {
+  display: flex;
+  align-items: center;
+}
