@@ -46,7 +46,7 @@ const AddUEModal = ({ visible, handleClose, handleSubmit, token }) => {
             // Initialize MapLibre map with a professional style
             mapInstanceRef.current = new maplibre.Map({
               container: mapRef.current,
-              style: 'https://api.maptiler.com/maps/streets/style.json?key=Nd327kRcLxwcfnt6D7Fy',
+              style: 'https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}',
               center: [23.7275, 37.9838],
               zoom: 12,
             });

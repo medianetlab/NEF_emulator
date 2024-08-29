@@ -49,9 +49,9 @@ const MapView = ({ token }) => {
     // Initialize MapLibre GL JS map
     const map = new maplibregl.Map({
       container: 'map', // Container ID
-      style: 'https://demotiles.maplibre.org/style.json', // Map style URL
+      style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`, // Map style URL
       center: [23.7275, 37.9838], // Map center [lng, lat]
-      zoom: 1 // Zoom level
+      zoom: 12 // Zoom level
     });
 
     // Add a marker
@@ -124,4 +124,3 @@ const MapView = ({ token }) => {
 };
 
 export default MapView;
-
