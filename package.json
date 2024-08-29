@@ -12,6 +12,7 @@
     "dotenv": "^16.4.5",
     "leaflet": "^1.9.4",
     "mapbox-gl": "^3.6.0",
+    "maplibre-gl": "^4.6.0",
     "prop-types": "^15.8.1",
     "react-bootstrap": "^2.10.2",
     "react-chartjs-2": "^5.2.0",

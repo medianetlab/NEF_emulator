@@ -12,6 +12,7 @@ import { getToken } from './utils/api';
 import './App.css';
 import Header from './containers/Header';
 import Sidebar from './containers/Sidebar';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 const App = () => {
   const [token, setToken] = useState('');

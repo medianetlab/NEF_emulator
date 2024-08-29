@@ -1,9 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { CCard, CCardBody, CCardHeader, CButton, CRow, CCol, CTable, CTableHead, CTableRow, CTableHeaderCell, CTableBody, CTableDataCell } from '@coreui/react';
-import 'leaflet/dist/leaflet.css';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import {
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CButton,
+  CRow,
+  CCol,
+  CTable,
+  CTableHead,
+  CTableRow,
+  CTableHeaderCell,
+  CTableBody,
+  CTableDataCell
+} from '@coreui/react';
+import maplibregl from 'maplibre-gl'; 
 import { getUEs } from '../../utils/api';
 import { handleStartAll, handleUEClick } from './MapViewUtils';
+import './MapView.css';
 
 const MapView = ({ token }) => {
   const [ues, setUEs] = useState([]);
@@ -19,7 +32,7 @@ const MapView = ({ token }) => {
       }
       try {
         const uesData = await getUEs(token);
-        setUEs(uesData); 
+        setUEs(uesData);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -30,6 +43,27 @@ const MapView = ({ token }) => {
     fetchUEs();
   }, [token]);
 
+  useEffect(() => {
+    if (loading || !token) return;
+
+    // Initialize MapLibre GL JS map
+    const map = new maplibregl.Map({
+      container: 'map', // Container ID
+      style: 'https://demotiles.maplibre.org/style.json', // Map style URL
+      center: [23.7275, 37.9838], // Map center [lng, lat]
+      zoom: 1 // Zoom level
+    });
+
+    // Add a marker
+    new maplibregl.Marker()
+      .setLngLat([23.7275, 37.9838])
+      .setPopup(new maplibregl.Popup().setText('Example Location'))
+      .addTo(map);
+
+    // Clean up on component unmount
+    return () => map.remove();
+  }, [loading, token]);
+
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;
   if (!token) return <p>Please provide a valid token.</p>;
@@ -39,16 +73,8 @@ const MapView = ({ token }) => {
       <CCard className="mb-4">
         <CCardHeader>Map</CCardHeader>
         <CCardBody>
-          <MapContainer center={[37.9838, 23.7275]} zoom={13} style={{ height: '500px' }}>
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
-            />
-            <Marker position={[37.9838, 23.7275]}>
-              <Popup>Example Location</Popup>
-            </Marker>
-          </MapContainer>
-
+          <div id="map" style={{ height: '500px', width: '100%' }}></div> {/* Map container */}
+          
           <CRow className="mt-3">
             <CCol>
               <CButton color="primary" onClick={handleStartAll}>Start All</CButton>
@@ -98,3 +124,4 @@ const MapView = ({ token }) => {
 };
 
 export default MapView;
+
