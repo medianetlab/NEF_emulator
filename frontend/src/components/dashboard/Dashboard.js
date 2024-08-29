@@ -3,15 +3,15 @@ import {
   CCard, CCardHeader, CCardBody, CTable, CTableHead, CTableRow, CTableHeaderCell,
   CTableBody, CTableDataCell, CButton, CCardTitle, CRow, CCol
 } from '@coreui/react';
-import AddGNBModal from './modals/AddGNBModal';
-import EditGNBModal from './modals/EditGNBModal';
-import AddCellModal from './modals/AddCellModal';
-import EditCellModal from './modals/EditCellModal';
-import AddUEsModal from './modals/AddUEModal';
-import EditUEsModal from './modals/EditUEModal';
-import AddPathModal from './modals/AddPathModal';
-import EditPathModal from './modals/EditPathModal';
-import ConfirmDeleteModal from './modals/ConfirmDeleteModal';
+import AddGNBModal from '../modals/AddGNBModal';
+import EditGNBModal from '../modals/EditGNBModal';
+import AddCellModal from '../modals/AddCellModal';
+import EditCellModal from '../modals/EditCellModal';
+import AddUEsModal from '../modals/AddUEModal';
+import EditUEsModal from '../modals/EditUEModal';
+import AddPathModal from '../modals/AddPathModal';
+import EditPathModal from '../modals/EditPathModal';
+import ConfirmDeleteModal from '../modals/ConfirmDeleteModal';
 import {
   fetchData, handleAdd, handleEdit, handleDelete, confirmDelete,
   handleAddEntity, handleEditEntity

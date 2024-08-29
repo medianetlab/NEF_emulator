@@ -14,8 +14,8 @@ import {
   CDropdownMenu,
   CDropdownItem
 } from '@coreui/react';
-import Dashboard from './components/Dashboard';
-import MapView from './components/MapView';
+import Dashboard from './components/dashboard/Dashboard';
+import MapView from './components/map/MapView';
 import ImportView from './components/ImportView';
 import ExportView from './components/ExportView';
 import { getToken } from './utils/api';

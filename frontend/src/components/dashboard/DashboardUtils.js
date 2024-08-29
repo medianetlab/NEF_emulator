@@ -1,7 +1,7 @@
 import {
   getGNBs, getCells, getUEs, getPaths, addGNB, editGNB, deleteGNB, addCell, editCell,
   deleteCell, addUE, editUE, deleteUE, addPath, editPath, deletePath
-} from '../utils/api';
+} from '../../utils/api';
 
 export const fetchData = async (token, setGnbs, setCells, setUEs, setPaths) => {
   try {

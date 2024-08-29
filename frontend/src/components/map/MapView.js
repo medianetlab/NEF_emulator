@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CCard, CCardBody, CCardHeader, CButton, CRow, CCol, CTable, CTableHead, CTableRow, CTableHeaderCell, CTableBody, CTableDataCell } from '@coreui/react';
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { getUEs } from '../utils/api';
+import { getUEs } from '../../utils/api';
 import { handleStartAll, handleUEClick } from './MapViewUtils';
 
 const MapView = ({ token }) => {

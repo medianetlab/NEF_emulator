@@ -10,8 +10,8 @@ import { getGNBs } from '../../utils/api';
 const MapClickHandler = ({ setLatLng }) => {
   useMapEvents({
     click(event) {
-      const { lat, lng } = event.latlng;  // Correctly get lat and lng
-      setLatLng({ latitude: lat, longitude: lng });  // Convert to your state names
+      const { lat, lng } = event.latlng;  // get lat lng
+      setLatLng({ latitude: lat, longitude: lng }); 
     }
   });
   return null;
@@ -31,7 +31,7 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
 
   useEffect(() => {
     if (visible) {
-      getGNBs(token)  // Use getGnbs to fetch gNBs
+      getGNBs(token)  // getgnbs
         .then(setGnbs)
         .catch(err => console.error("Failed to fetch gNBs", err));
     }
