@@ -1,32 +1,11 @@
-.app-container {
-  display: flex;
+/* Header title container */
+.header-title {
+  text-align: center;
+  flex: 1; 
 }
 
-.sidebar {
-  width: 250px;
-  transition: width 0.3s;
-}
-
-.sidebar-hidden .sidebar {
-  width: 0;
-  overflow: hidden;
-}
-
-.main-content {
-  flex: 1;
-  transition: margin-left 0.3s;
-}
-
-.sidebar-hidden .main-content {
-  margin-left: 0;
-}
-
-.c-header {
-  padding-left: 20px; /* Ensure some padding around icons */
-  padding-right: 20px;
-}
-
-.c-header-nav {
-  display: flex;
-  align-items: center;
+.header-title h1 {
+  color: #000000;
+  margin: 0;
+  font-size: 1.5rem; 
 }

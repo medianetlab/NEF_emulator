@@ -18,7 +18,7 @@ const Sidebar = ({ handleSwaggerClick, handleRedocClick }) => {
     <CSidebar className="sidebar">
       <CSidebarBrand className="d-md-down-none" to="/">
         <img
-          src="../../../backend/app/app/static/NEF_logo_400x160.svg"
+          src="/assets/NEF_logo_400x160.svg"
           alt="NEF Logo"
           className="sidebar-logo"
         />
