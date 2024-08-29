@@ -1,0 +1,33 @@
+/* Sidebar Styles */
+.sidebar {
+    background-color: #526b8f !important;  /* Darker Navy Blue */
+    color: #ffffff !important;  /* White Text */
+    width: 250px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: width 0.3s ease, margin-left 0.3s ease; /* Smooth transition */
+  }
+  
+  .sidebar-hidden {
+    width: 0; /* Hide the sidebar */
+    overflow: hidden; /* Prevent content overflow */
+    transition: width 0.3s ease, margin-left 0.3s ease; /* Smooth transition */
+  }
+  
+  /* Sidebar Links */
+  .sidebar a {
+    color: #ffffff !important;  /* White Text */
+    text-decoration: none;
+    display: block;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .sidebar a:hover {
+    background-color: #003366;  /* Slightly darker navy blue */
+  }
+  
