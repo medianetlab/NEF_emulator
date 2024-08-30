@@ -78,7 +78,7 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/t
     3. BASE URL -> .env file   				                    DONE
     4. Path add modal -> map with point assign	                DONE - ERROR WITH PATH POST (500)
     5. Datatables -> arrows to sort Datatables   
-    6. UEs edit/add modal -> map with path display              IN PROGRESS      
+    6. UEs edit/add modal -> map with path display              DONE     
     7. Path modal -> color choose boxes			                DONE
     8. Mapbox integration					                    IN PROGRESS
     9. Ues popup when hovering                  
