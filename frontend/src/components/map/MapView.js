@@ -70,10 +70,10 @@ const MapView = ({ token }) => {
 
   return (
     <>
-      <CCard className="mb-4">
+      <CCard className="mb-4" style={{ width: '100%' }}>
         <CCardHeader>Map</CCardHeader>
         <CCardBody>
-          <div id="map" style={{ height: '500px', width: '100%' }}></div> {/* Map container */}
+          <div id="map" style={{ height: '700px', width: '100%' }}></div> {/* Map container */}
           
           <CRow className="mt-3">
             <CCol>

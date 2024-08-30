@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CCard, CCardBody, CCardHeader, CButton, CFormInput, CAlert } from '@coreui/react';
+import { CCard, CCardBody, CCardHeader, CButton, CAlert } from '@coreui/react';
 import { exportScenario } from '../utils/api'; 
 
 const ExportView = ({ token }) => {
@@ -36,11 +36,9 @@ const ExportView = ({ token }) => {
     <CCard>
       <CCardHeader>Export</CCardHeader>
       <CCardBody>
-        {/* Text box to display the data about to be exported */}
-        <CFormInput
-          type="textarea"
-          rows="10"
-          placeholder="Scenario data..."
+        {/* Text area to display the data about to be exported */}
+        <textarea
+          style={{ width: '100%', height: '300px', padding: '10px', borderRadius: '5px', borderColor: '#ced4da' }}
           value={exportData}
           readOnly
         />
@@ -54,3 +52,4 @@ const ExportView = ({ token }) => {
 };
 
 export default ExportView;
+
