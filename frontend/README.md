@@ -21,3 +21,4 @@
     19. UEs edit Modals -> lock fields with prefill             IN PROGRESS
     20. add universal lat/lng coords in .env                    IN PROGRESS
     21. Login (token handling & redirection)                    DONE
+    22. Modal path displays                                     IN PROGRESS

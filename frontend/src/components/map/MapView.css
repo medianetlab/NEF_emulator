@@ -2,8 +2,8 @@
 
 .map-container {
     width: 100%; /* Full width */
-    height: 500px; /* Adjust height as needed */
-    position: relative; /* Ensure the relative positioning for the child element */
+    height: 500px;
+    position: relative;
   }
   
   .map {

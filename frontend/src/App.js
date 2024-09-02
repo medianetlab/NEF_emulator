@@ -1,4 +1,3 @@
-// src/App.js
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { CContainer } from '@coreui/react';
@@ -11,27 +10,10 @@ import Header from './containers/Header';
 import Sidebar from './containers/Sidebar';
 import './App.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { handleLogin, handleLogout, handleSwaggerClick, handleRedocClick } from './utils/app_utils';
 
 const App = () => {
   const [token, setToken] = useState(localStorage.getItem('token'));
-
-  const handleLogin = (token) => {
-    localStorage.setItem('token', token);
-    setToken(token);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-  };
-
-  const handleSwaggerClick = (url) => {
-    window.open(url, '_blank');
-  };
-
-  const handleRedocClick = (url) => {
-    window.open(url, '_blank');
-  };
 
   return (
     <Router>
@@ -40,7 +22,7 @@ const App = () => {
           <>
             <Sidebar handleSwaggerClick={handleSwaggerClick} handleRedocClick={handleRedocClick} />
             <div className="main-content">
-              <Header onLogout={handleLogout} />
+              <Header onLogout={() => handleLogout(setToken)} />
               <CContainer lg className="main-container">
                 <Routes>
                   <Route path="/dashboard" element={<Dashboard token={token} />} />
@@ -54,7 +36,7 @@ const App = () => {
           </>
         ) : (
           <Routes>
-            <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
+            <Route path="/login" element={<LoginPage onLogin={(token) => handleLogin(token, setToken)} />} />
             <Route path="*" element={<Navigate to="/login" />} />
           </Routes>
         )}

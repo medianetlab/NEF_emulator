@@ -1,21 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   CModal, CModalHeader, CModalBody, CModalFooter, CButton,
-  CForm, CFormInput, CFormTextarea, CFormSelect
+  CForm, CFormInput, CFormSelect
 } from '@coreui/react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
-import { getGNBs } from '../../utils/api'; 
-
-// Custom hook to handle map click events
-const MapClickHandler = ({ setLatLng }) => {
-  useMapEvents({
-    click(event) {
-      const { lat, lng } = event.latlng;  // get lat lng
-      setLatLng({ latitude: lat, longitude: lng }); 
-    }
-  });
-  return null;
-};
+import maplibre from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { getGNBs, getUEs, getCells } from '../../utils/api';
 
 const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
   const [formData, setFormData] = useState({
@@ -23,53 +13,219 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
     name: '',
     description: '',
     gNB_id: '',
-    latitude: 0,
-    longitude: 0,
+    latitude: '',
+    longitude: '',
     radius: ''
   });
+
   const [gnbs, setGnbs] = useState([]);
+  const [cells, setCells] = useState([]);
+  const [ues, setUes] = useState([]);
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const markerRef = useRef(null);
+  const circleLayerId = 'circleLayer';
+  const sourceId = 'circleSource';
+
+  useEffect(() => {
+    const fetchGnbs = async () => {
+      if (!token) return;
+      try {
+        const gnbData = await getGNBs(token);
+        setGnbs(gnbData);
+      } catch (error) {
+        console.error('Error fetching gNBs:', error);
+      }
+    };
+
+    const fetchCellsAndUEs = async () => {
+      if (!token) return;
+      try {
+        const [cellsData, uesData] = await Promise.all([getCells(token), getUEs(token)]);
+        setCells(cellsData);
+        setUes(uesData);
+      } catch (error) {
+        console.error('Error fetching cells or UEs:', error);
+      }
+    };
+
+    fetchGnbs();
+    fetchCellsAndUEs();
+  }, [token]);
 
   useEffect(() => {
     if (visible) {
-      getGNBs(token)  // getgnbs
-        .then(setGnbs)
-        .catch(err => console.error("Failed to fetch gNBs", err));
-    }
-  }, [visible, token]);
+      setTimeout(() => {
+        if (mapRef.current) {
+          if (!mapInstanceRef.current) {
+            mapInstanceRef.current = new maplibre.Map({
+              container: mapRef.current,
+              style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
+              center: [23.81953, 37.99803],
+              zoom: 12,
+            });
 
-  useEffect(() => {
-    setFormData({
-      cell_id: '',
-      name: '',
-      description: '',
-      gNB_id: '',
-      latitude: 0,
-      longitude: 0,
-      radius: ''
-    });
-  }, [visible]);
+            mapInstanceRef.current.on('click', (e) => {
+              const { lng, lat } = e.lngLat;
+
+              // Update form data with clicked coordinates
+              setFormData(prev => ({
+                ...prev,
+                latitude: lat.toFixed(5),
+                longitude: lng.toFixed(5)
+              }));
+
+              // Remove existing marker if it exists
+              if (markerRef.current) markerRef.current.remove();
+
+              // Add new marker
+              markerRef.current = new maplibre.Marker({ color: 'red' })
+                .setLngLat([lng, lat])
+                .addTo(mapInstanceRef.current);
+
+              // Remove existing circle layer and source if they exist
+              if (mapInstanceRef.current.getSource(sourceId)) {
+                mapInstanceRef.current.removeLayer(circleLayerId);
+                mapInstanceRef.current.removeSource(sourceId);
+              }
+
+              // Convert radius from meters to pixels
+              const radiusInPixels = convertRadiusToPixels(parseFloat(formData.radius), lat, mapInstanceRef.current.getZoom());
+              console.log(`Radius in pixels: ${radiusInPixels}`);
+
+              // Add new circle
+              mapInstanceRef.current.addSource(sourceId, {
+                type: 'geojson',
+                data: {
+                  type: 'FeatureCollection',
+                  features: [
+                    {
+                      type: 'Feature',
+                      geometry: {
+                        type: 'Point',
+                        coordinates: [lng, lat]
+                      }
+                    }
+                  ]
+                }
+              });
+
+              mapInstanceRef.current.addLayer({
+                id: circleLayerId,
+                type: 'circle',
+                source: sourceId,
+                paint: {
+                  'circle-color': 'rgba(255, 0, 0, 0.3)', // Red color with low opacity
+                  'circle-radius': radiusInPixels, // Use radius in pixels
+                  'circle-opacity': 0.3
+                }
+              });
+            });
+
+            // Add cells to the map
+            mapInstanceRef.current.on('load', () => {
+              // Add Cells Layer
+              mapInstanceRef.current.addSource('cellsSource', {
+                type: 'geojson',
+                data: {
+                  type: 'FeatureCollection',
+                  features: cells.map(cell => ({
+                    type: 'Feature',
+                    geometry: {
+                      type: 'Point',
+                      coordinates: [cell.longitude, cell.latitude]
+                    },
+                    properties: {
+                      description: cell.description,
+                      color: cell.color || '#FF0000' // Default color if not provided
+                    }
+                  }))
+                }
+              });
+
+              mapInstanceRef.current.addLayer({
+                id: 'cellsLayer',
+                type: 'circle',
+                source: 'cellsSource',
+                paint: {
+                  'circle-color': ['get', 'color'], // Use color from properties
+                  'circle-radius': 6, // Adjust size as needed
+                  'circle-opacity': 0.6
+                }
+              });
+
+              // Add UEs Layer
+              mapInstanceRef.current.addSource('uesSource', {
+                type: 'geojson',
+                data: {
+                  type: 'FeatureCollection',
+                  features: ues.map(ue => ({
+                    type: 'Feature',
+                    geometry: {
+                      type: 'Point',
+                      coordinates: [ue.longitude, ue.latitude]
+                    },
+                    properties: {
+                      id: ue.id, // Ensure that UE properties are set correctly
+                      name: ue.name
+                    }
+                  }))
+                }
+              });
+
+              // Add the custom icon image to the map
+              mapInstanceRef.current.loadImage('/assets/person.png', (error, image) => {
+                if (error) throw error;
+                if (!mapInstanceRef.current.hasImage('custom-person-icon')) {
+                  mapInstanceRef.current.addImage('custom-person-icon', image);
+                }
+
+                // Add UEs Layer after the icon image is added
+                mapInstanceRef.current.addLayer({
+                  id: 'uesLayer',
+                  type: 'symbol',
+                  source: 'uesSource',
+                  layout: {
+                    'icon-image': 'custom-person-icon', // Use the custom icon image
+                    'icon-size': 1.5
+                  },
+                  paint: {
+                    'icon-color': '#00FF00'
+                  }
+                });
+              });
+            });
+          }
+        }
+      }, 500);
+    } else if (mapInstanceRef.current) {
+      mapInstanceRef.current.remove();
+      mapInstanceRef.current = null;
+      markerRef.current = null;
+    }
+  }, [visible, formData.radius, cells, ues]);
+
+  const convertRadiusToPixels = (radius, latitude, zoom) => {
+    // Approximate conversion factor
+    const metersPerPixel = 156543.03392 * Math.cos((latitude * Math.PI) / 180) / Math.pow(2, zoom);
+    return radius / metersPerPixel;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleMapClick = ({ latitude, longitude }) => {
-    setFormData(prev => ({ ...prev, latitude, longitude }));
-  };
-
   const handleFormSubmit = () => {
-    const dataToSubmit = {
+    handleSubmit({
       ...formData,
-      radius: parseFloat(formData.radius), // Convert radius to number
-      gNB_id: formData.gNB_id.trim()       // Ensure gNB_id is in correct format
-    };
-
-    handleSubmit(dataToSubmit);
+      radius: parseFloat(formData.radius),
+      gNB_id: formData.gNB_id.trim()
+    });
   };
 
   return (
-    <CModal visible={visible} onClose={handleClose}>
+    <CModal visible={visible} onClose={handleClose} size="lg"> {/* Adjust size to "lg" */}
       <CModalHeader closeButton>Add Cell</CModalHeader>
       <CModalBody>
         <CForm>
@@ -87,7 +243,7 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
             value={formData.name}
             onChange={handleChange}
           />
-          <CFormTextarea
+          <CFormInput
             id="description"
             name="description"
             label="Description"
@@ -108,48 +264,36 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
               </option>
             ))}
           </CFormSelect>
+
           <CFormInput
             id="latitude"
             name="latitude"
             label="Latitude"
             value={formData.latitude}
-            onChange={handleChange}
-            disabled
+            readOnly
           />
           <CFormInput
             id="longitude"
             name="longitude"
             label="Longitude"
             value={formData.longitude}
-            onChange={handleChange}
-            disabled
+            readOnly
           />
           <CFormInput
             id="radius"
             name="radius"
-            label="Radius"
+            label="Radius (meters)"
             value={formData.radius}
             onChange={handleChange}
+            placeholder="Enter radius in meters"
           />
-          <div style={{ height: '400px', width: '100%' }}>
-            <MapContainer
-              center={[formData.latitude || 51.505, formData.longitude || -0.09]}
-              zoom={13}
-              style={{ height: '100%', width: '100%' }}
-            >
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              />
-              <MapClickHandler setLatLng={handleMapClick} />
-              <Marker position={[formData.latitude || 51.505, formData.longitude || -0.09]}>
-                <Popup>
-                  Latitude: {formData.latitude} <br /> Longitude: {formData.longitude}
-                </Popup>
-              </Marker>
-            </MapContainer>
-          </div>
         </CForm>
+
+        <div
+          id="cellMap"
+          ref={mapRef}
+          style={{ height: '400px', marginTop: '20px' }} // Increased height for better visibility
+        ></div>
       </CModalBody>
       <CModalFooter>
         <CButton color="secondary" onClick={handleClose}>Cancel</CButton>

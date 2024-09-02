@@ -7,7 +7,7 @@ const ConfirmDeleteModal = ({ visible, handleClose, handleDelete }) => {
     <CModal visible={visible} onClose={handleClose}>
       <CModalHeader closeButton>Confirm Delete</CModalHeader>
       <CModalBody>
-        Are you sure you want to delete this gNB?
+        Are you sure you want to delete this object?
       </CModalBody>
       <CModalFooter>
         <CButton color="secondary" onClick={handleClose}>Cancel</CButton>

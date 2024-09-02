@@ -94,7 +94,7 @@ const Dashboard = ({ token }) => {
               <CCardTitle>gNBs</CCardTitle>
             </CCardHeader>
             <CCardBody>
-              <CButton color="success" className="w-100 fs-3 d-flex justify-content-center align-items-center">
+              <CButton className="w-100 fs-3 d-flex justify-content-center align-items-center">
                 {gnbs.length}
               </CButton>
             </CCardBody>
@@ -106,7 +106,7 @@ const Dashboard = ({ token }) => {
               <CCardTitle>Cells</CCardTitle>
             </CCardHeader>
             <CCardBody>
-              <CButton color="info" className="w-100 fs-3 d-flex justify-content-center align-items-center">
+              <CButton className="w-100 fs-3 d-flex justify-content-center align-items-center">
                 {cells.length}
               </CButton>
             </CCardBody>
@@ -118,7 +118,7 @@ const Dashboard = ({ token }) => {
               <CCardTitle>UEs</CCardTitle>
             </CCardHeader>
             <CCardBody>
-              <CButton color="warning" className="w-100 fs-3 d-flex justify-content-center align-items-center">
+              <CButton className="w-100 fs-3 d-flex justify-content-center align-items-center">
                 {ues.length}
               </CButton>
             </CCardBody>
@@ -130,7 +130,7 @@ const Dashboard = ({ token }) => {
               <CCardTitle>Paths</CCardTitle>
             </CCardHeader>
             <CCardBody>
-              <CButton color="danger" className="w-100 fs-3 d-flex justify-content-center align-items-center">
+              <CButton className="w-100 fs-3 d-flex justify-content-center align-items-center">
                 {paths.length}
               </CButton>
             </CCardBody>
