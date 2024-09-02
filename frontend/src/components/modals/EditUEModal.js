@@ -21,7 +21,7 @@ const EditUEModal = ({ visible, handleClose, handleSubmit, initialData, token })
     dnn: '',
     path_id: '',
     speed: 'LOW',
-    position: { lat: 51.505, lng: -0.09 } // Default position
+    position: { lat: 51.505, lng: -0.09 }
   });
 
   const [paths, setPaths] = useState([]);

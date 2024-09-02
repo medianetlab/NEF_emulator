@@ -1,10 +1,19 @@
 import React from 'react';
 import { CHeader, CHeaderNav, CButton, CDropdown, CDropdownToggle, CDropdownMenu, CDropdownItem } from '@coreui/react';
+import { useNavigate } from 'react-router-dom';
 import { cilMenu, cilUser } from '@coreui/icons';
 import CIcon from '@coreui/icons-react';
 import './Header.css';
 
-const Header = ({ onToggleSidebar }) => {
+const Header = ({ onToggleSidebar, onLogout }) => {
+  const navigate = useNavigate();
+
+  // actions when logout
+  const handleLogout = () => {
+    onLogout();
+    navigate('/login');
+  };
+
   return (
     <CHeader className="bg-light d-flex justify-content-between align-items-center px-3">
       {/* Left side: Menu button */}
@@ -32,7 +41,7 @@ const Header = ({ onToggleSidebar }) => {
             <CDropdownItem href="#">
               Settings
             </CDropdownItem>
-            <CDropdownItem href="#">
+            <CDropdownItem href="#" onClick={handleLogout} color="danger">
               Logout
             </CDropdownItem>
           </CDropdownMenu>
