@@ -1,20 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   CModal, CModalHeader, CModalBody, CModalFooter, CButton,
   CForm, CFormInput, CFormTextarea, CFormSelect
 } from '@coreui/react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import maplibre from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import { getGNBs } from '../../utils/api';
-
-const MapClickHandler = ({ setLatLng }) => {
-  useMapEvents({
-    click(event) {
-      const { lat, lng } = event.latlng;
-      setLatLng({ latitude: lat, longitude: lng });
-    }
-  });
-  return null;
-};
 
 const EditCellModal = ({ visible, handleClose, handleSubmit, token, cellData }) => {
   const [formData, setFormData] = useState({
@@ -28,6 +19,8 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, cellData }) 
   });
 
   const [gnbs, setGnbs] = useState([]);
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
 
   // Fetch gNBs when modal is visible
   useEffect(() => {
@@ -53,13 +46,41 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, cellData }) 
     }
   }, [visible, cellData]);
 
+  // Initialize the map when the modal is visible
+  useEffect(() => {
+    if (visible) {
+      setTimeout(() => {
+        if (mapRef.current) {
+          if (!mapInstanceRef.current) {
+            mapInstanceRef.current = new maplibre.Map({
+              container: mapRef.current,
+              style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
+              center: [cellData?.longitude || 0, cellData?.latitude || 0],
+              zoom: 12,
+            });
+
+            // Update the map marker and form fields on map click
+            mapInstanceRef.current.on('click', (e) => {
+              const { lng, lat } = e.lngLat;
+              setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
+            });
+
+            // Add a marker to the map at the initial position
+            new maplibre.Marker()
+              .setLngLat([cellData?.longitude || 0, cellData?.latitude || 0])
+              .addTo(mapInstanceRef.current);
+          }
+        }
+      }, 500);
+    } else if (mapInstanceRef.current) {
+      mapInstanceRef.current.remove();
+      mapInstanceRef.current = null;
+    }
+  }, [visible, cellData]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleMapClick = ({ latitude, longitude }) => {
-    setFormData(prev => ({ ...prev, latitude, longitude }));
   };
 
   const handleFormSubmit = () => {
@@ -73,7 +94,7 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, cellData }) 
   };
 
   return (
-    <CModal visible={visible} onClose={handleClose}>
+    <CModal visible={visible} onClose={handleClose} size="lg">
       <CModalHeader closeButton>Edit Cell</CModalHeader>
       <CModalBody>
         <CForm>
@@ -136,29 +157,16 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, cellData }) 
             value={formData.radius}
             onChange={handleChange}
           />
-          <div style={{ height: '400px', width: '100%' }}>
-            <MapContainer
-              center={[formData.latitude || 51.505, formData.longitude || -0.09]}
-              zoom={13}
-              style={{ height: '100%', width: '100%' }}
-            >
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              />
-              <MapClickHandler setLatLng={handleMapClick} />
-              <Marker position={[formData.latitude || 51.505, formData.longitude || -0.09]}>
-                <Popup>
-                  Latitude: {formData.latitude} <br /> Longitude: {formData.longitude}
-                </Popup>
-              </Marker>
-            </MapContainer>
-          </div>
+          <div
+            id="editCellMap"
+            ref={mapRef}
+            style={{ height: '400px', marginTop: '20px' }}
+          ></div>
         </CForm>
       </CModalBody>
       <CModalFooter>
         <CButton color="secondary" onClick={handleClose}>Cancel</CButton>
-        <CButton color="primary" onClick={handleFormSubmit}>Save</CButton>
+        <CButton color="primary" type="button" onClick={handleFormSubmit}>Save</CButton>
       </CModalFooter>
     </CModal>
   );

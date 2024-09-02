@@ -78,7 +78,7 @@ const AddUEModal = ({ visible, handleClose, handleSubmit, token }) => {
   };
 
   return (
-    <CModal visible={visible} onClose={handleClose}>
+    <CModal visible={visible} onClose={handleClose} size="lg"> {/* Adjusted size to "lg" */}
       <div style={{ maxWidth: '100%', width: '100%' }}>
         <CModalHeader closeButton>Add UE</CModalHeader>
         <CModalBody>

@@ -1,35 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import { CModal, CModalHeader, CModalBody, CModalFooter, CButton, CForm, CFormInput, CFormTextarea } from '@coreui/react';
-import 'leaflet/dist/leaflet.css';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  CModal, CModalHeader, CModalBody, CModalFooter, CButton,
+  CForm, CFormTextarea
+} from '@coreui/react';
+import maplibre from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 // Color options for the path
 const colorOptions = [
   '#FF5733', '#33FF57', '#3357FF', '#F4C542', '#E94E77', '#8E44AD'
 ];
-
-// Component to handle map click events and update start/end points
-const MapClickHandler = ({ setStart, setEnd }) => {
-  const [clicks, setClicks] = useState([]);
-
-  useMapEvents({
-    click(e) {
-      if (clicks.length < 2) {
-        setClicks(prev => [...prev, e.latlng]);
-      }
-    }
-  });
-
-  useEffect(() => {
-    if (clicks.length === 1) {
-      setStart(clicks[0]);
-    } else if (clicks.length === 2) {
-      setEnd(clicks[1]);
-    }
-  }, [clicks, setStart, setEnd]);
-
-  return null;
-};
 
 const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
   const [formData, setFormData] = useState({
@@ -39,6 +19,8 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
     end: null
   });
   const [errors, setErrors] = useState({});
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
 
   useEffect(() => {
     if (visible) {
@@ -49,6 +31,31 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
         end: null
       });
       setErrors({});
+
+      setTimeout(() => {
+        if (mapRef.current) {
+          if (!mapInstanceRef.current) {
+            mapInstanceRef.current = new maplibre.Map({
+              container: mapRef.current,
+              style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
+              center: [23.7275, 37.9838],
+              zoom: 12,
+            });
+
+            mapInstanceRef.current.on('click', (e) => {
+              const { lng, lat } = e.lngLat;
+              if (!formData.start) {
+                setFormData(prev => ({ ...prev, start: { lat, lon: lng } }));
+              } else if (!formData.end) {
+                setFormData(prev => ({ ...prev, end: { lat, lon: lng } }));
+              }
+            });
+          }
+        }
+      }, 500);
+    } else if (mapInstanceRef.current) {
+      mapInstanceRef.current.remove();
+      mapInstanceRef.current = null;
     }
   }, [visible]);
 
@@ -116,31 +123,7 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
           </div>
           <div className="mb-3">
             <label className="form-label">Map</label>
-            <div style={{ height: '400px', width: '100%' }}>
-              <MapContainer center={[51.505, -0.09]} zoom={13} style={{ height: '100%', width: '100%' }}>
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                />
-                <MapClickHandler
-                  setStart={(latlng) => {
-                    setFormData(prev => ({
-                      ...prev,
-                      start: latlng,
-                      end: prev.end && !prev.start ? null : prev.end
-                    }));
-                  }}
-                  setEnd={(latlng) => {
-                    setFormData(prev => ({
-                      ...prev,
-                      end: latlng
-                    }));
-                  }}
-                />
-                {formData.start && <Marker position={[formData.start.lat, formData.start.lng]} />}
-                {formData.end && <Marker position={[formData.end.lat, formData.end.lng]} />}
-              </MapContainer>
-            </div>
+            <div ref={mapRef} style={{ height: '400px', width: '100%' }} />
             {errors.start && <div className="invalid-feedback d-block">{errors.start}</div>}
             {errors.end && <div className="invalid-feedback d-block">{errors.end}</div>}
           </div>
