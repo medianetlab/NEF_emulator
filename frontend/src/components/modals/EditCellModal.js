@@ -7,7 +7,7 @@ import maplibre from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { getGNBs } from '../../utils/api';
 
-const EditCellModal = ({ visible, handleClose, handleSubmit, token, cellData }) => {
+const EditCellModal = ({ visible, handleClose, handleSubmit, token, initialData }) => {
   const [formData, setFormData] = useState({
     cell_id: '',
     name: '',
@@ -33,18 +33,18 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, cellData }) 
 
   // Pre-fill form data when modal opens
   useEffect(() => {
-    if (cellData && visible) {
+    if (initialData && visible) {
       setFormData({
-        cell_id: cellData.cell_id || '',
-        name: cellData.name || '',
-        description: cellData.description || '',
-        gNB_id: cellData.gNB_id || '',
-        latitude: cellData.latitude || 0,
-        longitude: cellData.longitude || 0,
-        radius: cellData.radius || ''
+        cell_id: initialData.cell_id || '',
+        name: initialData.name || '',
+        description: initialData.description || '',
+        gNB_id: initialData.gNB_id || '',
+        latitude: initialData.latitude || 0,
+        longitude: initialData.longitude || 0,
+        radius: initialData.radius || ''
       });
     }
-  }, [visible, cellData]);
+  }, [visible, initialData]);
 
   // Initialize the map when the modal is visible
   useEffect(() => {
@@ -55,7 +55,7 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, cellData }) 
             mapInstanceRef.current = new maplibre.Map({
               container: mapRef.current,
               style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
-              center: [cellData?.longitude || 0, cellData?.latitude || 0],
+              center: [initialData?.longitude || 0, initialData?.latitude || 0],
               zoom: 12,
             });
 
@@ -67,7 +67,7 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, cellData }) 
 
             // Add a marker to the map at the initial position
             new maplibre.Marker()
-              .setLngLat([cellData?.longitude || 0, cellData?.latitude || 0])
+              .setLngLat([initialData?.longitude || 0, initialData?.latitude || 0])
               .addTo(mapInstanceRef.current);
           }
         }
@@ -76,7 +76,7 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, cellData }) 
       mapInstanceRef.current.remove();
       mapInstanceRef.current = null;
     }
-  }, [visible, cellData]);
+  }, [visible, initialData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

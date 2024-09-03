@@ -21,12 +21,14 @@ const EditUEModal = ({ visible, handleClose, handleSubmit, initialData, token })
     dnn: '',
     path_id: '',
     speed: 'LOW',
-    position: { lat: 51.505, lng: -0.09 }
+    latitude: 0.0,
+    longitude: 0.0
   });
 
   const [paths, setPaths] = useState([]);
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
+  const markerRef = useRef(null);
 
   // Fetch paths data when component mounts or token changes
   useEffect(() => {
@@ -49,12 +51,13 @@ const EditUEModal = ({ visible, handleClose, handleSubmit, initialData, token })
       setFormData(prev => ({
         ...prev,
         ...initialData,
-        position: initialData.position || { lat: 51.505, lng: -0.09 }
+        latitude: initialData.position?.lat || initialData.latitude || 0.0,
+        longitude: initialData.position?.lng || initialData.longitude || 0.0
       }));
     }
   }, [initialData, visible]);
 
-  // Initialize or update MapLibre map
+  // Initialize or update MapLibre map and marker
   useEffect(() => {
     if (visible) {
       setTimeout(() => {
@@ -63,18 +66,27 @@ const EditUEModal = ({ visible, handleClose, handleSubmit, initialData, token })
             mapInstanceRef.current = new maplibre.Map({
               container: mapRef.current,
               style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
-              center: [formData.position.lng, formData.position.lat],
+              center: [formData.longitude, formData.latitude],
               zoom: 13,
             });
 
+            // Add marker to the map
+            markerRef.current = new maplibre.Marker()
+              .setLngLat([formData.longitude, formData.latitude])
+              .addTo(mapInstanceRef.current);
+
+            // Update formData when the map is clicked
             mapInstanceRef.current.on('click', (e) => {
               const { lng, lat } = e.lngLat;
-              setFormData(prev => ({ ...prev, position: { lat, lng } }));
+              setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
+
+              // Move marker to the clicked location
+              markerRef.current.setLngLat([lng, lat]);
             });
           } else {
-            // Update map center and zoom when formData changes
-            mapInstanceRef.current.setCenter([formData.position.lng, formData.position.lat]);
-            mapInstanceRef.current.setZoom(13);
+            // Update map center and marker position when formData changes
+            mapInstanceRef.current.setCenter([formData.longitude, formData.latitude]);
+            markerRef.current.setLngLat([formData.longitude, formData.latitude]);
           }
         }
       }, 500);
@@ -82,7 +94,7 @@ const EditUEModal = ({ visible, handleClose, handleSubmit, initialData, token })
       mapInstanceRef.current.remove();
       mapInstanceRef.current = null;
     }
-  }, [visible, formData.position]);
+  }, [visible, formData.latitude, formData.longitude]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -199,17 +211,17 @@ const EditUEModal = ({ visible, handleClose, handleSubmit, initialData, token })
           </CFormSelect>
 
           <CFormInput
-            id="lat"
-            name="lat"
+            id="latitude"
+            name="latitude"
             label="Latitude"
-            value={formData.position.lat}
+            value={formData.latitude}
             readOnly 
           />
           <CFormInput
-            id="lon"
-            name="lon"
+            id="longitude"
+            name="longitude"
             label="Longitude"
-            value={formData.position.lng}
+            value={formData.longitude}
             readOnly 
           />
           <div className="mt-3">
