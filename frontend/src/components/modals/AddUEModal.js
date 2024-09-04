@@ -28,6 +28,7 @@ const AddUEModal = ({ visible, handleClose, handleSubmit, token }) => {
   const [paths, setPaths] = useState([]);
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
+  const markerRef = useRef(null); // Ref to hold the map marker
 
   useEffect(() => {
     const fetchPaths = async () => {
@@ -55,9 +56,23 @@ const AddUEModal = ({ visible, handleClose, handleSubmit, token }) => {
               zoom: 12,
             });
 
+            // Initialize the marker
+            markerRef.current = new maplibre.Marker()
+              .setLngLat([parseFloat(formData.lon) || 23.7275, parseFloat(formData.lat) || 37.9838])
+              .addTo(mapInstanceRef.current);
+
+            // Add a click event listener to update the marker
             mapInstanceRef.current.on('click', (e) => {
               const { lng, lat } = e.lngLat;
-              setFormData(prev => ({ ...prev, lat: lat, lon: lng }));
+              setFormData(prev => ({
+                ...prev,
+                lat: lat.toFixed(6), // Formatting for consistency
+                lon: lng.toFixed(6)  // Formatting for consistency
+              }));
+
+              if (markerRef.current) {
+                markerRef.current.setLngLat([lng, lat]); // Update marker position
+              }
             });
           }
         }
@@ -65,8 +80,9 @@ const AddUEModal = ({ visible, handleClose, handleSubmit, token }) => {
     } else if (mapInstanceRef.current) {
       mapInstanceRef.current.remove();
       mapInstanceRef.current = null;
+      markerRef.current = null; // Clean up marker reference
     }
-  }, [visible]);
+  }, [visible, formData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -194,7 +210,7 @@ const AddUEModal = ({ visible, handleClose, handleSubmit, token }) => {
           <div
             id="ueMap"
             ref={mapRef}
-            style={{ height: '300px', marginTop: '20px' }}
+            style={{ height: '400px', marginTop: '20px' }}
           ></div>
         </CModalBody>
         <CModalFooter>

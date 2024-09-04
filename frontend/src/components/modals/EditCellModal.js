@@ -21,6 +21,7 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, initialData 
   const [gnbs, setGnbs] = useState([]);
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
+  const markerRef = useRef(null); // Ref to hold the map marker
 
   // Fetch gNBs when modal is visible
   useEffect(() => {
@@ -55,20 +56,28 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, initialData 
             mapInstanceRef.current = new maplibre.Map({
               container: mapRef.current,
               style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
-              center: [initialData?.longitude || 0, initialData?.latitude || 0],
+              center: [formData.longitude, formData.latitude], // Corrected order
               zoom: 12,
             });
+
+            // Add a marker to the map at the initial position
+            markerRef.current = new maplibre.Marker()
+              .setLngLat([formData.longitude, formData.latitude]) // Corrected order
+              .addTo(mapInstanceRef.current);
 
             // Update the map marker and form fields on map click
             mapInstanceRef.current.on('click', (e) => {
               const { lng, lat } = e.lngLat;
-              setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
+              setFormData(prev => ({
+                ...prev,
+                latitude: lat, // Latitude first
+                longitude: lng // Longitude second
+              }));
+              
+              if (markerRef.current) {
+                markerRef.current.setLngLat([lng, lat]); // Update marker position
+              }
             });
-
-            // Add a marker to the map at the initial position
-            new maplibre.Marker()
-              .setLngLat([initialData?.longitude || 0, initialData?.latitude || 0])
-              .addTo(mapInstanceRef.current);
           }
         }
       }, 500);
@@ -76,7 +85,7 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, initialData 
       mapInstanceRef.current.remove();
       mapInstanceRef.current = null;
     }
-  }, [visible, initialData]);
+  }, [visible, formData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

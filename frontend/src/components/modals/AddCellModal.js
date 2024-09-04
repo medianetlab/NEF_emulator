@@ -9,13 +9,13 @@ import { getGNBs, getUEs, getCells } from '../../utils/api';
 
 const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
   const [formData, setFormData] = useState({
-    cell_id: '',
-    name: '',
+    cell_id: 'AAAAA1001',
+    name: 'cell1',
     description: '',
     gNB_id: '',
     latitude: '',
     longitude: '',
-    radius: ''
+    radius: '100'
   });
 
   const [gnbs, setGnbs] = useState([]);

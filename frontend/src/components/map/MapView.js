@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   CCard,
   CCardBody,
   CCardHeader,
-  CButton,
   CRow,
   CCol,
+  CButton,
   CTable,
   CTableHead,
   CTableRow,
@@ -13,26 +13,42 @@ import {
   CTableBody,
   CTableDataCell
 } from '@coreui/react';
-import maplibregl from 'maplibre-gl'; 
-import { getUEs } from '../../utils/api';
-import { handleStartAll, handleUEClick } from './MapViewUtils';
-import './MapView.css';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { getUEs, getCells, getPaths } from '../../utils/api';
+import {
+  addUEsToMap,
+  addCellsToMap,
+  addPathsToMap,
+  removeMapLayersAndSources,
+  handleStartAll,
+  handleUEClick,
+} from './MapViewUtils';
 
 const MapView = ({ token }) => {
   const [ues, setUEs] = useState([]);
+  const [cells, setCells] = useState([]);
+  const [paths, setPaths] = useState([]);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
 
   useEffect(() => {
-    const fetchUEs = async () => {
+    const fetchData = async () => {
       if (!token) {
         setLoading(false);
         return;
       }
       try {
         const uesData = await getUEs(token);
+        const cellsData = await getCells(token);
+        const pathsData = await getPaths(token);
+
         setUEs(uesData);
+        setCells(cellsData);
+        setPaths(pathsData);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -40,29 +56,40 @@ const MapView = ({ token }) => {
       }
     };
 
-    fetchUEs();
+    fetchData();
   }, [token]);
 
   useEffect(() => {
     if (loading || !token) return;
 
-    // Initialize MapLibre GL JS map
-    const map = new maplibregl.Map({
-      container: 'map', // Container ID
-      style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`, // Map style URL
-      center: [23.7275, 37.9838], // Map center [lng, lat]
-      zoom: 12 // Zoom level
-    });
+    if (mapRef.current && !mapInstanceRef.current) {
+      mapInstanceRef.current = new maplibregl.Map({
+        container: mapRef.current,
+        style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
+        center: [23.7275, 37.9838],
+        zoom: 12,
+      });
+    }
 
-    // Add a marker
-    new maplibregl.Marker()
-      .setLngLat([23.7275, 37.9838])
-      .setPopup(new maplibregl.Popup().setText('Example Location'))
-      .addTo(map);
+    const map = mapInstanceRef.current;
 
-    // Clean up on component unmount
-    return () => map.remove();
-  }, [loading, token]);
+    if (map) {
+      // Remove any existing layers and sources before adding new ones
+      removeMapLayersAndSources(map, paths);
+
+      // Add UEs, cells, and paths to the map
+      addUEsToMap(map, ues, paths, handleUEClick);
+      addCellsToMap(map, cells);
+      addPathsToMap(map, paths);
+    }
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [loading, token, ues, cells, paths]);
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;
@@ -73,17 +100,11 @@ const MapView = ({ token }) => {
       <CCard className="mb-4" style={{ width: '100%' }}>
         <CCardHeader>Map</CCardHeader>
         <CCardBody>
-          <div id="map" style={{ height: '700px', width: '100%' }}></div> {/* Map container */}
-          
+          <div ref={mapRef} style={{ height: '700px', width: '100%' }}></div> {/* Map container */}
           <CRow className="mt-3">
             <CCol>
-              <CButton color="primary" onClick={handleStartAll}>Start All</CButton>
+              <CButton color="primary" onClick={() => handleStartAll(ues)}>Start All</CButton>
             </CCol>
-            {ues.map(ue => (
-              <CCol key={ue.supi} className="mt-2">
-                <CButton color="info" onClick={() => handleUEClick(ue)}>{ue.name || ue.supi}</CButton>
-              </CCol>
-            ))}
           </CRow>
 
           <CCard className="mt-4">
