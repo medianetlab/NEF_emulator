@@ -294,3 +294,62 @@ export const deletePath = async (token, pathId) => {
     throw error;
   }
 };
+
+
+//------------------- movement ---------------------
+// start loop
+export const start_loop = async (token) => {
+  try {
+    await axios.post(`${BASE_URL}/ue_movement/start-loop`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  } catch (error) {
+    console.error('Error starting loop:', error);
+    throw error;
+  }
+};
+
+// stop loop
+export const stop_loop = async (token) => {
+  try {
+    await axios.post(`${BASE_URL}/ue_movement/stop-loop`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  } catch (error) {
+    console.error('Error stopping loop:', error);
+    throw error;
+  }
+};
+
+// state loop
+export const state_loop = async (token) => {
+  try {
+    await axios.get(`${BASE_URL}/ue_movement/state-loop`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  } catch (error) {
+    console.error('Error info loop:', error);
+    throw error;
+  }
+};
+
+//state ues
+export const state_ues = async (token) => {
+  try {
+    await axios.get(`${BASE_URL}/ue_movement/state-ues`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  } catch (error) {
+    console.error('Error info ues:', error);
+    throw error;
+  }
+};
+
