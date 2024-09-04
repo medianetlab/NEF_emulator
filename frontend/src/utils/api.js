@@ -254,6 +254,20 @@ export const addPath = async (token, path) => {
   }
 };
 
+export const readPath = async (token, path_id) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/paths/${path_id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching path detail:', error);
+    throw error;
+  }
+};
+
 export const editPath = async (token, path) => {
   try {
     const response = await axios.put(`${BASE_URL}/paths/${path.id}`, path, {

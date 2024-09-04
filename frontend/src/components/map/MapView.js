@@ -15,7 +15,7 @@ import {
 } from '@coreui/react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { getUEs, getCells, getPaths } from '../../utils/api';
+import { getUEs, getCells, getPaths, readPath } from '../../utils/api';
 import {
   addUEsToMap,
   addCellsToMap,
@@ -29,6 +29,7 @@ const MapView = ({ token }) => {
   const [ues, setUEs] = useState([]);
   const [cells, setCells] = useState([]);
   const [paths, setPaths] = useState([]);
+  const [pathDetails, setPathDetails] = useState([]);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -46,9 +47,13 @@ const MapView = ({ token }) => {
         const cellsData = await getCells(token);
         const pathsData = await getPaths(token);
 
+        // Fetch detailed path information for each path
+        const pathDetailsData = await Promise.all(pathsData.map(path => readPath(token, path.id)));
+
         setUEs(uesData);
         setCells(cellsData);
         setPaths(pathsData);
+        setPathDetails(pathDetailsData);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -73,15 +78,15 @@ const MapView = ({ token }) => {
 
     const map = mapInstanceRef.current;
 
-    if (map) {
+    map.on('style.load', () => {
       // Remove any existing layers and sources before adding new ones
       removeMapLayersAndSources(map, paths);
 
       // Add UEs, cells, and paths to the map
       addUEsToMap(map, ues, paths, handleUEClick);
       addCellsToMap(map, cells);
-      addPathsToMap(map, paths);
-    }
+      addPathsToMap(map, pathDetails); // Pass pathDetails here
+    });
 
     return () => {
       if (mapInstanceRef.current) {
@@ -89,7 +94,7 @@ const MapView = ({ token }) => {
         mapInstanceRef.current = null;
       }
     };
-  }, [loading, token, ues, cells, paths]);
+  }, [loading, token, ues, cells, paths, pathDetails]);
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;

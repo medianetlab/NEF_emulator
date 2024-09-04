@@ -2,43 +2,86 @@ import maplibregl from 'maplibre-gl';
 
 // Function to add UEs with paths as markers
 export const addUEsToMap = (mapInstance, ues, paths, handleUEClick) => {
+  console.log('Adding UEs to map:', ues);
+
   ues.forEach(ue => {
     const uePath = paths.find(path => path.ue_id === ue.id);
-    if (uePath && ue.position) {
+
+    // Ensure lat and lng are valid numbers
+    const lat = parseFloat(ue.latitude);
+    const lng = parseFloat(ue.longitude);
+
+    if (!isNaN(lat) && !isNaN(lng)) {
       const marker = new maplibregl.Marker({ color: 'blue' })
-        .setLngLat([ue.position.longitude, ue.position.latitude])
+        .setLngLat([lng, lat])
         .setPopup(new maplibregl.Popup().setText(`UE: ${ue.name || ue.supi}`))
         .addTo(mapInstance);
 
       marker.getElement().addEventListener('click', () => {
         handleUEClick(ue);
       });
+    } else {
+      console.warn('Invalid lat/lng for UE:', ue);
     }
   });
 };
 
 // Function to add cells as markers
 export const addCellsToMap = (mapInstance, cells) => {
+  console.log('Adding Cells to map:', cells);
+
   cells.forEach(cell => {
-    if (cell.position) {
+    // Ensure lat and lng are valid numbers
+    const lat = parseFloat(cell.latitude);
+    const lng = parseFloat(cell.longitude);
+
+    if (!isNaN(lat) && !isNaN(lng)) {
       new maplibregl.Marker({ color: 'red' })
-        .setLngLat([cell.position.longitude, cell.position.latitude])
+        .setLngLat([lng, lat])
         .setPopup(new maplibregl.Popup().setText(`Cell: ${cell.id}`))
         .addTo(mapInstance);
+    } else {
+      console.warn('Invalid lat/lng for Cell:', cell);
     }
   });
 };
 
 // Function to add paths to the map
-export const addPathsToMap = (mapInstance, paths) => {
-  paths.forEach(path => {
-    if (path.start_point && path.end_point && path.points && path.points.length > 0) {
-      const coordinates = path.points.map(point => [parseFloat(point.longitude), parseFloat(point.latitude)]);
-      coordinates.unshift([parseFloat(path.start_point.longitude), parseFloat(path.start_point.latitude)]);
-      coordinates.push([parseFloat(path.end_point.longitude), parseFloat(path.end_point.latitude)]);
+export const addPathsToMap = (mapInstance, pathDetails) => {
+  console.log('Adding Paths to map:', pathDetails);
+
+  pathDetails.forEach(pathDetail => {
+    const points = pathDetail.points;
+
+    // Ensure start and end points are valid
+    const startLat = parseFloat(pathDetail.start_point.latitude);
+    const startLng = parseFloat(pathDetail.start_point.longitude);
+    const endLat = parseFloat(pathDetail.end_point.latitude);
+    const endLng = parseFloat(pathDetail.end_point.longitude);
+
+    if (!isNaN(startLat) && !isNaN(startLng) && points.length > 0) {
+      // Prepare coordinates array
+      const coordinates = points.map(point => {
+        const lng = parseFloat(point.longitude);
+        const lat = parseFloat(point.latitude);
+        if (!isNaN(lng) && !isNaN(lat)) {
+          return [lng, lat];
+        } else {
+          console.warn('Invalid point coordinates:', point);
+          return null;
+        }
+      }).filter(coord => coord !== null);
+
+      // Ensure start and end coordinates are valid
+      if (!isNaN(startLat) && !isNaN(startLng)) {
+        coordinates.unshift([startLng, startLat]);
+      }
+      if (!isNaN(endLat) && !isNaN(endLng)) {
+        coordinates.push([endLng, endLat]);
+      }
 
       // Add path as a line
-      const pathSourceId = `path-${path.id}`;
+      const pathSourceId = `path-${pathDetail.id}`;
       if (!mapInstance.getSource(pathSourceId)) {
         mapInstance.addSource(pathSourceId, {
           type: 'geojson',
@@ -60,28 +103,46 @@ export const addPathsToMap = (mapInstance, paths) => {
             'line-cap': 'round'
           },
           paint: {
-            'line-color': path.color || '#FF0000',
+            'line-color': pathDetail.color || '#FF0000',
             'line-width': 4
+          }
+        });
+      } else {
+        // Update the existing line source and layer if needed
+        mapInstance.getSource(pathSourceId).setData({
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates
           }
         });
       }
 
       // Add markers for start and end points
-      new maplibregl.Marker({ color: path.color || '#FF0000' })
-        .setLngLat([parseFloat(path.start_point.longitude), parseFloat(path.start_point.latitude)])
-        .setPopup(new maplibregl.Popup().setText(`Start: ${path.description}`))
-        .addTo(mapInstance);
+      if (!isNaN(startLat) && !isNaN(startLng)) {
+        new maplibregl.Marker({ color: pathDetail.color || '#FF0000' })
+          .setLngLat([startLng, startLat])
+          .setPopup(new maplibregl.Popup().setText(`Start: ${pathDetail.description}`))
+          .addTo(mapInstance);
+      }
 
-      new maplibregl.Marker({ color: path.color || '#FF0000' })
-        .setLngLat([parseFloat(path.end_point.longitude), parseFloat(path.end_point.latitude)])
-        .setPopup(new maplibregl.Popup().setText(`End: ${path.description}`))
-        .addTo(mapInstance);
+      if (!isNaN(endLat) && !isNaN(endLng)) {
+        new maplibregl.Marker({ color: pathDetail.color || '#FF0000' })
+          .setLngLat([endLng, endLat])
+          .setPopup(new maplibregl.Popup().setText(`End: ${pathDetail.description}`))
+          .addTo(mapInstance);
+      }
+    } else {
+      console.warn('Invalid start/end points or empty points for path:', pathDetail);
     }
   });
 };
 
+
 // Function to remove all layers and sources
 export const removeMapLayersAndSources = (mapInstance, paths) => {
+  console.log('Removing map layers and sources');
+
   paths.forEach(path => {
     const pathSourceId = `path-${path.id}`;
     if (mapInstance.getLayer(pathSourceId)) {
