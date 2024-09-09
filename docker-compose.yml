@@ -90,12 +90,15 @@ services:
     build: 
       context: ./frontend
       dockerfile: Dockerfile
+    container_name: nef-front
+    profiles: [ "debug", "dev" ]
     ports:
       - "3000:80"
     networks:
       - services_default
     volumes:
-      - /home/gerpapa/NEF_emulator/frontend:/app
+      - ./frontend:/app
+      - /app/node_modules
 
   reverse_proxy:
     build:
