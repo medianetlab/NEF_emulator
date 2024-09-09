@@ -10,6 +10,7 @@
     "bootstrap": "^5.3.3",
     "classnames": "^2.5.1",
     "dotenv": "^16.4.5",
+    "https-browserify": "^1.0.0",
     "leaflet": "^1.9.4",
     "mapbox-gl": "^3.6.0",
     "maplibre-gl": "^4.6.0",

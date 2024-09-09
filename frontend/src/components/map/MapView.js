@@ -24,6 +24,9 @@ import {
   handleStartAll,
   handleUEClick,
 } from './MapViewUtils';
+import createWebSocketObservable from '../../utils/server'; 
+
+const BASE_URL = `http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_SERVER_PORT}/api/v1`;
 
 const MapView = ({ token }) => {
   const [ues, setUEs] = useState([]);
@@ -36,6 +39,7 @@ const MapView = ({ token }) => {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
 
+  // Fetch initial data (UEs, cells, paths)
   useEffect(() => {
     const fetchData = async () => {
       if (!token) {
@@ -64,6 +68,7 @@ const MapView = ({ token }) => {
     fetchData();
   }, [token]);
 
+  // Initialize the map
   useEffect(() => {
     if (loading || !token) return;
 
@@ -96,9 +101,6 @@ const MapView = ({ token }) => {
     };
   }, [loading, token, ues, cells, paths, pathDetails]);
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error}</p>;
-  if (!token) return <p>Please provide a valid token.</p>;
 
   return (
     <>

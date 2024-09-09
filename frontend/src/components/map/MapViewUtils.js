@@ -168,3 +168,6 @@ export const handleUEClick = (ue) => {
   console.log(`UE clicked: ${ue.supi}`);
   // Implement additional logic for handling UE clicks here
 };
+
+
+

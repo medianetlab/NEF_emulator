@@ -34,8 +34,11 @@
     "react-map-gl": "^7.1.7",
     "react-router-dom": "^6.25.1",
     "react-scripts": "^5.0.1",
+    "rxjs": "^7.8.1",
     "socket.io-client": "^4.7.5",
-    "web-vitals": "^2.1.4"
+    "stream-http": "^3.2.0",
+    "web-vitals": "^2.1.4",
+    "ws": "^8.18.0"
   },
   "scripts": {
     "start": "react-scripts start",
