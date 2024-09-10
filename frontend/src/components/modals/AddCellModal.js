@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   CModal, CModalHeader, CModalBody, CModalFooter, CButton,
-  CForm, CFormInput, CFormSelect
+  CForm, CFormInput, CFormSelect, CAlert
 } from '@coreui/react';
 import maplibre from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -21,6 +21,7 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
   const [gnbs, setGnbs] = useState([]);
   const [cells, setCells] = useState([]);
   const [ues, setUes] = useState([]);
+  const [message, setMessage] = useState({ type: '', text: '' }); // State for success/failure message
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
@@ -68,32 +69,26 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
             mapInstanceRef.current.on('click', (e) => {
               const { lng, lat } = e.lngLat;
 
-              // Update form data with clicked coordinates
               setFormData(prev => ({
                 ...prev,
                 latitude: lat.toFixed(5),
                 longitude: lng.toFixed(5)
               }));
 
-              // Remove existing marker if it exists
               if (markerRef.current) markerRef.current.remove();
 
-              // Add new marker
               markerRef.current = new maplibre.Marker({ color: 'red' })
                 .setLngLat([lng, lat])
                 .addTo(mapInstanceRef.current);
 
-              // Remove existing circle layer and source if they exist
               if (mapInstanceRef.current.getSource(sourceId)) {
                 mapInstanceRef.current.removeLayer(circleLayerId);
                 mapInstanceRef.current.removeSource(sourceId);
               }
 
-              // Convert radius from meters to pixels
               const radiusInPixels = convertRadiusToPixels(parseFloat(formData.radius), lat, mapInstanceRef.current.getZoom());
               console.log(`Radius in pixels: ${radiusInPixels}`);
 
-              // Add new circle
               mapInstanceRef.current.addSource(sourceId, {
                 type: 'geojson',
                 data: {
@@ -115,16 +110,14 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
                 type: 'circle',
                 source: sourceId,
                 paint: {
-                  'circle-color': 'rgba(255, 0, 0, 0.3)', // Red color with low opacity
-                  'circle-radius': radiusInPixels, // Use radius in pixels
+                  'circle-color': 'rgba(255, 0, 0, 0.3)',
+                  'circle-radius': radiusInPixels,
                   'circle-opacity': 0.3
                 }
               });
             });
 
-            // Add cells to the map
             mapInstanceRef.current.on('load', () => {
-              // Add Cells Layer
               mapInstanceRef.current.addSource('cellsSource', {
                 type: 'geojson',
                 data: {
@@ -137,7 +130,7 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
                     },
                     properties: {
                       description: cell.description,
-                      color: cell.color || '#FF0000' // Default color if not provided
+                      color: cell.color || '#FF0000'
                     }
                   }))
                 }
@@ -148,13 +141,12 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
                 type: 'circle',
                 source: 'cellsSource',
                 paint: {
-                  'circle-color': ['get', 'color'], // Use color from properties
-                  'circle-radius': 6, // Adjust size as needed
+                  'circle-color': ['get', 'color'],
+                  'circle-radius': 6,
                   'circle-opacity': 0.6
                 }
               });
 
-              // Add UEs Layer
               mapInstanceRef.current.addSource('uesSource', {
                 type: 'geojson',
                 data: {
@@ -166,27 +158,25 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
                       coordinates: [ue.longitude, ue.latitude]
                     },
                     properties: {
-                      id: ue.id, // Ensure that UE properties are set correctly
+                      id: ue.id,
                       name: ue.name
                     }
                   }))
                 }
               });
 
-              // Add the custom icon image to the map
               mapInstanceRef.current.loadImage('/assets/person.png', (error, image) => {
                 if (error) throw error;
                 if (!mapInstanceRef.current.hasImage('custom-person-icon')) {
                   mapInstanceRef.current.addImage('custom-person-icon', image);
                 }
 
-                // Add UEs Layer after the icon image is added
                 mapInstanceRef.current.addLayer({
                   id: 'uesLayer',
                   type: 'symbol',
                   source: 'uesSource',
                   layout: {
-                    'icon-image': 'custom-person-icon', // Use the custom icon image
+                    'icon-image': 'custom-person-icon',
                     'icon-size': 1.5
                   },
                   paint: {
@@ -206,7 +196,6 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
   }, [visible, formData.radius, cells, ues]);
 
   const convertRadiusToPixels = (radius, latitude, zoom) => {
-    // Approximate conversion factor
     const metersPerPixel = 156543.03392 * Math.cos((latitude * Math.PI) / 180) / Math.pow(2, zoom);
     return radius / metersPerPixel;
   };
@@ -217,89 +206,114 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
   };
 
   const handleFormSubmit = () => {
-    handleSubmit({
-      ...formData,
-      radius: parseFloat(formData.radius),
-      gNB_id: formData.gNB_id.trim()
-    });
+    if (formData.gNB_id.trim()) {
+      handleSubmit({
+        ...formData,
+        radius: parseFloat(formData.radius),
+        gNB_id: formData.gNB_id.trim()
+      });
+      setMessage({ type: 'success', text: 'Cell successfully added!' });
+    } else {
+      setMessage({ type: 'failure', text: 'Failed to add cell. Please select a gNB.' });
+    }
   };
 
   return (
-    <CModal visible={visible} onClose={handleClose} size="lg"> {/* Adjust size to "lg" */}
-      <CModalHeader closeButton>Add Cell</CModalHeader>
-      <CModalBody>
-        <CForm>
-          <CFormInput
-            id="cell_id"
-            name="cell_id"
-            label="Cell ID"
-            value={formData.cell_id}
-            onChange={handleChange}
-          />
-          <CFormInput
-            id="name"
-            name="name"
-            label="Name"
-            value={formData.name}
-            onChange={handleChange}
-          />
-          <CFormInput
-            id="description"
-            name="description"
-            label="Description"
-            value={formData.description}
-            onChange={handleChange}
-          />
-          <CFormSelect
-            id="gNB_id"
-            name="gNB_id"
-            label="Select gNB"
-            value={formData.gNB_id}
-            onChange={handleChange}
-          >
-            <option value="">Select gNB</option>
-            {gnbs.map(gnb => (
-              <option key={gnb.id} value={gnb.id}>
-                {gnb.name} (ID: {gnb.id})
-              </option>
-            ))}
-          </CFormSelect>
+    <>
+      <CModal visible={visible} onClose={handleClose} size="lg">
+        <CModalHeader closeButton>Add Cell</CModalHeader>
+        <CModalBody>
+          <CForm>
+            <CFormInput
+              id="cell_id"
+              name="cell_id"
+              label="Cell ID"
+              value={formData.cell_id}
+              onChange={handleChange}
+            />
+            <CFormInput
+              id="name"
+              name="name"
+              label="Name"
+              value={formData.name}
+              onChange={handleChange}
+            />
+            <CFormInput
+              id="description"
+              name="description"
+              label="Description"
+              value={formData.description}
+              onChange={handleChange}
+            />
+            <CFormSelect
+              id="gNB_id"
+              name="gNB_id"
+              label="Select gNB"
+              value={formData.gNB_id}
+              onChange={handleChange}
+            >
+              <option value="">Select gNB</option>
+              {gnbs.map(gnb => (
+                <option key={gnb.id} value={gnb.id}>
+                  {gnb.name} (ID: {gnb.id})
+                </option>
+              ))}
+            </CFormSelect>
 
-          <CFormInput
-            id="latitude"
-            name="latitude"
-            label="Latitude"
-            value={formData.latitude}
-            readOnly
-          />
-          <CFormInput
-            id="longitude"
-            name="longitude"
-            label="Longitude"
-            value={formData.longitude}
-            readOnly
-          />
-          <CFormInput
-            id="radius"
-            name="radius"
-            label="Radius (meters)"
-            value={formData.radius}
-            onChange={handleChange}
-            placeholder="Enter radius in meters"
-          />
-        </CForm>
+            <CFormInput
+              id="latitude"
+              name="latitude"
+              label="Latitude"
+              value={formData.latitude}
+              readOnly
+            />
+            <CFormInput
+              id="longitude"
+              name="longitude"
+              label="Longitude"
+              value={formData.longitude}
+              readOnly
+            />
+            <CFormInput
+              id="radius"
+              name="radius"
+              label="Radius (meters)"
+              value={formData.radius}
+              onChange={handleChange}
+              placeholder="Radius in meters"
+            />
+          </CForm>
 
-        <div
-          id="cellMap"
-          ref={mapRef}
-          style={{ height: '400px', marginTop: '20px' }} // Increased height for better visibility
-        ></div>
-      </CModalBody>
-      <CModalFooter>
-        <CButton color="secondary" onClick={handleClose}>Cancel</CButton>
-        <CButton color="primary" onClick={handleFormSubmit}>Save</CButton>
-      </CModalFooter>
-    </CModal>
+          <div
+            ref={mapRef}
+            style={{ width: '100%', height: '400px', marginTop: '10px' }}
+          />
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={handleClose}>
+            Close
+          </CButton>
+          <CButton color="primary" onClick={handleFormSubmit}>
+            Submit
+          </CButton>
+        </CModalFooter>
+      </CModal>
+
+      {/* Status message display */}
+      {message.text && (
+        <CAlert
+          color={message.type === 'success' ? 'success' : 'danger'}
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            right: '20px',
+            zIndex: 9999
+          }}
+        >
+          {message.text}
+        </CAlert>
+      )}
+    </>
   );
 };
 
