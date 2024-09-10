@@ -1,6 +1,5 @@
 .vscode
 .mypy_cache
-.env
 *.key
 *.crt
 *.csr

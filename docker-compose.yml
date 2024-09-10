@@ -88,6 +88,7 @@ services:
       - services_default
 
   frontend:
+    image: '${DOCKER_IMAGE_FRONTEND?Variable not set}:${TAG-latest}'
     build: 
       context: ./frontend
       dockerfile: Dockerfile
@@ -127,6 +128,7 @@ services:
       - nef
       - mongo-nef
       - db
+      - frontend
     networks:
       - services_default
     command: sh -c '/self-signed-crt.sh && /dynamic_ports.sh'
