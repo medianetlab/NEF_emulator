@@ -1,0 +1,64 @@
+/* Sidebar Styles */
+.sidebar {
+    background-color: #526b8f !important;  /* Darker Navy Blue */
+    color: #ffffff !important;  /* White Text */
+    width: 250px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: width 0.3s ease, margin-left 0.3s ease; /* Smooth transition */
+  }
+  
+  .sidebar-hidden {
+    width: 0; /* Hide the sidebar */
+    overflow: hidden; /* Prevent content overflow */
+    transition: width 0.3s ease, margin-left 0.3s ease; /* Smooth transition */
+  }
+  
+  /* Sidebar Links */
+  .sidebar a {
+    color: #ffffff !important; 
+    text-decoration: none;
+    display: block;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .sidebar a:hover {
+    background-color: #003366;  /* darker navy blue */
+  }
+  
+  /* Sidebar logo styling */
+.sidebar-logo {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+
+  /* ------------------ dropdowns ----------------------*/
+
+  /* Sidebar Dropdown Menu Styling */
+.sidebar .dropdown-menu {
+    background-color: #001f3f;  /* Dark Navy Blue to match the sidebar */
+    border: none;               /* Remove the default border */
+  }
+  
+  .sidebar .dropdown-item {
+    color: #ecf0f1;  /* Light Gray text color to match the sidebar */
+    padding: 10px 20px; /* Adjust padding if necessary */
+  }
+  
+  .sidebar .dropdown-item:hover {
+    background-color: #34495e;  /* Slightly darker blue-gray for hover effect */
+  }
+  
+  /* Optional: Add padding and margin if needed */
+  .sidebar .dropdown-menu {
+    margin: 0;  /* Remove any default margin */
+    padding: 0; /* Remove any default padding */
+  }
+  

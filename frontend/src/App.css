@@ -1,0 +1,136 @@
+/* App Container */
+.app-container {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+}
+
+/* Top Bar Styles */
+.header {
+  background-color: #3498db;  /* Lighter Blue */
+  color: #fff;
+  padding: 15px;
+  font-size: 1.5em;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px; /* Adjusted margin for better spacing */
+}
+
+/* Main Content Area */
+.main-content {
+  flex: 1;
+  background-color: #ecf0f1;  /* Light Gray */
+  padding: 20px;
+  overflow-y: auto;
+  transition: margin-left 0.3s ease; /* Smooth transition */
+}
+
+/* Adjust margin for content when sidebar is hidden */
+.sidebar-hidden ~ .main-content {
+  margin-left: 0;
+}
+
+/* Button Styles */
+.button {
+  border-radius: 20px;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  font-size: 1em;
+  color: #fff;
+}
+
+.button.edit {
+  background-color: #3498db;
+}
+
+.button.delete {
+  background-color: #e74c3c;
+}
+
+.button.add {
+  background-color: #27ae60;
+}
+
+.button:hover {
+  opacity: 0.8;
+}
+
+/* Table and Card Styling */
+.table-container {
+  background-color: #fff;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table th,
+table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+/* Section Header Colors */
+.section-header.gNBs {
+  background-color: #8e44ad; /* Purple */
+  color: #fff;
+  padding: 10px;
+  border-radius: 10px 10px 0 0;
+}
+
+.section-header.Cells {
+  background-color: #2980b9; /* Blue */
+  color: #fff;
+  padding: 10px;
+  border-radius: 10px 10px 0 0;
+}
+
+.section-header.Ues {
+  background-color: #f39c12; /* Yellow */
+  color: #fff;
+  padding: 10px;
+  border-radius: 10px 10px 0 0;
+}
+
+.section-header.Paths {
+  background-color: #e74c3c; /* Red */
+  color: #fff;
+  padding: 10px;
+  border-radius: 10px 10px 0 0;
+}
+
+/* Profile Icon */
+.profile-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #bdc3c7;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.c-header {
+  padding-left: 20px; /* Ensure some padding around icons */
+  padding-right: 20px;
+}
+
+.c-header-nav {
+  display: flex;
+  align-items: center;
+}

@@ -1,0 +1,11 @@
+/* Header title container */
+.header-title {
+  text-align: center;
+  flex: 1; 
+}
+
+.header-title h1 {
+  color: #000000;
+  margin: 0;
+  font-size: 1.5rem; 
+}
