@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   CModal, CModalHeader, CModalBody, CModalFooter, CButton,
-  CForm, CFormInput, CFormTextarea
+  CForm, CFormInput, CFormTextarea, CAlert
 } from '@coreui/react';
 
 // Color options for the path
@@ -15,6 +15,9 @@ const EditPathModal = ({ visible, handleClose, handleSubmit, initialData }) => {
     description: '',
     color: ''
   });
+  const [errors, setErrors] = useState({});
+  const [message, setMessage] = useState({ type: '', text: '' });
+  const [showMessage, setShowMessage] = useState(false); // Control visibility with fade-out effect
 
   useEffect(() => {
     if (initialData) {
@@ -31,14 +34,48 @@ const EditPathModal = ({ visible, handleClose, handleSubmit, initialData }) => {
     setFormData(prev => ({ ...prev, color }));
   };
 
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.description) errors.description = 'Description is required';
+    if (!formData.color) errors.color = 'Color is required';
+    setErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleFormSubmit = () => {
-    handleSubmit(formData);
+    if (validateForm()) {
+      handleSubmit(formData);
+      setMessage({ type: 'success', text: 'Path updated successfully!' });
+    } else {
+      setMessage({ type: 'danger', text: 'Please correct the errors in the form.' });
+    }
+    setShowMessage(true);
+
+    // Hide the message after 3 seconds and then fade it out
+    setTimeout(() => {
+      setShowMessage(false); // Start fade-out effect
+    }, 3000);
   };
 
   return (
     <CModal visible={visible} onClose={handleClose}>
       <CModalHeader closeButton>Edit Path</CModalHeader>
       <CModalBody>
+        {message.text && (
+          <CAlert
+            color={message.type === 'success' ? 'success' : 'danger'}
+            style={{
+              position: 'fixed',
+              bottom: '20px',
+              right: '20px',
+              zIndex: 9999,
+              transition: 'opacity 0.5s ease', // Smooth transition for fade-out
+              opacity: showMessage ? 1 : 0 // Control opacity to fade out
+            }}
+          >
+            {message.text}
+          </CAlert>
+        )}
         <CForm>
           <CFormInput
             id="id"
@@ -54,7 +91,9 @@ const EditPathModal = ({ visible, handleClose, handleSubmit, initialData }) => {
             label="Description"
             value={formData.description}
             onChange={handleChange}
+            isInvalid={!!errors.description}
           />
+          {errors.description && <div className="invalid-feedback">{errors.description}</div>}
           <div className="mb-3">
             <label className="form-label">Color</label>
             <div className="d-flex">
@@ -74,6 +113,7 @@ const EditPathModal = ({ visible, handleClose, handleSubmit, initialData }) => {
                 />
               ))}
             </div>
+            {errors.color && <div className="invalid-feedback d-block">{errors.color}</div>}
           </div>
         </CForm>
       </CModalBody>

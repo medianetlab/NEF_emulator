@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   CModal, CModalHeader, CModalBody, CModalFooter, CButton,
-  CForm, CFormTextarea
+  CForm, CFormTextarea, CAlert
 } from '@coreui/react';
 import maplibre from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -20,6 +20,7 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
     points: []
   });
   const [errors, setErrors] = useState({});
+  const [message, setMessage] = useState({ type: '', text: '' }); // For success/error messages
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
@@ -34,6 +35,7 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
         points: []
       });
       setErrors({});
+      setMessage({ type: '', text: '' }); // Clear messages
       markersRef.current.forEach(marker => marker.remove());
       markersRef.current = [];
 
@@ -177,6 +179,11 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
         }))
       };
       handleSubmit(dataToSubmit);
+      setMessage({ type: 'success', text: 'Path added successfully!' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } else {
+      setMessage({ type: 'danger', text: 'Please correct the errors in the form.' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     }
   };
 
@@ -184,6 +191,19 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
     <CModal visible={visible} onClose={handleClose} size="lg">
       <CModalHeader closeButton>Add Path</CModalHeader>
       <CModalBody>
+        {message.text && (
+          <CAlert
+            color={message.type === 'success' ? 'success' : 'danger'}
+            style={{
+              position: 'fixed',
+              bottom: '20px',
+              right: '20px',
+              zIndex: 9999
+            }}
+          >
+            {message.text}
+          </CAlert>
+        )}
         <CForm>
           <div className="mb-3">
             <label htmlFor="description" className="form-label">Description</label>
@@ -234,4 +254,3 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
 };
 
 export default AddPathModal;
-

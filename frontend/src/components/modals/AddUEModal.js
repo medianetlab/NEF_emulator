@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   CModal, CModalHeader, CModalBody, CModalFooter, CButton,
-  CForm, CFormInput, CFormSelect, CToaster, CToast, CToastBody, CToastClose
+  CForm, CFormInput, CFormSelect, CAlert
 } from '@coreui/react';
 import maplibre from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { getPaths, getGNBs, getCells } from '../../utils/api';  // Assuming you have these API functions
+import { getPaths, getGNBs, getCells, addUE } from '../../utils/api';  // Assuming you have these API functions
 
-const AddUEModal = ({ visible, handleClose, handleSubmit, token }) => {
+const AddUEModal = ({ visible, handleClose, token }) => {
   const [formData, setFormData] = useState({
     supi: '202010000000001',
     name: 'UE1',
@@ -26,12 +26,12 @@ const AddUEModal = ({ visible, handleClose, handleSubmit, token }) => {
   });
 
   const [paths, setPaths] = useState([]);
-  const [gnbs, setGNBs] = useState([]);  // For gNBs
-  const [cells, setCells] = useState([]);  // For cells
-  const [toasts, setToasts] = useState([]);  // For toast messages
+  const [gnbs, setGNBs] = useState([]);
+  const [cells, setCells] = useState([]);
+  const [message, setMessage] = useState({ type: '', text: '' }); // For success/error messages
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
-  const markerRef = useRef(null); // Ref to hold the map marker
+  const markerRef = useRef(null);
 
   useEffect(() => {
     const fetchPaths = async () => {
@@ -39,12 +39,12 @@ const AddUEModal = ({ visible, handleClose, handleSubmit, token }) => {
       try {
         const [pathsData, gnbData, cellData] = await Promise.all([
           getPaths(token),
-          getGNBs(token),   // Fetch gNBs
-          getCells(token)   // Fetch Cells
+          getGNBs(token),
+          getCells(token)
         ]);
         setPaths(pathsData);
-        setGNBs(gnbData);   // Set gNBs
-        setCells(cellData); // Set Cells
+        setGNBs(gnbData);
+        setCells(cellData);
       } catch (error) {
         console.error('Error fetching paths, gNBs, or cells:', error);
       }
@@ -65,22 +65,20 @@ const AddUEModal = ({ visible, handleClose, handleSubmit, token }) => {
               zoom: 12,
             });
 
-            // Initialize the marker
             markerRef.current = new maplibre.Marker()
               .setLngLat([parseFloat(formData.lon) || 23.7275, parseFloat(formData.lat) || 37.9838])
               .addTo(mapInstanceRef.current);
 
-            // Add a click event listener to update the marker
             mapInstanceRef.current.on('click', (e) => {
               const { lng, lat } = e.lngLat;
               setFormData(prev => ({
                 ...prev,
-                lat: lat.toFixed(6), // Formatting for consistency
-                lon: lng.toFixed(6)  // Formatting for consistency
+                lat: lat.toFixed(6),
+                lon: lng.toFixed(6)
               }));
 
               if (markerRef.current) {
-                markerRef.current.setLngLat([lng, lat]); // Update marker position
+                markerRef.current.setLngLat([lng, lat]);
               }
             });
           }
@@ -89,7 +87,7 @@ const AddUEModal = ({ visible, handleClose, handleSubmit, token }) => {
     } else if (mapInstanceRef.current) {
       mapInstanceRef.current.remove();
       mapInstanceRef.current = null;
-      markerRef.current = null; // Clean up marker reference
+      markerRef.current = null;
     }
   }, [visible, formData]);
 
@@ -98,169 +96,169 @@ const AddUEModal = ({ visible, handleClose, handleSubmit, token }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Function to display toast messages
-  const addToast = (message, color) => {
-    setToasts([...toasts, { message, color }]);
-  };
-
-  const handleFormSubmit = () => {
-    // Validation: Check if there are no gNBs or Cells
+  const handleFormSubmit = async () => {
     if (gnbs.length === 0) {
-      addToast('Error: No gNBs available. Please add at least one gNB.', 'danger');
+      setMessage({ type: 'danger', text: 'Error: No gNBs available. Please add at least one gNB.' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       return;
     }
 
     if (cells.length === 0) {
-      addToast('Error: No Cells available. Please add at least one Cell.', 'danger');
+      setMessage({ type: 'danger', text: 'Error: No Cells available. Please add at least one Cell.' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       return;
     }
 
-    // If gNBs and Cells exist, submit the form
-    handleSubmit(formData);
-    addToast('UE added successfully!', 'success');
-    handleClose(); // Close the modal after successful submission
+    try {
+      await addUE(formData);
+      setMessage({ type: 'success', text: 'UE added successfully!' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      handleClose();
+    } catch (error) {
+      setMessage({ type: 'danger', text: 'Error: Failed to add UE.' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    }
   };
 
   return (
-    <>
-      <CModal visible={visible} onClose={handleClose} size="lg"> {/* Adjusted size to "lg" */}
-        <div style={{ maxWidth: '100%', width: '100%' }}>
-          <CModalHeader closeButton>Add UE</CModalHeader>
-          <CModalBody>
-            <CForm>
-              <CFormInput
-                id="supi"
-                name="supi"
-                label="SUPI"
-                value={formData.supi}
-                onChange={handleChange}
-              />
-              <CFormInput
-                id="name"
-                name="name"
-                label="Name"
-                value={formData.name}
-                onChange={handleChange}
-              />
-              <CFormInput
-                id="ext_identifier"
-                name="ext_identifier"
-                label="External Identifier"
-                value={formData.ext_identifier}
-                onChange={handleChange}
-              />
-              <CFormInput
-                id="cell_id"
-                name="cell_id"
-                label="Cell ID"
-                value={formData.cell_id}
-                onChange={handleChange}
-              />
-              <CFormInput
-                id="ip_address_v4"
-                name="ip_address_v4"
-                label="IPv4"
-                value={formData.ip_address_v4}
-                onChange={handleChange}
-              />
-              <CFormInput
-                id="ip_address_v6"
-                name="ip_address_v6"
-                label="IPv6"
-                value={formData.ip_address_v6}
-                onChange={handleChange}
-              />
-              <CFormInput
-                id="mcc"
-                name="mcc"
-                label="mcc"
-                value={formData.mcc}
-                onChange={handleChange}
-                disabled
-              />
-              <CFormInput
-                id="mnc"
-                name="mnc"
-                label="mnc"
-                value={formData.mnc}
-                onChange={handleChange}
-                disabled
-              />
-              <CFormInput
-                id="dnn"
-                name="dnn"
-                label="dnn"
-                value={formData.dnn}
-                onChange={handleChange}
-                disabled
-              />
-              <CFormSelect
-                id="path_id"
-                name="path_id"
-                label="Path"
-                value={formData.path_id}
-                onChange={handleChange}
-              >
-                <option value="">Select a path</option>
-                {paths.map((path) => (
-                  <option key={path.id} value={path.id}>
-                    {path.description}
-                  </option>
-                ))}
-              </CFormSelect>
+    <CModal visible={visible} onClose={handleClose} size="lg">
+      <div style={{ maxWidth: '100%', width: '100%' }}>
+        <CModalHeader closeButton>Add UE</CModalHeader>
+        <CModalBody>
+          {message.text && (
+            <CAlert
+              color={message.type === 'success' ? 'success' : 'danger'}
+              style={{
+                position: 'fixed',
+                bottom: '20px',
+                right: '20px',
+                zIndex: 9999
+              }}
+            >
+              {message.text}
+            </CAlert>
+          )}
+          <CForm>
+            <CFormInput
+              id="supi"
+              name="supi"
+              label="SUPI"
+              value={formData.supi}
+              onChange={handleChange}
+            />
+            <CFormInput
+              id="name"
+              name="name"
+              label="Name"
+              value={formData.name}
+              onChange={handleChange}
+            />
+            <CFormInput
+              id="ext_identifier"
+              name="ext_identifier"
+              label="External Identifier"
+              value={formData.ext_identifier}
+              onChange={handleChange}
+            />
+            <CFormInput
+              id="cell_id"
+              name="cell_id"
+              label="Cell ID"
+              value={formData.cell_id}
+              onChange={handleChange}
+            />
+            <CFormInput
+              id="ip_address_v4"
+              name="ip_address_v4"
+              label="IPv4"
+              value={formData.ip_address_v4}
+              onChange={handleChange}
+            />
+            <CFormInput
+              id="ip_address_v6"
+              name="ip_address_v6"
+              label="IPv6"
+              value={formData.ip_address_v6}
+              onChange={handleChange}
+            />
+            <CFormInput
+              id="mcc"
+              name="mcc"
+              label="MCC"
+              value={formData.mcc}
+              onChange={handleChange}
+              disabled
+            />
+            <CFormInput
+              id="mnc"
+              name="mnc"
+              label="MNC"
+              value={formData.mnc}
+              onChange={handleChange}
+              disabled
+            />
+            <CFormInput
+              id="dnn"
+              name="dnn"
+              label="DNN"
+              value={formData.dnn}
+              onChange={handleChange}
+              disabled
+            />
+            <CFormSelect
+              id="path_id"
+              name="path_id"
+              label="Path"
+              value={formData.path_id}
+              onChange={handleChange}
+            >
+              <option value="">Select a path</option>
+              {paths.map((path) => (
+                <option key={path.id} value={path.id}>
+                  {path.description}
+                </option>
+              ))}
+            </CFormSelect>
 
-              <CFormSelect
-                id="speed"
-                name="speed"
-                label="Speed"
-                value={formData.speed}
-                onChange={handleChange}
-              >
-                <option value="LOW">LOW</option>
-                <option value="HIGH">HIGH</option>
-              </CFormSelect>
+            <CFormSelect
+              id="speed"
+              name="speed"
+              label="Speed"
+              value={formData.speed}
+              onChange={handleChange}
+            >
+              <option value="LOW">LOW</option>
+              <option value="HIGH">HIGH</option>
+            </CFormSelect>
 
-              <CFormInput
-                id="lat"
-                name="lat"
-                label="Latitude"
-                value={formData.lat}
-                readOnly 
-              />
-              <CFormInput
-                id="lon"
-                name="lon"
-                label="Longitude"
-                value={formData.lon}
-                readOnly 
-              />
-            </CForm>
+            <CFormInput
+              id="lat"
+              name="lat"
+              label="Latitude"
+              value={formData.lat}
+              readOnly 
+            />
+            <CFormInput
+              id="lon"
+              name="lon"
+              label="Longitude"
+              value={formData.lon}
+              readOnly 
+            />
+          </CForm>
 
-            <div
-              id="ueMap"
-              ref={mapRef}
-              style={{ height: '400px', marginTop: '20px' }}
-            ></div>
-          </CModalBody>
-          <CModalFooter>
-            <CButton color="secondary" onClick={handleClose}>Cancel</CButton>
-            <CButton color="primary" onClick={handleFormSubmit}>Save</CButton>
-          </CModalFooter>
-        </div>
-      </CModal>
-
-      {/* Toast notifications */}
-      <CToaster placement="bottom-end">
-        {toasts.map((toast, index) => (
-          <CToast key={index} color={toast.color} autohide={true} delay={5000} visible={true}>
-            <div className="d-flex">
-              <CToastBody>{toast.message}</CToastBody>
-              <CToastClose className="me-2 m-auto" />
-            </div>
-          </CToast>
-        ))}
-      </CToaster>
-    </>
+          <div
+            id="ueMap"
+            ref={mapRef}
+            style={{ height: '400px', marginTop: '20px' }}
+          ></div>
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={handleClose}>Cancel</CButton>
+          <CButton color="primary" onClick={handleFormSubmit}>Save</CButton>
+        </CModalFooter>
+      </div>
+    </CModal>
   );
 };
 
