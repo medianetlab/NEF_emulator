@@ -1,24 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import {
   CModal, CModalHeader, CModalBody, CModalFooter, CButton,
-  CForm, CFormInput, CFormTextarea
+  CForm, CFormInput, CFormTextarea, CAlert
 } from '@coreui/react';
 
 const AddGNBModal = ({ visible, handleClose, handleSubmit }) => {
   const [formData, setFormData] = useState({
-    gNB_id: '',
-    name: '',
-    description: '',
-    location: ''
+    gNB_id: 'AAAAA1',
+    name: 'gNB1',
+    description: 'This is a base station',
+    location: 'location-A'
   });
 
+  const [message, setMessage] = useState({ type: '', text: '' }); // State for success/failure message
+
   useEffect(() => {
-    setFormData({
-      gNB_id: '',
-      name: '',
-      description: '',
-      location: ''
-    });
+    if (visible) {
+      setFormData({
+        gNB_id: 'AAAAA1',
+        name: 'gNB1',
+        description: 'This is a base station',
+        location: 'location-A'
+      });
+      setMessage({ type: '', text: '' }); // Clear message on modal open
+    }
   }, [visible]);
 
   const handleChange = (e) => {
@@ -27,49 +32,81 @@ const AddGNBModal = ({ visible, handleClose, handleSubmit }) => {
   };
 
   const handleFormSubmit = () => {
-    handleSubmit(formData);
+    if (!formData.gNB_id || !formData.name) {
+      setMessage({ type: 'failure', text: 'Error: Please fill in all fields' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000); // Auto-hide after 3 seconds
+      return;
+    }
+
+    try {
+      handleSubmit(formData);  // Call the submit handler
+      setMessage({ type: 'success', text: 'gNB added successfully!' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000); // Auto-hide after 3 seconds
+      handleClose();  // Close modal after success
+    } catch (error) {
+      setMessage({ type: 'failure', text: 'Error: Failed to add gNB' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000); // Auto-hide after 3 seconds
+    }
   };
 
   return (
-    <CModal visible={visible} onClose={handleClose}>
-      <CModalHeader closeButton>Add gNB</CModalHeader>
-      <CModalBody>
-        <CForm>
-          <CFormInput
-            id="gNB_id"
-            name="gNB_id"
-            label="gNB_id"
-            value={formData.gNB_id}
-            onChange={handleChange}
-          />
-          <CFormInput
-            id="name"
-            name="name"
-            label="Name"
-            value={formData.name}
-            onChange={handleChange}
-          />
-          <CFormTextarea
-            id="description"
-            name="description"
-            label="Description"
-            value={formData.description}
-            onChange={handleChange}
-          />
-          <CFormInput
-            id="location"
-            name="location"
-            label="Location"
-            value={formData.location}
-            onChange={handleChange}
-          />
-        </CForm>
-      </CModalBody>
-      <CModalFooter>
-        <CButton color="secondary" onClick={handleClose}>Cancel</CButton>
-        <CButton color="primary" onClick={handleFormSubmit}>Save</CButton>
-      </CModalFooter>
-    </CModal>
+    <>
+      {/* Status message display */}
+      {message.text && (
+        <CAlert
+          color={message.type === 'success' ? 'success' : 'danger'}
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            right: '20px',
+            zIndex: 9999
+          }}
+        >
+          {message.text}
+        </CAlert>
+      )}
+
+      {/* Modal */}
+      <CModal visible={visible} onClose={handleClose}>
+        <CModalHeader closeButton>Add gNB</CModalHeader>
+        <CModalBody>
+          <CForm>
+            <CFormInput
+              id="gNB_id"
+              name="gNB_id"
+              label="gNB_id"
+              value={formData.gNB_id}
+              onChange={handleChange}
+            />
+            <CFormInput
+              id="name"
+              name="name"
+              label="Name"
+              value={formData.name}
+              onChange={handleChange}
+            />
+            <CFormTextarea
+              id="description"
+              name="description"
+              label="Description"
+              value={formData.description}
+              onChange={handleChange}
+            />
+            <CFormInput
+              id="location"
+              name="location"
+              label="Location"
+              value={formData.location}
+              onChange={handleChange}
+            />
+          </CForm>
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={handleClose}>Cancel</CButton>
+          <CButton color="primary" onClick={handleFormSubmit}>Save</CButton>
+        </CModalFooter>
+      </CModal>
+    </>
   );
 };
 

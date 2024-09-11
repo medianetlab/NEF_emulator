@@ -213,8 +213,10 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
         gNB_id: formData.gNB_id.trim()
       });
       setMessage({ type: 'success', text: 'Cell successfully added!' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000); // Auto-hide after 3 seconds
     } else {
       setMessage({ type: 'failure', text: 'Failed to add cell. Please select a gNB.' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000); // Auto-hide after 3 seconds
     }
   };
 
