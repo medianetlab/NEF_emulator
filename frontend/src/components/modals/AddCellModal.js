@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   CModal, CModalHeader, CModalBody, CModalFooter, CButton,
-  CForm, CFormInput, CFormSelect, CAlert
+  CForm, CFormInput, CFormSelect, CToaster, CToast, CToastBody, CToastClose
 } from '@coreui/react';
 import maplibre from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -21,7 +21,7 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
   const [gnbs, setGnbs] = useState([]);
   const [cells, setCells] = useState([]);
   const [ues, setUes] = useState([]);
-  const [message, setMessage] = useState({ type: '', text: '' }); // State for success/failure message
+  const [toasts, setToasts] = useState([]);  // State for toast messages
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
@@ -36,6 +36,7 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
         setGnbs(gnbData);
       } catch (error) {
         console.error('Error fetching gNBs:', error);
+        addToast('Error fetching gNBs. Please try again.', 'danger');
       }
     };
 
@@ -47,6 +48,7 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
         setUes(uesData);
       } catch (error) {
         console.error('Error fetching cells or UEs:', error);
+        addToast('Error fetching cells or UEs. Please try again.', 'danger');
       }
     };
 
@@ -205,18 +207,30 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFormSubmit = () => {
-    if (formData.gNB_id.trim()) {
-      handleSubmit({
+  const addToast = (message, color) => {
+    setToasts(prevToasts => [...prevToasts, { message, color }]);
+    setTimeout(() => {
+      setToasts(prevToasts => prevToasts.slice(1)); // Remove the oldest toast after 3 seconds
+    }, 3000);
+  };
+
+  const handleFormSubmit = async () => {
+    if (!formData.gNB_id.trim()) {
+      addToast('Error: Please select a gNB.', 'danger');
+      return;
+    }
+
+    try {
+      await handleSubmit({
         ...formData,
         radius: parseFloat(formData.radius),
         gNB_id: formData.gNB_id.trim()
       });
-      setMessage({ type: 'success', text: 'Cell successfully added!' });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000); // Auto-hide after 3 seconds
-    } else {
-      setMessage({ type: 'failure', text: 'Failed to add cell. Please select a gNB.' });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000); // Auto-hide after 3 seconds
+      addToast('Cell successfully added!', 'success');
+      handleClose();
+    } catch (error) {
+      console.error('Error adding cell:', error);  // Log error to console
+      addToast('Error: Failed to add cell. Please try again.', 'danger');
     }
   };
 
@@ -261,7 +275,6 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
                 </option>
               ))}
             </CFormSelect>
-
             <CFormInput
               id="latitude"
               name="latitude"
@@ -301,20 +314,16 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
         </CModalFooter>
       </CModal>
 
-      {/* Status message display */}
-      {message.text && (
-        <CAlert
-          color={message.type === 'success' ? 'success' : 'danger'}
-          style={{
-            position: 'fixed',
-            bottom: '20px',
-            right: '20px',
-            zIndex: 9999
-          }}
-        >
-          {message.text}
-        </CAlert>
-      )}
+      <CToaster position="top-end">
+        {toasts.map((toast, index) => (
+          <CToast key={index} color={toast.color} autohide={true} visible={true} fade={true} style={{ marginTop: '1rem' }}>
+            <CToastBody>
+              {toast.message}
+              <CToastClose />
+            </CToastBody>
+          </CToast>
+        ))}
+      </CToaster>
     </>
   );
 };

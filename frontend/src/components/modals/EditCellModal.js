@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   CModal, CModalHeader, CModalBody, CModalFooter, CButton,
-  CForm, CFormInput, CFormTextarea, CFormSelect
+  CForm, CFormInput, CFormTextarea, CFormSelect, CAlert
 } from '@coreui/react';
 import maplibre from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -19,6 +19,7 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, initialData 
   });
 
   const [gnbs, setGnbs] = useState([]);
+  const [message, setMessage] = useState({ type: '', text: '' }); // State for success/failure message
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null); // Ref to hold the map marker
@@ -28,7 +29,11 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, initialData 
     if (visible) {
       getGNBs(token)
         .then(setGnbs)
-        .catch(err => console.error("Failed to fetch gNBs", err));
+        .catch(err => {
+          console.error("Failed to fetch gNBs", err);
+          setMessage({ type: 'failure', text: 'Error fetching gNBs. Please try again later.' });
+          setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+        });
     }
   }, [visible, token]);
 
@@ -92,92 +97,117 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, initialData 
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFormSubmit = () => {
-    const dataToSubmit = {
-      ...formData,
-      radius: parseFloat(formData.radius),
-      gNB_id: parseFloat(formData.gNB_id)
-    };
+  const handleFormSubmit = async () => {
+    try {
+      const dataToSubmit = {
+        ...formData,
+        radius: parseFloat(formData.radius),
+        gNB_id: parseFloat(formData.gNB_id)
+      };
 
-    handleSubmit(dataToSubmit);
+      await handleSubmit(dataToSubmit);
+      setMessage({ type: 'success', text: 'Cell updated successfully!' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000); // Auto-hide after 3 seconds
+      handleClose(); // Close the modal after successful update
+    } catch (error) {
+      setMessage({ type: 'failure', text: 'Error: Failed to update the cell.' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000); // Auto-hide after 3 seconds
+    }
   };
 
   return (
-    <CModal visible={visible} onClose={handleClose} size="lg">
-      <CModalHeader closeButton>Edit Cell</CModalHeader>
-      <CModalBody>
-        <CForm>
-          <CFormInput
-            id="cell_id"
-            name="cell_id"
-            label="Cell ID"
-            value={formData.cell_id}
-            onChange={handleChange}
-            disabled // Disable editing for Cell ID
-          />
-          <CFormInput
-            id="name"
-            name="name"
-            label="Name"
-            value={formData.name}
-            onChange={handleChange}
-          />
-          <CFormTextarea
-            id="description"
-            name="description"
-            label="Description"
-            value={formData.description}
-            onChange={handleChange}
-          />
-          <CFormSelect
-            id="gNB_id"
-            name="gNB_id"
-            label="Select gNB"
-            value={formData.gNB_id}
-            onChange={handleChange}
-          >
-            <option value="">Select gNB</option>
-            {gnbs.map(gnb => (
-              <option key={gnb.id} value={gnb.id}>
-                {gnb.name} (ID: {gnb.id})
-              </option>
-            ))}
-          </CFormSelect>
-          <CFormInput
-            id="latitude"
-            name="latitude"
-            label="Latitude"
-            value={formData.latitude}
-            onChange={handleChange}
-            disabled
-          />
-          <CFormInput
-            id="longitude"
-            name="longitude"
-            label="Longitude"
-            value={formData.longitude}
-            onChange={handleChange}
-            disabled
-          />
-          <CFormInput
-            id="radius"
-            name="radius"
-            label="Radius"
-            value={formData.radius}
-            onChange={handleChange}
-          />
-          <div
-            id="editCellMap"
-            ref={mapRef}
-            style={{ height: '400px', marginTop: '20px' }}
-          ></div>
-        </CForm>
-      </CModalBody>
-      <CModalFooter>
-        <CButton color="secondary" onClick={handleClose}>Cancel</CButton>
-        <CButton color="primary" type="button" onClick={handleFormSubmit}>Save</CButton>
-      </CModalFooter>
-    </CModal>
+    <>
+      {/* Status message display */}
+      {message.text && (
+        <CAlert
+          color={message.type === 'success' ? 'success' : 'danger'}
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            right: '20px',
+            zIndex: 9999
+          }}
+        >
+          {message.text}
+        </CAlert>
+      )}
+
+      {/* Edit Cell Modal */}
+      <CModal visible={visible} onClose={handleClose} size="lg">
+        <CModalHeader closeButton>Edit Cell</CModalHeader>
+        <CModalBody>
+          <CForm>
+            <CFormInput
+              id="cell_id"
+              name="cell_id"
+              label="Cell ID"
+              value={formData.cell_id}
+              onChange={handleChange}
+              disabled // Disable editing for Cell ID
+            />
+            <CFormInput
+              id="name"
+              name="name"
+              label="Name"
+              value={formData.name}
+              onChange={handleChange}
+            />
+            <CFormTextarea
+              id="description"
+              name="description"
+              label="Description"
+              value={formData.description}
+              onChange={handleChange}
+            />
+            <CFormSelect
+              id="gNB_id"
+              name="gNB_id"
+              label="Select gNB"
+              value={formData.gNB_id}
+              onChange={handleChange}
+            >
+              <option value="">Select gNB</option>
+              {gnbs.map(gnb => (
+                <option key={gnb.id} value={gnb.id}>
+                  {gnb.name} (ID: {gnb.id})
+                </option>
+              ))}
+            </CFormSelect>
+            <CFormInput
+              id="latitude"
+              name="latitude"
+              label="Latitude"
+              value={formData.latitude}
+              onChange={handleChange}
+              disabled
+            />
+            <CFormInput
+              id="longitude"
+              name="longitude"
+              label="Longitude"
+              value={formData.longitude}
+              onChange={handleChange}
+              disabled
+            />
+            <CFormInput
+              id="radius"
+              name="radius"
+              label="Radius"
+              value={formData.radius}
+              onChange={handleChange}
+            />
+            <div
+              ref={mapRef}
+              style={{ height: '400px', marginTop: '20px' }}
+            ></div>
+          </CForm>
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={handleClose}>Cancel</CButton>
+          <CButton color="primary" type="button" onClick={handleFormSubmit}>Save</CButton>
+        </CModalFooter>
+      </CModal>
+    </>
   );
 };
 
