@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   CModal, CModalHeader, CModalBody, CModalFooter, CButton,
-  CForm, CFormInput, CFormSelect, CToaster, CToast, CToastBody, CToastClose
+  CForm, CFormInput, CFormSelect, CAlert
 } from '@coreui/react';
 import maplibre from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -21,12 +21,12 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
   const [gnbs, setGnbs] = useState([]);
   const [cells, setCells] = useState([]);
   const [ues, setUes] = useState([]);
-  const [toasts, setToasts] = useState([]);  // State for toast messages
+  const [message, setMessage] = useState({ type: '', text: '' }); // State for success/failure message
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
-  const markerRef = useRef(null);
   const circleLayerId = 'circleLayer';
   const sourceId = 'circleSource';
+  const dotLayerId = 'dotLayer';
 
   useEffect(() => {
     const fetchGnbs = async () => {
@@ -36,7 +36,8 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
         setGnbs(gnbData);
       } catch (error) {
         console.error('Error fetching gNBs:', error);
-        addToast('Error fetching gNBs. Please try again.', 'danger');
+        setMessage({ type: 'danger', text: 'Error fetching gNBs. Please try again.' });
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000); // Auto-hide after 3 seconds
       }
     };
 
@@ -48,7 +49,8 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
         setUes(uesData);
       } catch (error) {
         console.error('Error fetching cells or UEs:', error);
-        addToast('Error fetching cells or UEs. Please try again.', 'danger');
+        setMessage({ type: 'danger', text: 'Error fetching cells or UEs. Please try again.' });
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000); // Auto-hide after 3 seconds
       }
     };
 
@@ -65,7 +67,7 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
               container: mapRef.current,
               style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
               center: [23.81953, 37.99803],
-              zoom: 12,
+              zoom: 14,  // Zoom level to focus on the cluster
             });
 
             mapInstanceRef.current.on('click', (e) => {
@@ -77,20 +79,20 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
                 longitude: lng.toFixed(5)
               }));
 
-              if (markerRef.current) markerRef.current.remove();
-
-              markerRef.current = new maplibre.Marker({ color: 'red' })
-                .setLngLat([lng, lat])
-                .addTo(mapInstanceRef.current);
-
+              // Check if the source already exists
               if (mapInstanceRef.current.getSource(sourceId)) {
-                mapInstanceRef.current.removeLayer(circleLayerId);
+                // Remove existing layers
+                if (mapInstanceRef.current.getLayer(circleLayerId)) {
+                  mapInstanceRef.current.removeLayer(circleLayerId);
+                }
+                if (mapInstanceRef.current.getLayer(dotLayerId)) {
+                  mapInstanceRef.current.removeLayer(dotLayerId);
+                }
+                // Remove the existing source
                 mapInstanceRef.current.removeSource(sourceId);
               }
 
-              const radiusInPixels = convertRadiusToPixels(parseFloat(formData.radius), lat, mapInstanceRef.current.getZoom());
-              console.log(`Radius in pixels: ${radiusInPixels}`);
-
+              // Add or update the source
               mapInstanceRef.current.addSource(sourceId, {
                 type: 'geojson',
                 data: {
@@ -107,14 +109,27 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
                 }
               });
 
+              // Add or update the circle layer
               mapInstanceRef.current.addLayer({
                 id: circleLayerId,
                 type: 'circle',
                 source: sourceId,
                 paint: {
-                  'circle-color': 'rgba(255, 0, 0, 0.3)',
-                  'circle-radius': radiusInPixels,
-                  'circle-opacity': 0.3
+                  'circle-color': 'rgba(255, 0, 0, 0.1)',  // Very low opacity red color
+                  'circle-radius': convertRadiusToPixels(parseFloat(formData.radius), lat, mapInstanceRef.current.getZoom()),
+                  'circle-opacity': 0.1  // Very low opacity
+                }
+              });
+
+              // Add or update the dot layer
+              mapInstanceRef.current.addLayer({
+                id: dotLayerId,
+                type: 'circle',
+                source: sourceId,
+                paint: {
+                  'circle-color': '#FF0000',  // Red color for the dot
+                  'circle-radius': 5,  // Dot size
+                  'circle-opacity': 1  // Fully opaque dot
                 }
               });
             });
@@ -132,7 +147,8 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
                     },
                     properties: {
                       description: cell.description,
-                      color: cell.color || '#FF0000'
+                      color: '#FF0000',  // Red for all cells
+                      radius: cell.radius || 100  // Real-world radius in meters
                     }
                   }))
                 }
@@ -144,47 +160,24 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
                 source: 'cellsSource',
                 paint: {
                   'circle-color': ['get', 'color'],
-                  'circle-radius': 6,
-                  'circle-opacity': 0.6
+                  'circle-radius': ['interpolate', ['linear'], ['zoom'],
+                    10, ['/', ['get', 'radius'], 10],
+                    15, ['/', ['get', 'radius'], 2]
+                  ],
+                  'circle-opacity': 0.1  // Higher opacity for circles
                 }
               });
 
-              mapInstanceRef.current.addSource('uesSource', {
-                type: 'geojson',
-                data: {
-                  type: 'FeatureCollection',
-                  features: ues.map(ue => ({
-                    type: 'Feature',
-                    geometry: {
-                      type: 'Point',
-                      coordinates: [ue.longitude, ue.latitude]
-                    },
-                    properties: {
-                      id: ue.id,
-                      name: ue.name
-                    }
-                  }))
+              // Add a red dot in the center of each cell
+              mapInstanceRef.current.addLayer({
+                id: 'centerDotsLayer',
+                type: 'circle',
+                source: 'cellsSource',
+                paint: {
+                  'circle-color': '#FF0000',  // Red color
+                  'circle-radius': 5,  // Small dot size
+                  'circle-opacity': 1  // Fully opaque
                 }
-              });
-
-              mapInstanceRef.current.loadImage('/assets/person.png', (error, image) => {
-                if (error) throw error;
-                if (!mapInstanceRef.current.hasImage('custom-person-icon')) {
-                  mapInstanceRef.current.addImage('custom-person-icon', image);
-                }
-
-                mapInstanceRef.current.addLayer({
-                  id: 'uesLayer',
-                  type: 'symbol',
-                  source: 'uesSource',
-                  layout: {
-                    'icon-image': 'custom-person-icon',
-                    'icon-size': 1.5
-                  },
-                  paint: {
-                    'icon-color': '#00FF00'
-                  }
-                });
               });
             });
           }
@@ -193,7 +186,6 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
     } else if (mapInstanceRef.current) {
       mapInstanceRef.current.remove();
       mapInstanceRef.current = null;
-      markerRef.current = null;
     }
   }, [visible, formData.radius, cells, ues]);
 
@@ -207,16 +199,10 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const addToast = (message, color) => {
-    setToasts(prevToasts => [...prevToasts, { message, color }]);
-    setTimeout(() => {
-      setToasts(prevToasts => prevToasts.slice(1)); // Remove the oldest toast after 3 seconds
-    }, 3000);
-  };
-
   const handleFormSubmit = async () => {
     if (!formData.gNB_id.trim()) {
-      addToast('Error: Please select a gNB.', 'danger');
+      setMessage({ type: 'danger', text: 'Error: Please select a gNB.' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000); // Auto-hide after 3 seconds
       return;
     }
 
@@ -226,16 +212,34 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
         radius: parseFloat(formData.radius),
         gNB_id: formData.gNB_id.trim()
       });
-      addToast('Cell successfully added!', 'success');
+      setMessage({ type: 'success', text: 'Cell successfully added!' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000); // Auto-hide after 3 seconds
       handleClose();
     } catch (error) {
-      console.error('Error adding cell:', error);  // Log error to console
-      addToast('Error: Failed to add cell. Please try again.', 'danger');
+      console.error('Error adding cell:', error);
+      setMessage({ type: 'danger', text: 'Error: Failed to add cell. Please try again.' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000); // Auto-hide after 3 seconds
     }
   };
 
   return (
     <>
+      {/* Status message display */}
+      {message.text && (
+        <CAlert
+          color={message.type}
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            right: '20px',
+            zIndex: 9999
+          }}
+        >
+          {message.text}
+        </CAlert>
+      )}
+
+      {/* Modal */}
       <CModal visible={visible} onClose={handleClose} size="lg">
         <CModalHeader closeButton>Add Cell</CModalHeader>
         <CModalBody>
@@ -268,10 +272,10 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
               value={formData.gNB_id}
               onChange={handleChange}
             >
-              <option value="">Select gNB</option>
+              <option value="">Select a gNB</option>
               {gnbs.map(gnb => (
                 <option key={gnb.id} value={gnb.id}>
-                  {gnb.name} (ID: {gnb.id})
+                  {gnb.name}
                 </option>
               ))}
             </CFormSelect>
@@ -280,50 +284,33 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
               name="latitude"
               label="Latitude"
               value={formData.latitude}
-              readOnly
+              onChange={handleChange}
+              disabled
             />
             <CFormInput
               id="longitude"
               name="longitude"
               label="Longitude"
               value={formData.longitude}
-              readOnly
+              onChange={handleChange}
+              disabled
             />
             <CFormInput
               id="radius"
               name="radius"
+              type="number"
               label="Radius (meters)"
               value={formData.radius}
               onChange={handleChange}
-              placeholder="Radius in meters"
             />
+            <div ref={mapRef} style={{ width: '100%', height: '300px', marginTop: '20px' }}></div>
           </CForm>
-
-          <div
-            ref={mapRef}
-            style={{ width: '100%', height: '400px', marginTop: '10px' }}
-          />
         </CModalBody>
         <CModalFooter>
-          <CButton color="secondary" onClick={handleClose}>
-            Close
-          </CButton>
-          <CButton color="primary" onClick={handleFormSubmit}>
-            Submit
-          </CButton>
+          <CButton color="secondary" onClick={handleClose}>Cancel</CButton>
+          <CButton color="primary" onClick={handleFormSubmit}>Save</CButton>
         </CModalFooter>
       </CModal>
-
-      <CToaster position="top-end">
-        {toasts.map((toast, index) => (
-          <CToast key={index} color={toast.color} autohide={true} visible={true} fade={true} style={{ marginTop: '1rem' }}>
-            <CToastBody>
-              {toast.message}
-              <CToastClose />
-            </CToastBody>
-          </CToast>
-        ))}
-      </CToaster>
     </>
   );
 };

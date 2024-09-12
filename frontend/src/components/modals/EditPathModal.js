@@ -17,13 +17,32 @@ const EditPathModal = ({ visible, handleClose, handleSubmit, initialData }) => {
   });
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState({ type: '', text: '' });
-  const [showMessage, setShowMessage] = useState(false); // Control visibility with fade-out effect
+  const [showMessage, setShowMessage] = useState(false); // Control visibility
+  const [fadeOut, setFadeOut] = useState(false); // Trigger fade-out
 
   useEffect(() => {
     if (initialData) {
       setFormData(initialData);
     }
   }, [initialData, visible]);
+
+  useEffect(() => {
+    if (showMessage) {
+      const fadeTimer = setTimeout(() => {
+        setFadeOut(true); // Trigger fade-out after 3 seconds
+      }, 3000);
+
+      const hideTimer = setTimeout(() => {
+        setShowMessage(false); // Hide message completely after fade-out
+        setFadeOut(false); // Reset fade-out for future messages
+      }, 3500);
+
+      return () => {
+        clearTimeout(fadeTimer);
+        clearTimeout(hideTimer);
+      };
+    }
+  }, [showMessage]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -50,18 +69,13 @@ const EditPathModal = ({ visible, handleClose, handleSubmit, initialData }) => {
       setMessage({ type: 'danger', text: 'Please correct the errors in the form.' });
     }
     setShowMessage(true);
-
-    // Hide the message after 3 seconds and then fade it out
-    setTimeout(() => {
-      setShowMessage(false); // Start fade-out effect
-    }, 3000);
   };
 
   return (
     <CModal visible={visible} onClose={handleClose}>
       <CModalHeader closeButton>Edit Path</CModalHeader>
       <CModalBody>
-        {message.text && (
+        {showMessage && (
           <CAlert
             color={message.type === 'success' ? 'success' : 'danger'}
             style={{
@@ -69,8 +83,8 @@ const EditPathModal = ({ visible, handleClose, handleSubmit, initialData }) => {
               bottom: '20px',
               right: '20px',
               zIndex: 9999,
-              transition: 'opacity 0.5s ease', // Smooth transition for fade-out
-              opacity: showMessage ? 1 : 0 // Control opacity to fade out
+              opacity: fadeOut ? 0 : 1, // Trigger fade-out effect
+              transition: 'opacity 0.5s ease', // Smooth fade-out transition
             }}
           >
             {message.text}
