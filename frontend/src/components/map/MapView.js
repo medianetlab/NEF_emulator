@@ -88,6 +88,41 @@ const MapView = ({ token }) => {
       addUEsToMap(map, ues, paths, handleUEClick);
       addCellsToMap(map, cells);
       addPathsToMap(map, pathDetails); // Pass pathDetails here
+
+      // Display radius around cells
+      cells.forEach(cell => {
+        map.addLayer({
+          id: `cell-radius-${cell.id}`,
+          type: 'circle',
+          source: {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [cell.longitude, cell.latitude]
+              }
+            }
+          },
+          paint: {
+            'circle-radius': {
+              stops: [
+                [0, 0],
+                [12, 50] // Adjust the radius size as needed (e.g., 50 meters)
+              ]
+            },
+            'circle-color': '#0000FF', // Blue color for the radius
+            'circle-opacity': 0.2 // Low opacity
+          }
+        });
+      });
+
+      // Zoom into the cluster of cells
+      const bounds = new maplibregl.LngLatBounds();
+      cells.forEach(cell => {
+        bounds.extend([cell.longitude, cell.latitude]);
+      });
+      map.fitBounds(bounds, { padding: 50 });
     });
 
     return () => {
@@ -97,7 +132,6 @@ const MapView = ({ token }) => {
       }
     };
   }, [loading, token, ues, cells, paths, pathDetails]);
-
 
   return (
     <>
@@ -149,3 +183,4 @@ const MapView = ({ token }) => {
 };
 
 export default MapView;
+
