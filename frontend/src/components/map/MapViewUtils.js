@@ -20,32 +20,6 @@ export const addUEsToMap = (mapInstance, ues, paths, handleUEClick) => {
       marker.getElement().addEventListener('click', () => {
         handleUEClick(ue);
       });
-
-      // Add a radius circle around the UE marker
-      mapInstance.addLayer({
-        id: `ue-radius-${ue.id}`,
-        type: 'circle',
-        source: {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            geometry: {
-              type: 'Point',
-              coordinates: [lng, lat]
-            }
-          }
-        },
-        paint: {
-          'circle-radius': {
-            stops: [
-              [0, 0],
-              [12, 30] // Adjust the radius size as needed (e.g., 30 meters)
-            ]
-          },
-          'circle-color': '#0000FF', // Blue color for the radius
-          'circle-opacity': 0.2 // Low opacity
-        }
-      });
     } else {
       console.warn('Invalid lat/lng for UE:', ue);
     }
@@ -62,131 +36,133 @@ export const addCellsToMap = (mapInstance, cells) => {
     const lng = parseFloat(cell.longitude);
 
     if (!isNaN(lat) && !isNaN(lng)) {
-      new maplibregl.Marker({ color: 'red' })
+      const cellRadiusId = `cell-radius-${cell.id}`;
+
+      // Remove existing circle layer and source if it exists (for re-rendering purposes)
+      if (mapInstance.getLayer(cellRadiusId)) {
+        mapInstance.removeLayer(cellRadiusId);
+      }
+      if (mapInstance.getSource(cellRadiusId)) {
+        mapInstance.removeSource(cellRadiusId);
+      }
+
+      // Add circle representing the cell's radius
+      mapInstance.addSource(cellRadiusId, {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [lng, lat]
+          }
+        }
+      });
+
+      mapInstance.addLayer({
+        id: cellRadiusId,
+        type: 'circle',
+        source: cellRadiusId,
+        paint: {
+          'circle-radius': cell.radius, // Proportional to radius
+          'circle-color': 'rgba(255, 0, 0, 0.5)', // Red with opacity
+          'circle-stroke-width': 1,
+          'circle-stroke-color': 'rgba(255, 0, 0, 0.8)'
+        }
+      });
+
+      // Add cell center marker after the circle layer, ensuring it's displayed on top
+      const marker = new maplibregl.Marker({ color: 'red' }) // Red marker
         .setLngLat([lng, lat])
         .setPopup(new maplibregl.Popup().setText(`Cell: ${cell.id}`))
         .addTo(mapInstance);
 
-      // Add a radius circle around the cell marker
-      mapInstance.addLayer({
-        id: `cell-radius-${cell.id}`,
-        type: 'circle',
-        source: {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            geometry: {
-              type: 'Point',
-              coordinates: [lng, lat]
-            }
-          }
-        },
-        paint: {
-          'circle-radius': {
-            stops: [
-              [0, 0],
-              [12, 50] // Adjust the radius size as needed (e.g., 50 meters)
-            ]
-          },
-          'circle-color': '#0000FF', // Blue color for the radius
-          'circle-opacity': 0.2 // Low opacity
-        }
-      });
     } else {
       console.warn('Invalid lat/lng for Cell:', cell);
     }
   });
 };
 
+
+
+
 // Function to add paths to the map
 export const addPathsToMap = (mapInstance, pathDetails) => {
-  pathDetails.forEach(pathDetail => {
-    // Assuming pathDetail has a property 'coordinates' with an array of [lng, lat]
-    const coordinates = pathDetail.coordinates;
+  console.log('Adding Paths to map:', pathDetails);
 
-    if (coordinates && coordinates.length > 0) {
-      // Add path as a line layer
-      mapInstance.addLayer({
-        id: `path-${pathDetail.id}`,
-        type: 'line',
-        source: {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            geometry: {
-              type: 'LineString',
-              coordinates: coordinates
-            }
+  pathDetails.forEach(pathDetail => {
+    const points = pathDetail.points;
+
+    // Ensure start and end points are valid
+    const startLat = parseFloat(pathDetail.start_point.latitude);
+    const startLng = parseFloat(pathDetail.start_point.longitude);
+    const endLat = parseFloat(pathDetail.end_point.latitude);
+    const endLng = parseFloat(pathDetail.end_point.longitude);
+
+    if (!isNaN(startLat) && !isNaN(startLng) && points.length > 0) {
+      // Prepare coordinates array
+      const coordinates = points.map(point => {
+        const lng = parseFloat(point.longitude);
+        const lat = parseFloat(point.latitude);
+        if (!isNaN(lng) && !isNaN(lat)) {
+          return [lng, lat];
+        } else {
+          console.warn('Invalid point coordinates:', point);
+          return null;
+        }
+      }).filter(coord => coord !== null);
+
+      // Ensure start and end coordinates are valid
+      if (!isNaN(startLat) && !isNaN(startLng)) {
+        coordinates.unshift([startLng, startLat]);
+      }
+      if (!isNaN(endLat) && !isNaN(endLng)) {
+        coordinates.push([endLng, endLat]);
+      }
+
+      // Add path as a line, ensuring we don't duplicate sources and layers
+      const pathSourceId = `path-${pathDetail.id}`;
+      const pathLayerId = `path-layer-${pathDetail.id}`;
+
+      if (mapInstance.getSource(pathSourceId)) {
+        mapInstance.removeSource(pathSourceId);
+      }
+
+      if (mapInstance.getLayer(pathLayerId)) {
+        mapInstance.removeLayer(pathLayerId);
+      }
+
+      mapInstance.addSource(pathSourceId, {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates
           }
-        },
-        layout: {
-          'line-cap': 'round',
-          'line-join': 'round'
-        },
-        paint: {
-          'line-color': '#FF0000', // Color for the path line
-          'line-width': 3
         }
       });
 
-      // Add a radius circle at the start and end of the path
-      if (coordinates.length > 0) {
-        const [startLng, startLat] = coordinates[0];
-        const [endLng, endLat] = coordinates[coordinates.length - 1];
-
-        mapInstance.addLayer({
-          id: `path-start-radius-${pathDetail.id}`,
-          type: 'circle',
-          source: {
-            type: 'geojson',
-            data: {
-              type: 'Feature',
-              geometry: {
-                type: 'Point',
-                coordinates: [startLng, startLat]
-              }
-            }
-          },
-          paint: {
-            'circle-radius': {
-              stops: [
-                [0, 0],
-                [12, 10] // Adjust the radius size as needed (e.g., 10 meters)
-              ]
-            },
-            'circle-color': '#0000FF', // Blue color for the radius
-            'circle-opacity': 0.2 // Low opacity
-          }
-        });
-
-        mapInstance.addLayer({
-          id: `path-end-radius-${pathDetail.id}`,
-          type: 'circle',
-          source: {
-            type: 'geojson',
-            data: {
-              type: 'Feature',
-              geometry: {
-                type: 'Point',
-                coordinates: [endLng, endLat]
-              }
-            }
-          },
-          paint: {
-            'circle-radius': {
-              stops: [
-                [0, 0],
-                [12, 10] // Adjust the radius size as needed (e.g., 10 meters)
-              ]
-            },
-            'circle-color': '#0000FF', // Blue color for the radius
-            'circle-opacity': 0.2 // Low opacity
-          }
-        });
-      }
+      mapInstance.addLayer({
+        id: pathLayerId,
+        type: 'line',
+        source: pathSourceId,
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        paint: {
+          'line-color': pathDetail.color || '#FF0000',
+          'line-width': 2 // Thinner line width as per your requirement
+        }
+      });
+    } else {
+      console.warn('Invalid start/end points or empty points for path:', pathDetail);
     }
   });
 };
+
+
+
 
 // Function to remove all layers and sources
 export const removeMapLayersAndSources = (mapInstance, paths) => {
@@ -199,27 +175,6 @@ export const removeMapLayersAndSources = (mapInstance, paths) => {
     }
     if (mapInstance.getSource(pathSourceId)) {
       mapInstance.removeSource(pathSourceId);
-    }
-
-    // Remove radius layers
-    if (mapInstance.getLayer(`path-start-radius-${path.id}`)) {
-      mapInstance.removeLayer(`path-start-radius-${path.id}`);
-    }
-    if (mapInstance.getLayer(`path-end-radius-${path.id}`)) {
-      mapInstance.removeLayer(`path-end-radius-${path.id}`);
-    }
-  });
-
-  // Remove UEs and cells layers if needed
-  ues.forEach(ue => {
-    if (mapInstance.getLayer(`ue-radius-${ue.id}`)) {
-      mapInstance.removeLayer(`ue-radius-${ue.id}`);
-    }
-  });
-
-  cells.forEach(cell => {
-    if (mapInstance.getLayer(`cell-radius-${cell.id}`)) {
-      mapInstance.removeLayer(`cell-radius-${cell.id}`);
     }
   });
 };
@@ -238,3 +193,6 @@ export const handleUEClick = (ue) => {
   console.log(`UE clicked: ${ue.supi}`);
   // Implement additional logic for handling UE clicks here
 };
+
+
+

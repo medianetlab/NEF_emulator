@@ -87,7 +87,7 @@ const MapView = ({ token }) => {
       // Add UEs, cells, and paths to the map
       addUEsToMap(map, ues, paths, handleUEClick);
       addCellsToMap(map, cells);
-      addPathsToMap(map, pathDetails); // Pass pathDetails here
+      addPathsToMap(map, pathDetails, ues); // Pass pathDetails here
 
       // Display radius around cells
       cells.forEach(cell => {
@@ -105,16 +105,19 @@ const MapView = ({ token }) => {
             }
           },
           paint: {
+            // Adjust the circle radius in meters based on zoom level
             'circle-radius': {
+              property: 'radius', // Assuming each cell has a 'radius' property
               stops: [
                 [0, 0],
-                [12, 50] // Adjust the radius size as needed (e.g., 50 meters)
+                [12, cell.radius || 50] // Use the actual radius for each cell, defaulting to 50 if not provided
               ]
             },
-            'circle-color': '#0000FF', // Blue color for the radius
-            'circle-opacity': 0.2 // Low opacity
+            'circle-color': '#FF0000', // Red color for the radius
+            'circle-opacity': 0.2 // Keep the current opacity
           }
         });
+        
       });
 
       // Zoom into the cluster of cells
