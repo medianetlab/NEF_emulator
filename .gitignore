@@ -11,3 +11,4 @@ capif-provider/certificates/capif_provider_details.json
 capif-provider/certificates/CAPIF_service_as_session_with_qos.json
 capif-provider/certificates/CAPIF_service_monitoring_event.json
 venv/
+**/node_modules

@@ -87,7 +87,7 @@ const MapView = ({ token }) => {
       // Add UEs, cells, and paths to the map
       addUEsToMap(map, ues, paths, handleUEClick);
       addCellsToMap(map, cells);
-      addPathsToMap(map, pathDetails, ues); // Pass pathDetails here
+      addPathsToMap(map, ues); 
 
       // Display radius around cells
       cells.forEach(cell => {

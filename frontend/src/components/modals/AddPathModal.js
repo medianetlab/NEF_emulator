@@ -11,7 +11,7 @@ const colorOptions = [
   '#FF5733', '#33FF57', '#3357FF', '#F4C542', '#E94E77', '#8E44AD'
 ];
 
-const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
+const AddPathModal = ({ visible, handleClose, handleSubmit, cells = [] }) => { // Default to empty array if undefined
   const [formData, setFormData] = useState({
     description: '',
     color: '',
@@ -24,6 +24,7 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
+  const circleLayersRef = useRef([]);
 
   useEffect(() => {
     if (visible) {
@@ -38,6 +39,13 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
       setMessage({ type: '', text: '' }); // Clear messages
       markersRef.current.forEach(marker => marker.remove());
       markersRef.current = [];
+      circleLayersRef.current.forEach(layer => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.removeLayer(layer);
+          mapInstanceRef.current.removeSource(layer);
+        }
+      });
+      circleLayersRef.current = [];
 
       if (mapInstanceRef.current) {
         mapInstanceRef.current.removeLayer('path-line');
@@ -58,6 +66,9 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
               const { lng, lat } = e.lngLat;
               addPoint({ lat: lat.toFixed(6).toString(), lon: lng.toFixed(6).toString() });
             });
+
+            // Add cells to map (radius circles)
+            addCellsToMap(mapInstanceRef.current, cells);
           }
         }
       }, 500);
@@ -65,7 +76,7 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
       mapInstanceRef.current.remove();
       mapInstanceRef.current = null;
     }
-  }, [visible]);
+  }, [visible, cells]);
 
   useEffect(() => {
     if (mapInstanceRef.current) {
@@ -134,11 +145,59 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
           },
           paint: {
             'line-color': formData.color || '#FF0000',
-            'line-width': 4
+            'line-width': 2 // Thinner line
           }
         });
       }
     }
+  };
+
+  const addCellsToMap = (mapInstance, cells) => {
+    if (!cells || !Array.isArray(cells)) {
+      console.warn('Invalid cells data:', cells);
+      return;
+    }
+
+    cells.forEach(cell => {
+      const lat = parseFloat(cell.latitude);
+      const lng = parseFloat(cell.longitude);
+
+      if (!isNaN(lat) && !isNaN(lng)) {
+        const circleLayerId = `cell-radius-${cell.id}`;
+
+        if (mapInstance.getLayer(circleLayerId)) {
+          mapInstance.removeLayer(circleLayerId);
+          mapInstance.removeSource(circleLayerId);
+        }
+
+        mapInstance.addSource(circleLayerId, {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            geometry: {
+              type: 'Point',
+              coordinates: [lng, lat]
+            }
+          }
+        });
+
+        mapInstance.addLayer({
+          id: circleLayerId,
+          type: 'circle',
+          source: circleLayerId,
+          paint: {
+            'circle-radius': cell.radius,
+            'circle-color': 'rgba(255, 0, 0, 0.5)',
+            'circle-stroke-width': 1,
+            'circle-stroke-color': 'rgba(255, 0, 0, 0.8)'
+          }
+        });
+
+        circleLayersRef.current.push(circleLayerId);
+      } else {
+        console.warn('Invalid lat/lng for Cell:', cell);
+      }
+    });
   };
 
   const handleChange = (e) => {
@@ -162,7 +221,6 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
 
   const handleFormSubmit = () => {
     if (validateForm()) {
-      // Convert start_point and end_point lat/lng values to numbers
       const dataToSubmit = {
         ...formData,
         start_point: {

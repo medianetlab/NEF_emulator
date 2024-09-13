@@ -1,4 +1,5 @@
 import maplibregl from 'maplibre-gl';
+import { readPath } from '../../utils/api';
 
 // Function to add UEs with paths as markers
 export const addUEsToMap = (mapInstance, ues, paths, handleUEClick) => {
@@ -83,82 +84,90 @@ export const addCellsToMap = (mapInstance, cells) => {
 };
 
 
-
-
 // Function to add paths to the map
-export const addPathsToMap = (mapInstance, pathDetails) => {
-  console.log('Adding Paths to map:', pathDetails);
+export const addPathsToMap = async (mapInstance, ues, token) => {
+  console.log('Adding Paths to map:', ues);
 
-  pathDetails.forEach(pathDetail => {
-    const points = pathDetail.points;
+  // Loop through each UE
+  for (const ue of ues) {
+    const pathId = ue.path_id; // Assuming each UE has a `path_id` field
 
-    // Ensure start and end points are valid
-    const startLat = parseFloat(pathDetail.start_point.latitude);
-    const startLng = parseFloat(pathDetail.start_point.longitude);
-    const endLat = parseFloat(pathDetail.end_point.latitude);
-    const endLng = parseFloat(pathDetail.end_point.longitude);
+    try {
+      // Fetch path details
+      const pathDetail = await readPath(token, pathId);
 
-    if (!isNaN(startLat) && !isNaN(startLng) && points.length > 0) {
-      // Prepare coordinates array
-      const coordinates = points.map(point => {
-        const lng = parseFloat(point.longitude);
-        const lat = parseFloat(point.latitude);
-        if (!isNaN(lng) && !isNaN(lat)) {
-          return [lng, lat];
-        } else {
-          console.warn('Invalid point coordinates:', point);
-          return null;
-        }
-      }).filter(coord => coord !== null);
+      const points = pathDetail.points;
 
-      // Ensure start and end coordinates are valid
-      if (!isNaN(startLat) && !isNaN(startLng)) {
-        coordinates.unshift([startLng, startLat]);
-      }
-      if (!isNaN(endLat) && !isNaN(endLng)) {
-        coordinates.push([endLng, endLat]);
-      }
+      // Ensure start and end points are valid
+      const startLat = parseFloat(pathDetail.start_point.latitude);
+      const startLng = parseFloat(pathDetail.start_point.longitude);
+      const endLat = parseFloat(pathDetail.end_point.latitude);
+      const endLng = parseFloat(pathDetail.end_point.longitude);
 
-      // Add path as a line, ensuring we don't duplicate sources and layers
-      const pathSourceId = `path-${pathDetail.id}`;
-      const pathLayerId = `path-layer-${pathDetail.id}`;
-
-      if (mapInstance.getSource(pathSourceId)) {
-        mapInstance.removeSource(pathSourceId);
-      }
-
-      if (mapInstance.getLayer(pathLayerId)) {
-        mapInstance.removeLayer(pathLayerId);
-      }
-
-      mapInstance.addSource(pathSourceId, {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          geometry: {
-            type: 'LineString',
-            coordinates
+      if (!isNaN(startLat) && !isNaN(startLng) && points.length > 0) {
+        // Prepare coordinates array
+        const coordinates = points.map(point => {
+          const lng = parseFloat(point.longitude);
+          const lat = parseFloat(point.latitude);
+          if (!isNaN(lng) && !isNaN(lat)) {
+            return [lng, lat];
+          } else {
+            console.warn('Invalid point coordinates:', point);
+            return null;
           }
-        }
-      });
+        }).filter(coord => coord !== null);
 
-      mapInstance.addLayer({
-        id: pathLayerId,
-        type: 'line',
-        source: pathSourceId,
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
-        paint: {
-          'line-color': pathDetail.color || '#FF0000',
-          'line-width': 2 // Thinner line width as per your requirement
+        // Ensure start and end coordinates are valid
+        if (!isNaN(startLat) && !isNaN(startLng)) {
+          coordinates.unshift([startLng, startLat]);
         }
-      });
-    } else {
-      console.warn('Invalid start/end points or empty points for path:', pathDetail);
+        if (!isNaN(endLat) && !isNaN(endLng)) {
+          coordinates.push([endLng, endLat]);
+        }
+
+        // Add path as a line, ensuring we don't duplicate sources and layers
+        const pathSourceId = `path-${pathId}`;
+        const pathLayerId = `path-layer-${pathId}`;
+
+        if (mapInstance.getSource(pathSourceId)) {
+          mapInstance.removeSource(pathSourceId);
+        }
+
+        if (mapInstance.getLayer(pathLayerId)) {
+          mapInstance.removeLayer(pathLayerId);
+        }
+
+        mapInstance.addSource(pathSourceId, {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            geometry: {
+              type: 'LineString',
+              coordinates
+            }
+          }
+        });
+
+        mapInstance.addLayer({
+          id: pathLayerId,
+          type: 'line',
+          source: pathSourceId,
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round'
+          },
+          paint: {
+            'line-color': pathDetail.color || '#FF0000',
+            'line-width': 2 // Thinner line width as per your requirement
+          }
+        });
+      } else {
+        console.warn('Invalid start/end points or empty points for path:', pathDetail);
+      }
+    } catch (error) {
+      console.error('Error adding path to map:', error);
     }
-  });
+  }
 };
 
 
