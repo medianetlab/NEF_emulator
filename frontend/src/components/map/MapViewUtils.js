@@ -90,7 +90,7 @@ export const addPathsToMap = async (mapInstance, ues, token) => {
 
   // Loop through each UE
   for (const ue of ues) {
-    const pathId = ue.path_id; // Assuming each UE has a `path_id` field
+    const pathId = ue.path_id; // each UE has a `path_id` field
 
     try {
       // Fetch path details

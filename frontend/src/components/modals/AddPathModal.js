@@ -11,7 +11,7 @@ const colorOptions = [
   '#FF5733', '#33FF57', '#3357FF', '#F4C542', '#E94E77', '#8E44AD'
 ];
 
-const AddPathModal = ({ visible, handleClose, handleSubmit, cells = [] }) => { // Default to empty array if undefined
+const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
   const [formData, setFormData] = useState({
     description: '',
     color: '',
@@ -153,11 +153,6 @@ const AddPathModal = ({ visible, handleClose, handleSubmit, cells = [] }) => { /
   };
 
   const addCellsToMap = (mapInstance, cells) => {
-    if (!cells || !Array.isArray(cells)) {
-      console.warn('Invalid cells data:', cells);
-      return;
-    }
-
     cells.forEach(cell => {
       const lat = parseFloat(cell.latitude);
       const lng = parseFloat(cell.longitude);
