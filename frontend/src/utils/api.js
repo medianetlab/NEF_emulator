@@ -295,37 +295,46 @@ export const deletePath = async (token, pathId) => {
   }
 };
 
-
 //------------------- movement ---------------------
-// start loop
-export const start_loop = async (token) => {
+
+// Start loop with supi in the request body
+export const start_loop = async (token, supi) => {
   try {
-    await axios.post(`${BASE_URL}/ue_movement/start-loop`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
+    await axios.post(
+      `${BASE_URL}/ue_movement/start-loop`,
+      { supi }, // Body with supi
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json' // Ensure Content-Type is set for JSON body
+        }
       }
-    });
+    );
   } catch (error) {
     console.error('Error starting loop:', error);
     throw error;
   }
 };
 
-// stop loop
+// Stop loop
 export const stop_loop = async (token) => {
   try {
-    await axios.post(`${BASE_URL}/ue_movement/stop-loop`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
+    await axios.post(
+      `${BASE_URL}/ue_movement/stop-loop`,
+      {},
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       }
-    });
+    );
   } catch (error) {
     console.error('Error stopping loop:', error);
     throw error;
   }
 };
 
-// state loop
+// State loop
 export const state_loop = async (token) => {
   try {
     await axios.get(`${BASE_URL}/ue_movement/state-loop`, {
@@ -334,10 +343,11 @@ export const state_loop = async (token) => {
       }
     });
   } catch (error) {
-    console.error('Error info loop:', error);
+    console.error('Error retrieving loop state:', error);
     throw error;
   }
 };
+
 
 //state ues
 export const state_ues = async (token) => {

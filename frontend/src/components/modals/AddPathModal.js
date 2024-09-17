@@ -5,6 +5,7 @@ import {
 } from '@coreui/react';
 import maplibre from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { getCells } from '../../utils/api';
 
 // Color options for the path
 const colorOptions = [
@@ -20,7 +21,8 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
     points: []
   });
   const [errors, setErrors] = useState({});
-  const [message, setMessage] = useState({ type: '', text: '' }); // For success/error messages
+  const [message, setMessage] = useState({ type: '', text: '' });
+  const [cells, setCells] = useState([]); 
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
@@ -36,7 +38,8 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
         points: []
       });
       setErrors({});
-      setMessage({ type: '', text: '' }); // Clear messages
+      setMessage({ type: '', text: '' });
+
       markersRef.current.forEach(marker => marker.remove());
       markersRef.current = [];
       circleLayersRef.current.forEach(layer => {
@@ -52,31 +55,45 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
         mapInstanceRef.current.removeSource('path-line');
       }
 
-      setTimeout(() => {
-        if (mapRef.current) {
-          if (!mapInstanceRef.current) {
-            mapInstanceRef.current = new maplibre.Map({
-              container: mapRef.current,
-              style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
-              center: [23.7275, 37.9838],
-              zoom: 12,
-            });
-
-            mapInstanceRef.current.on('click', (e) => {
-              const { lng, lat } = e.lngLat;
-              addPoint({ lat: lat.toFixed(6).toString(), lon: lng.toFixed(6).toString() });
-            });
-
-            // Add cells to map (radius circles)
-            addCellsToMap(mapInstanceRef.current, cells);
+      // Fetch cells when modal becomes visible
+      getCells()
+        .then(response => {
+          setCells(response.data);
+          // Add cells to map once fetched
+          if (mapInstanceRef.current) {
+            addCellsToMap(mapInstanceRef.current, response.data);
           }
+        })
+        .catch(error => {
+          console.error('Error fetching cells:', error);
+        });
+
+      setTimeout(() => {
+        if (mapRef.current && !mapInstanceRef.current) {
+          mapInstanceRef.current = new maplibre.Map({
+            container: mapRef.current,
+            style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
+            center: [23.7275, 37.9838],
+            zoom: 12,
+          });
+
+          mapInstanceRef.current.on('click', (e) => {
+            const { lng, lat } = e.lngLat;
+            addPoint({ lat: lat.toFixed(6).toString(), lon: lng.toFixed(6).toString() });
+          });
+
+          mapInstanceRef.current.on('style.load', () => {
+            // Add cells and paths to map
+            addCellsToMap(mapInstanceRef.current, cells);
+            updatePath();
+          });
         }
       }, 500);
     } else if (mapInstanceRef.current) {
       mapInstanceRef.current.remove();
       mapInstanceRef.current = null;
     }
-  }, [visible, cells]);
+  }, [visible]);
 
   useEffect(() => {
     if (mapInstanceRef.current) {
@@ -181,14 +198,23 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
           type: 'circle',
           source: circleLayerId,
           paint: {
-            'circle-radius': cell.radius,
+            'circle-radius': {
+              property: 'radius',
+              stops: [
+                [0, 0],
+                [12, cell.radius || 50]
+              ]
+            },
             'circle-color': 'rgba(255, 0, 0, 0.5)',
-            'circle-stroke-width': 1,
-            'circle-stroke-color': 'rgba(255, 0, 0, 0.8)'
+            'circle-opacity': 0.5
           }
         });
 
-        circleLayersRef.current.push(circleLayerId);
+        // Add cell center marker after the circle layer
+        const marker = new maplibre.Marker({ color: 'red' })
+          .setLngLat([lng, lat])
+          .setPopup(new maplibre.Popup().setText(`Cell: ${cell.id}`))
+          .addTo(mapInstance);
       } else {
         console.warn('Invalid lat/lng for Cell:', cell);
       }
@@ -242,65 +268,82 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
 
   return (
     <CModal visible={visible} onClose={handleClose} size="lg">
-      <CModalHeader closeButton>Add Path</CModalHeader>
+      <CModalHeader closeButton>
+        <h5>Add Path</h5>
+      </CModalHeader>
       <CModalBody>
-        {message.text && (
-          <CAlert
-            color={message.type === 'success' ? 'success' : 'danger'}
-            style={{
-              position: 'fixed',
-              bottom: '20px',
-              right: '20px',
-              zIndex: 9999
-            }}
-          >
-            {message.text}
-          </CAlert>
-        )}
         <CForm>
+          {message.text && (
+            <CAlert color={message.type} dismissible>
+              {message.text}
+            </CAlert>
+          )}
           <div className="mb-3">
             <label htmlFor="description" className="form-label">Description</label>
-            <CFormTextarea
+            <input
+              type="text"
               id="description"
               name="description"
               value={formData.description}
               onChange={handleChange}
-              isInvalid={!!errors.description}
+              className={`form-control ${errors.description ? 'is-invalid' : ''}`}
             />
             {errors.description && <div className="invalid-feedback">{errors.description}</div>}
           </div>
           <div className="mb-3">
-            <label className="form-label">Color</label>
-            <div className="d-flex">
-              {colorOptions.map((color) => (
+            <label className="form-label">Path Color</label>
+            <div className="d-flex gap-2">
+              {colorOptions.map(color => (
                 <div
                   key={color}
+                  style={{ backgroundColor: color, width: 24, height: 24, cursor: 'pointer' }}
                   onClick={() => handleColorClick(color)}
-                  style={{
-                    backgroundColor: color,
-                    width: '30px',
-                    height: '30px',
-                    borderRadius: '50%',
-                    marginRight: '10px',
-                    cursor: 'pointer',
-                    border: formData.color === color ? '2px solid #000' : '2px solid transparent'
-                  }}
-                />
+                ></div>
               ))}
             </div>
-            {errors.color && <div className="invalid-feedback d-block">{errors.color}</div>}
+            {errors.color && <div className="text-danger">{errors.color}</div>}
+          </div>
+          <div id="map" ref={mapRef} style={{ height: '400px', width: '100%' }}></div>
+          <div className="mb-3">
+            <label htmlFor="start_point" className="form-label">Start Point</label>
+            <input
+              type="text"
+              id="start_point"
+              name="start_point"
+              value={formData.start_point ? `${formData.start_point.lat}, ${formData.start_point.lon}` : ''}
+              readOnly
+              className={`form-control ${errors.start_point ? 'is-invalid' : ''}`}
+            />
+            {errors.start_point && <div className="invalid-feedback">{errors.start_point}</div>}
           </div>
           <div className="mb-3">
-            <label className="form-label">Map</label>
-            <div ref={mapRef} style={{ height: '400px', width: '100%' }} />
-            {errors.start_point && <div className="invalid-feedback d-block">{errors.start_point}</div>}
-            {errors.end_point && <div className="invalid-feedback d-block">{errors.end_point}</div>}
+            <label htmlFor="end_point" className="form-label">End Point</label>
+            <input
+              type="text"
+              id="end_point"
+              name="end_point"
+              value={formData.end_point ? `${formData.end_point.lat}, ${formData.end_point.lon}` : ''}
+              readOnly
+              className={`form-control ${errors.end_point ? 'is-invalid' : ''}`}
+            />
+            {errors.end_point && <div className="invalid-feedback">{errors.end_point}</div>}
+          </div>
+          <div className="mb-3">
+            <label htmlFor="points" className="form-label">Points</label>
+            <CFormTextarea
+              id="points"
+              name="points"
+              value={formData.points.map(point => `(${point.lat}, ${point.lon})`).join('\n')}
+              readOnly
+              rows={5}
+              className="form-control"
+            />
           </div>
         </CForm>
       </CModalBody>
       <CModalFooter>
-        <CButton color="secondary" onClick={handleClose}>Cancel</CButton>
-        <CButton color="primary" type="button" onClick={handleFormSubmit}>Save</CButton>
+        <CButton color="secondary" onClick={handleClose}>Close</CButton>
+        <CButton color="primary" onClick={handleFormSubmit}>Save changes</CButton>
       </CModalFooter>
     </CModal>
   );

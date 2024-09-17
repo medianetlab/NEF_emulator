@@ -15,13 +15,12 @@ import {
 } from '@coreui/react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { getUEs, getCells, getPaths, readPath } from '../../utils/api';
+import { getUEs, getCells, getPaths, readPath, state_ues, start_loop, stop_loop } from '../../utils/api';
 import {
   addUEsToMap,
   addCellsToMap,
   addPathsToMap,
   removeMapLayersAndSources,
-  handleStartAll,
   handleUEClick,
 } from './MapViewUtils';
 
@@ -33,10 +32,11 @@ const MapView = ({ token }) => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isLooping, setIsLooping] = useState(false);
+  const [currentSupi, setCurrentSupi] = useState(null); // State to store the SUPI
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
 
-  // Fetch initial data (UEs, cells, paths)
   useEffect(() => {
     const fetchData = async () => {
       if (!token) {
@@ -47,8 +47,6 @@ const MapView = ({ token }) => {
         const uesData = await getUEs(token);
         const cellsData = await getCells(token);
         const pathsData = await getPaths(token);
-
-        // Fetch detailed path information for each path
         const pathDetailsData = await Promise.all(pathsData.map(path => readPath(token, path.id)));
 
         setUEs(uesData);
@@ -65,7 +63,6 @@ const MapView = ({ token }) => {
     fetchData();
   }, [token]);
 
-  // Initialize the map
   useEffect(() => {
     if (loading || !token) return;
 
@@ -81,15 +78,13 @@ const MapView = ({ token }) => {
     const map = mapInstanceRef.current;
 
     map.on('style.load', () => {
-      // Remove any existing layers and sources before adding new ones
+      // Ensure all layers are reset initially
       removeMapLayersAndSources(map, paths);
 
-      // Add UEs, cells, and paths to the map
       addUEsToMap(map, ues, paths, handleUEClick);
       addCellsToMap(map, cells);
-      addPathsToMap(map, ues); 
+      addPathsToMap(map, ues, token); // Pass token to addPathsToMap
 
-      // Display radius around cells
       cells.forEach(cell => {
         map.addLayer({
           id: `cell-radius-${cell.id}`,
@@ -105,22 +100,19 @@ const MapView = ({ token }) => {
             }
           },
           paint: {
-            // Adjust the circle radius in meters based on zoom level
             'circle-radius': {
-              property: 'radius', // Assuming each cell has a 'radius' property
+              property: 'radius',
               stops: [
                 [0, 0],
-                [12, cell.radius || 50] // Use the actual radius for each cell, defaulting to 50 if not provided
+                [12, cell.radius || 50]
               ]
             },
-            'circle-color': '#FF0000', // Red color for the radius
-            'circle-opacity': 0.2 // Keep the current opacity
+            'circle-color': '#FF0000',
+            'circle-opacity': 0.2
           }
         });
-        
       });
 
-      // Zoom into the cluster of cells
       const bounds = new maplibregl.LngLatBounds();
       cells.forEach(cell => {
         bounds.extend([cell.longitude, cell.latitude]);
@@ -136,15 +128,93 @@ const MapView = ({ token }) => {
     };
   }, [loading, token, ues, cells, paths, pathDetails]);
 
+  useEffect(() => {
+    let interval;
+
+    if (isLooping) {
+      const fetchUEState = async () => {
+        try {
+          const uesState = await state_ues(token);
+          setUEs(uesState);
+
+          const map = mapInstanceRef.current;
+          if (map) {
+            removeMapLayersAndSources(map, ['ues-layer']); // Remove only UE layers
+            addUEsToMap(map, uesState, paths, handleUEClick); // Re-add UEs without affecting other layers
+          }
+        } catch (err) {
+          console.error('Error fetching UE state:', err);
+        }
+      };
+
+      interval = setInterval(fetchUEState, 5000);
+    } else if (!isLooping && interval) {
+      clearInterval(interval);
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [isLooping, token, paths]);
+
+  const handleStartLoop = async () => {
+    if (!token) {
+      console.error('Token is missing');
+      return;
+    }
+  
+    try {
+      const supi = ues.length > 0 ? ues[0].supi : null;
+  
+      if (supi) {
+        await start_loop(token, supi);
+        console.log(`Loop started for SUPI: ${supi}`);
+        setCurrentSupi(supi); // Store the SUPI
+        setIsLooping(true); // Mark loop as active
+      } else {
+        console.error('No SUPI found to start the loop');
+      }
+    } catch (err) {
+      console.error('Error starting loop:', err);
+    }
+  };
+  
+  const handleStopLoop = async () => {
+    if (!token) {
+      console.error('Token is missing');
+      return;
+    }
+  
+    try {
+      if (currentSupi) {
+        console.log(`Stopping loop for SUPI: ${currentSupi}`);
+        await stop_loop(token, currentSupi); // Stop the loop using the stored SUPI
+        setIsLooping(false); // Set the loop status as inactive
+        console.log('Loop stopped');
+      } else {
+        console.error('No SUPI stored for stopping the loop');
+      }
+    } catch (err) {
+      console.error('Error stopping loop:', err);
+    }
+  };
+
   return (
     <>
       <CCard className="mb-4" style={{ width: '100%' }}>
         <CCardHeader>Map</CCardHeader>
         <CCardBody>
-          <div ref={mapRef} style={{ height: '700px', width: '100%' }}></div> {/* Map container */}
+          <div ref={mapRef} style={{ height: '700px', width: '100%' }}></div>
           <CRow className="mt-3">
             <CCol>
-              <CButton color="primary" onClick={() => handleStartAll(ues)}>Start All</CButton>
+              <CButton color="primary" onClick={handleStartLoop} disabled={isLooping}>
+                Start Movement Loop
+              </CButton>
+              <CButton color="danger" onClick={handleStopLoop}>
+                Stop Movement Loop
+              </CButton>
             </CCol>
           </CRow>
 
@@ -186,4 +256,3 @@ const MapView = ({ token }) => {
 };
 
 export default MapView;
-
