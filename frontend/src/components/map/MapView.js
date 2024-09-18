@@ -21,12 +21,11 @@ import {
   addCellsToMap,
   addPathsToMap,
   removeMapLayersAndSources,
-  handleUEClick,
-  addUEsToMapWithMarkers,
+  handleUEClick
 } from './MapViewUtils';
 
 const MapView = ({ token }) => {
-  const [ues, setUEs] = useState([]); // Initialize as an empty array
+  const [ues, setUEs] = useState([]);
   const [cells, setCells] = useState([]);
   const [paths, setPaths] = useState([]);
   const [pathDetails, setPathDetails] = useState([]);
@@ -37,6 +36,9 @@ const MapView = ({ token }) => {
   const [currentSupi, setCurrentSupi] = useState(null);
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
+  const centerRef = useRef([23.7275, 37.9838]);
+  const zoomRef = useRef(12);
+  const intervalRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,7 +52,7 @@ const MapView = ({ token }) => {
         const pathsData = await getPaths(token);
         const pathDetailsData = await Promise.all(pathsData.map(path => readPath(token, path.id)));
 
-        setUEs(uesData || []); 
+        setUEs(uesData || []);
         setCells(cellsData || []);
         setPaths(pathsData || []);
         setPathDetails(pathDetailsData || []);
@@ -71,54 +73,38 @@ const MapView = ({ token }) => {
       mapInstanceRef.current = new maplibregl.Map({
         container: mapRef.current,
         style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
-        center: [23.7275, 37.9838],
-        zoom: 12,
+        center: centerRef.current,
+        zoom: zoomRef.current,
       });
     }
 
     const map = mapInstanceRef.current;
 
     map.on('style.load', () => {
-      // Ensure all layers are reset initially
-      removeMapLayersAndSources(map, paths);
+      // Apply saved center and zoom level
+      map.setCenter(centerRef.current);
+      map.setZoom(zoomRef.current);
 
-      addUEsToMapWithMarkers(map, ues, paths, handleUEClick);
+      // Remove existing layers and sources
+      removeMapLayersAndSources(map, cells.map(cell => `cell-${cell.id}`));
+      removeMapLayersAndSources(map, paths.map(path => `path-${path.id}`));
+
+      // Add new layers
+      addUEsToMap(map, ues, paths, handleUEClick);
       addCellsToMap(map, cells);
-      addPathsToMap(map, ues, token); // Pass token to addPathsToMap
+      addPathsToMap(map, ues, token);
 
-      cells.forEach(cell => {
-        map.addLayer({
-          id: `cell-radius-${cell.id}`,
-          type: 'circle',
-          source: {
-            type: 'geojson',
-            data: {
-              type: 'Feature',
-              geometry: {
-                type: 'Point',
-                coordinates: [cell.longitude, cell.latitude]
-              }
-            }
-          },
-          paint: {
-            'circle-radius': {
-              property: 'radius',
-              stops: [
-                [0, 0],
-                [12, cell.radius || 50]
-              ]
-            },
-            'circle-color': '#FF0000',
-            'circle-opacity': 0.2
-          }
-        });
-      });
-
+      // Adjust map bounds based on cells
       const bounds = new maplibregl.LngLatBounds();
       cells.forEach(cell => {
         bounds.extend([cell.longitude, cell.latitude]);
       });
       map.fitBounds(bounds, { padding: 50 });
+    });
+
+    map.on('moveend', () => {
+      centerRef.current = map.getCenter();
+      zoomRef.current = map.getZoom();
     });
 
     return () => {
@@ -127,39 +113,42 @@ const MapView = ({ token }) => {
         mapInstanceRef.current = null;
       }
     };
-  }, [loading, token, ues, cells, paths, pathDetails]);
+  }, [loading, token, ues, cells, paths]);
 
   useEffect(() => {
-    let interval;
+    const fetchUEState = async () => {
+      try {
+        const uesState = await state_ues(token);
+
+        const uesArray = Object.values(uesState);
+
+        setUEs(uesArray);
+
+        const map = mapInstanceRef.current;
+        if (map) {
+          // Remove existing UE markers before adding new ones
+          removeMapLayersAndSources(map, ues.map(ue => `ue-${ue.id}`));
+
+          addUEsToMap(map, uesArray, paths, handleUEClick);
+        }
+      } catch (err) {
+        console.error('Error fetching UE state:', err);
+      }
+    };
 
     if (isLooping) {
-      const fetchUEState = async () => {
-        try {
-          const uesState = await state_ues(token);
-
-          // Convert the object to an array
-          const uesArray = Object.values(uesState);
-
-          setUEs(uesArray);
-
-          const map = mapInstanceRef.current;
-          if (map) {
-            // Update markers without reloading the map
-            addUEsToMapWithMarkers(map, uesArray, paths, handleUEClick);
-          }
-        } catch (err) {
-          console.error('Error fetching UE state:', err);
-        }
-      };
-
-      interval = setInterval(fetchUEState, 5000);
-    } else if (!isLooping && interval) {
-      clearInterval(interval);
+      fetchUEState();
+      intervalRef.current = setInterval(fetchUEState, 5000);
+    } else {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     }
 
     return () => {
-      if (interval) {
-        clearInterval(interval);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
       }
     };
   }, [isLooping, token, paths]);
@@ -176,8 +165,8 @@ const MapView = ({ token }) => {
       if (supi) {
         await start_loop(token, supi);
         console.log(`Loop started for SUPI: ${supi}`);
-        setCurrentSupi(supi); // Store the SUPI
-        setIsLooping(true); // Mark loop as active
+        setCurrentSupi(supi);
+        setIsLooping(true);
       } else {
         console.error('No SUPI found to start the loop');
       }
@@ -195,8 +184,8 @@ const MapView = ({ token }) => {
     try {
       if (currentSupi) {
         console.log(`Stopping loop for SUPI: ${currentSupi}`);
-        await stop_loop(token, currentSupi); // Stop the loop using the stored SUPI
-        setIsLooping(false); // Set the loop status as inactive
+        await stop_loop(token, currentSupi);
+        setIsLooping(false);
         console.log('Loop stopped');
       } else {
         console.error('No SUPI stored for stopping the loop');

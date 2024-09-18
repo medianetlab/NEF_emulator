@@ -1,7 +1,9 @@
 import maplibregl from 'maplibre-gl';
 import { readPath } from '../../utils/api';
 
-// Add UEs to the map
+let markersMap = new Map(); // Initialize an empty map to track markers
+
+// Add or update UEs to the map
 export const addUEsToMap = (mapInstance, ues, paths, handleUEClick) => {
   console.log('Adding UEs to map:', ues);
 
@@ -9,11 +11,21 @@ export const addUEsToMap = (mapInstance, ues, paths, handleUEClick) => {
 
   uesArray.forEach(ue => {
     if (ue && ue.latitude && ue.longitude) {
-      // Add UE markers
+      // Remove existing marker if it exists
+      if (markersMap.has(ue.id)) {
+        const existingMarker = markersMap.get(ue.id);
+        existingMarker.remove();
+        markersMap.delete(ue.id);
+      }
+
+      // Add new UE marker
       const marker = new maplibregl.Marker({ id: `ue-${ue.id}` })
         .setLngLat([ue.longitude, ue.latitude])
         .setPopup(new maplibregl.Popup().setHTML(`<h3>${ue.name}</h3><p>${ue.description}</p>`))
         .addTo(mapInstance);
+
+      // Store marker in the map
+      markersMap.set(ue.id, marker);
 
       // Optional: Add click event handler if needed
       marker.getElement().addEventListener('click', () => handleUEClick(ue));
@@ -21,15 +33,6 @@ export const addUEsToMap = (mapInstance, ues, paths, handleUEClick) => {
   });
 };
 
-// Function to remove UE markers by their IDs
-export const removeUEMarkers = (mapInstance, ueIds) => {
-  ueIds.forEach(id => {
-    const existingMarker = mapInstance.getLayer(`ue-${id}`);
-    if (existingMarker) {
-      mapInstance.removeLayer(`ue-${id}`);
-    }
-  });
-};
 
 // Function to add cells to the map
 export const addCellsToMap = (mapInstance, cells) => {
