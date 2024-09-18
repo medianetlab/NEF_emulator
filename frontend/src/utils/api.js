@@ -316,15 +316,16 @@ export const start_loop = async (token, supi) => {
   }
 };
 
-// Stop loop
-export const stop_loop = async (token) => {
+// Stop loop with supi in the request body
+export const stop_loop = async (token, supi) => {
   try {
     await axios.post(
       `${BASE_URL}/ue_movement/stop-loop`,
-      {},
+      { supi }, // Body with supi
       {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json' // Ensure Content-Type is set for JSON body
         }
       }
     );
@@ -348,18 +349,17 @@ export const state_loop = async (token) => {
   }
 };
 
-
-//state ues
+// State UEs
 export const state_ues = async (token) => {
   try {
-    await axios.get(`${BASE_URL}/ue_movement/state-ues`, {
+    const response = await axios.get(`${BASE_URL}/ue_movement/state-ues`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
+    return response.data; // Return the data from the API
   } catch (error) {
-    console.error('Error info ues:', error);
+    console.error('Error retrieving UEs:', error);
     throw error;
   }
 };
-

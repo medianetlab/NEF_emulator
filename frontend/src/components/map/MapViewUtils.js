@@ -1,38 +1,33 @@
 import maplibregl from 'maplibre-gl';
 import { readPath } from '../../utils/api';
 
-// Function to add UEs with paths as markers
+// Add UEs to the map
 export const addUEsToMap = (mapInstance, ues, paths, handleUEClick) => {
   console.log('Adding UEs to map:', ues);
 
-  ues.forEach(ue => {
-    mapInstance.addLayer({
-      id: `ue-${ue.id}`,
-      type: 'circle',
-      source: {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: [ue.longitude, ue.latitude]
-          },
-          properties: {
-            id: ue.id,
-            ...ue,
-          }
-        }
-      },
-      paint: {
-        'circle-radius': 5,
-        'circle-color': '#00F',
-        'circle-opacity': 0.7
-      }
-    });
+  const uesArray = Array.isArray(ues) ? ues : Object.values(ues);
 
-    mapInstance.on('click', `ue-${ue.id}`, (e) => {
-      handleUEClick(e);
-    });
+  uesArray.forEach(ue => {
+    if (ue && ue.latitude && ue.longitude) {
+      // Add UE markers
+      const marker = new maplibregl.Marker({ id: `ue-${ue.id}` })
+        .setLngLat([ue.longitude, ue.latitude])
+        .setPopup(new maplibregl.Popup().setHTML(`<h3>${ue.name}</h3><p>${ue.description}</p>`))
+        .addTo(mapInstance);
+
+      // Optional: Add click event handler if needed
+      marker.getElement().addEventListener('click', () => handleUEClick(ue));
+    }
+  });
+};
+
+// Function to remove UE markers by their IDs
+export const removeUEMarkers = (mapInstance, ueIds) => {
+  ueIds.forEach(id => {
+    const existingMarker = mapInstance.getLayer(`ue-${id}`);
+    if (existingMarker) {
+      mapInstance.removeLayer(`ue-${id}`);
+    }
   });
 };
 
@@ -59,15 +54,9 @@ export const addCellsToMap = (mapInstance, cells) => {
         }
       },
       paint: {
-        'circle-radius': {
-          property: 'radius',
-          stops: [
-            [0, 0],
-            [12, cell.radius || 50]
-          ]
-        },
+        'circle-radius': 7,
         'circle-color': '#F00',
-        'circle-opacity': 0.2
+        'circle-opacity': 0.7
       }
     });
   });
@@ -77,53 +66,54 @@ export const addCellsToMap = (mapInstance, cells) => {
 export const addPathsToMap = (mapInstance, ues, token) => {
   console.log('Adding paths to map:', ues);
 
-  ues.forEach(async (ue) => {
+  ues.forEach(async ue => {
     try {
-      const path = await readPath(token, ue.id);
-      if (path) {
-        mapInstance.addLayer({
-          id: `path-${ue.id}`,
-          type: 'line',
-          source: {
-            type: 'geojson',
-            data: {
-              type: 'Feature',
-              geometry: {
-                type: 'LineString',
-                coordinates: path.coordinates
-              }
+      const path = await readPath(token, ue.pathId);
+      const coordinates = path.map(point => [point.longitude, point.latitude]);
+
+      mapInstance.addLayer({
+        id: `path-${ue.pathId}`,
+        type: 'line',
+        source: {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            geometry: {
+              type: 'LineString',
+              coordinates
+            },
+            properties: {
+              id: ue.pathId
             }
-          },
-          paint: {
-            'line-width': 2,
-            'line-color': '#00F'
           }
-        });
-      }
-    } catch (err) {
-      console.error('Error reading path:', err);
+        },
+        paint: {
+          'line-color': '#00F',
+          'line-width': 2
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching path:', error);
     }
   });
 };
 
-// Function to remove map layers and sources
-export const removeMapLayersAndSources = (mapInstance, layersToRemove) => {
-  console.log('Removing map layers and sources:', layersToRemove);
+// Function to remove all layers and sources from the map
+export const removeMapLayersAndSources = (mapInstance, layerIds) => {
+  layerIds.forEach(layerId => {
+    if (mapInstance.getLayer(layerId)) {
+      mapInstance.removeLayer(layerId);
+      mapInstance.removeSource(layerId);
+    }
+  });
+};
 
-  if (mapInstance) {
-    layersToRemove.forEach((layerId) => {
-      if (mapInstance.getLayer(layerId)) {
-        mapInstance.removeLayer(layerId);
-      }
-      if (mapInstance.getSource(layerId)) {
-        mapInstance.removeSource(layerId);
-      }
-    });
+// Handle UE click event
+export const handleUEClick = (event) => {
+  const { features } = event;
+
+  if (features.length > 0) {
+    const feature = features[0];
+    console.log('UE clicked:', feature.properties);
   }
 };
-
-// Function to handle UE click event
-export const handleUEClick = (event) => {
-  console.log('UE Clicked:', event.features[0].properties);
-};
-

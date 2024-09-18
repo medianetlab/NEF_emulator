@@ -22,10 +22,11 @@ import {
   addPathsToMap,
   removeMapLayersAndSources,
   handleUEClick,
+  addUEsToMapWithMarkers,
 } from './MapViewUtils';
 
 const MapView = ({ token }) => {
-  const [ues, setUEs] = useState([]);
+  const [ues, setUEs] = useState([]); // Initialize as an empty array
   const [cells, setCells] = useState([]);
   const [paths, setPaths] = useState([]);
   const [pathDetails, setPathDetails] = useState([]);
@@ -33,7 +34,7 @@ const MapView = ({ token }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isLooping, setIsLooping] = useState(false);
-  const [currentSupi, setCurrentSupi] = useState(null); // State to store the SUPI
+  const [currentSupi, setCurrentSupi] = useState(null);
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
 
@@ -49,10 +50,10 @@ const MapView = ({ token }) => {
         const pathsData = await getPaths(token);
         const pathDetailsData = await Promise.all(pathsData.map(path => readPath(token, path.id)));
 
-        setUEs(uesData);
-        setCells(cellsData);
-        setPaths(pathsData);
-        setPathDetails(pathDetailsData);
+        setUEs(uesData || []); 
+        setCells(cellsData || []);
+        setPaths(pathsData || []);
+        setPathDetails(pathDetailsData || []);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -81,7 +82,7 @@ const MapView = ({ token }) => {
       // Ensure all layers are reset initially
       removeMapLayersAndSources(map, paths);
 
-      addUEsToMap(map, ues, paths, handleUEClick);
+      addUEsToMapWithMarkers(map, ues, paths, handleUEClick);
       addCellsToMap(map, cells);
       addPathsToMap(map, ues, token); // Pass token to addPathsToMap
 
@@ -135,12 +136,16 @@ const MapView = ({ token }) => {
       const fetchUEState = async () => {
         try {
           const uesState = await state_ues(token);
-          setUEs(uesState);
+
+          // Convert the object to an array
+          const uesArray = Object.values(uesState);
+
+          setUEs(uesArray);
 
           const map = mapInstanceRef.current;
           if (map) {
-            removeMapLayersAndSources(map, ['ues-layer']); // Remove only UE layers
-            addUEsToMap(map, uesState, paths, handleUEClick); // Re-add UEs without affecting other layers
+            // Update markers without reloading the map
+            addUEsToMapWithMarkers(map, uesArray, paths, handleUEClick);
           }
         } catch (err) {
           console.error('Error fetching UE state:', err);
@@ -164,10 +169,10 @@ const MapView = ({ token }) => {
       console.error('Token is missing');
       return;
     }
-  
+
     try {
       const supi = ues.length > 0 ? ues[0].supi : null;
-  
+
       if (supi) {
         await start_loop(token, supi);
         console.log(`Loop started for SUPI: ${supi}`);
@@ -180,13 +185,13 @@ const MapView = ({ token }) => {
       console.error('Error starting loop:', err);
     }
   };
-  
+
   const handleStopLoop = async () => {
     if (!token) {
       console.error('Token is missing');
       return;
     }
-  
+
     try {
       if (currentSupi) {
         console.log(`Stopping loop for SUPI: ${currentSupi}`);
@@ -241,7 +246,7 @@ const MapView = ({ token }) => {
                       <CTableDataCell>{log.type}</CTableDataCell>
                       <CTableDataCell>{log.method}</CTableDataCell>
                       <CTableDataCell>{log.response}</CTableDataCell>
-                      <CTableDataCell>{log.timestamp}</CTableDataCell>
+                      <CTableDataCell>{new Date(log.timestamp).toLocaleString()}</CTableDataCell>
                       <CTableDataCell>{log.details}</CTableDataCell>
                     </CTableRow>
                   ))}
