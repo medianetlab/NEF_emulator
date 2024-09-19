@@ -27,7 +27,7 @@ export const addUEsToMap = (mapInstance, ues, paths, handleUEClick) => {
       // Store marker in the map
       markersMap.set(ue.id, marker);
 
-      // Optional: Add click event handler if needed
+      // Add click event handler if needed
       marker.getElement().addEventListener('click', () => handleUEClick(ue));
     }
   });
