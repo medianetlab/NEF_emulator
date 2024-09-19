@@ -37,7 +37,7 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
       } catch (error) {
         console.error('Error fetching gNBs:', error);
         setMessage({ type: 'danger', text: 'Error fetching gNBs. Please try again.' });
-        setTimeout(() => setMessage({ type: '', text: '' }), 3000); // Auto-hide after 3 seconds
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000); 
       }
     };
 
@@ -50,7 +50,7 @@ const AddCellModal = ({ visible, handleClose, handleSubmit, token }) => {
       } catch (error) {
         console.error('Error fetching cells or UEs:', error);
         setMessage({ type: 'danger', text: 'Error fetching cells or UEs. Please try again.' });
-        setTimeout(() => setMessage({ type: '', text: '' }), 3000); // Auto-hide after 3 seconds
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000); 
       }
     };
 

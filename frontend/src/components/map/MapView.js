@@ -40,6 +40,7 @@ const MapView = ({ token }) => {
   const zoomRef = useRef(12);
   const intervalRef = useRef(null);
 
+  // Fetch initial data (UEs, Cells, Paths)
   useEffect(() => {
     const fetchData = async () => {
       if (!token) {
@@ -66,6 +67,7 @@ const MapView = ({ token }) => {
     fetchData();
   }, [token]);
 
+  // Initialize map and add UEs, Cells, Paths layers
   useEffect(() => {
     if (loading || !token) return;
 
@@ -88,6 +90,7 @@ const MapView = ({ token }) => {
       // Remove existing layers and sources
       removeMapLayersAndSources(map, cells.map(cell => `cell-${cell.id}`));
       removeMapLayersAndSources(map, paths.map(path => `path-${path.id}`));
+      removeMapLayersAndSources(map, ues.map(ue => `ue-${ue.id}`)); // Ensure UEs are removed before adding
 
       // Add new layers
       addUEsToMap(map, ues, paths, handleUEClick);
@@ -115,6 +118,7 @@ const MapView = ({ token }) => {
     };
   }, [loading, token, ues, cells, paths]);
 
+  // Periodically update UEs and paths on the map
   useEffect(() => {
     const fetchUEState = async () => {
       try {
@@ -153,6 +157,7 @@ const MapView = ({ token }) => {
     };
   }, [isLooping, token, paths]);
 
+  // Start and Stop the movement loop
   const handleStartLoop = async () => {
     if (!token) {
       console.error('Token is missing');

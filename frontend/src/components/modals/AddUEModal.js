@@ -26,6 +26,7 @@ const AddUEModal = ({ visible, handleClose, token }) => {
   });
 
   const [paths, setPaths] = useState([]);
+  const [ues, setUEs] = useState([]);
   const [gnbs, setGNBs] = useState([]);
   const [cells, setCells] = useState([]);
   const [message, setMessage] = useState({ type: '', text: '' }); // For success/error messages
@@ -61,25 +62,119 @@ const AddUEModal = ({ visible, handleClose, token }) => {
             mapInstanceRef.current = new maplibre.Map({
               container: mapRef.current,
               style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
-              center: [23.7275, 37.9838],
-              zoom: 12,
+              center: [23.81953, 37.99803],
+              zoom: 14,  // Zoom level to focus on the cluster
             });
-
-            markerRef.current = new maplibre.Marker()
-              .setLngLat([parseFloat(formData.lon) || 23.7275, parseFloat(formData.lat) || 37.9838])
-              .addTo(mapInstanceRef.current);
 
             mapInstanceRef.current.on('click', (e) => {
               const { lng, lat } = e.lngLat;
+
               setFormData(prev => ({
                 ...prev,
-                lat: lat.toFixed(6),
-                lon: lng.toFixed(6)
+                latitude: lat.toFixed(5),
+                longitude: lng.toFixed(5)
               }));
 
-              if (markerRef.current) {
-                markerRef.current.setLngLat([lng, lat]);
+              // Check if the source already exists
+              if (mapInstanceRef.current.getSource(sourceId)) {
+                // Remove existing layers
+                if (mapInstanceRef.current.getLayer(circleLayerId)) {
+                  mapInstanceRef.current.removeLayer(circleLayerId);
+                }
+                if (mapInstanceRef.current.getLayer(dotLayerId)) {
+                  mapInstanceRef.current.removeLayer(dotLayerId);
+                }
+                // Remove the existing source
+                mapInstanceRef.current.removeSource(sourceId);
               }
+
+              // Add or update the source
+              mapInstanceRef.current.addSource(sourceId, {
+                type: 'geojson',
+                data: {
+                  type: 'FeatureCollection',
+                  features: [
+                    {
+                      type: 'Feature',
+                      geometry: {
+                        type: 'Point',
+                        coordinates: [lng, lat]
+                      }
+                    }
+                  ]
+                }
+              });
+
+              // Add or update the circle layer
+              mapInstanceRef.current.addLayer({
+                id: circleLayerId,
+                type: 'circle',
+                source: sourceId,
+                paint: {
+                  'circle-color': 'rgba(255, 0, 0, 0.1)',  // Very low opacity red color
+                  'circle-radius': convertRadiusToPixels(parseFloat(formData.radius), lat, mapInstanceRef.current.getZoom()),
+                  'circle-opacity': 0.1  // Very low opacity
+                }
+              });
+
+              // Add or update the dot layer
+              mapInstanceRef.current.addLayer({
+                id: dotLayerId,
+                type: 'circle',
+                source: sourceId,
+                paint: {
+                  'circle-color': '#FF0000',  // Red color for the dot
+                  'circle-radius': 5,  // Dot size
+                  'circle-opacity': 1  // Fully opaque dot
+                }
+              });
+            });
+
+            mapInstanceRef.current.on('load', () => {
+              mapInstanceRef.current.addSource('cellsSource', {
+                type: 'geojson',
+                data: {
+                  type: 'FeatureCollection',
+                  features: cells.map(cell => ({
+                    type: 'Feature',
+                    geometry: {
+                      type: 'Point',
+                      coordinates: [cell.longitude, cell.latitude]
+                    },
+                    properties: {
+                      description: cell.description,
+                      color: '#FF0000',  // Red for all cells
+                      radius: cell.radius || 100  // Real-world radius in meters
+                    }
+                  }))
+                }
+              });
+
+              mapInstanceRef.current.addLayer({
+                id: 'cellsLayer',
+                type: 'circle',
+                source: 'cellsSource',
+                paint: {
+                  'circle-color': ['get', 'color'],
+                  'circle-radius': ['interpolate', ['linear'], ['zoom'],
+                    10, ['/', ['get', 'radius'], 10],
+                    15, ['/', ['get', 'radius'], 2]
+                  ],
+                  'circle-opacity': 0.1  // Higher opacity for circles
+                }
+              });
+
+              // Add a red dot in the center of each cell
+              mapInstanceRef.current.addLayer({
+                id: 'centerDotsLayer',
+                type: 'circle',
+                source: 'cellsSource',
+                paint: {
+                  'circle-color': '#FF0000',  // Red color
+                  'circle-radius': 5,  // Small dot size
+                  'circle-opacity': 1  // Fully opaque
+                }
+              });
             });
           }
         }
@@ -87,9 +182,8 @@ const AddUEModal = ({ visible, handleClose, token }) => {
     } else if (mapInstanceRef.current) {
       mapInstanceRef.current.remove();
       mapInstanceRef.current = null;
-      markerRef.current = null;
     }
-  }, [visible, formData]);
+  }, [visible, formData.radius, cells, ues]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
