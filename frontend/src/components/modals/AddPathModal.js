@@ -5,9 +5,8 @@ import {
 } from '@coreui/react';
 import maplibre from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { getCells } from '../../utils/api';
+import { getCells, getUEs, getPaths } from '../../utils/api';  // Assuming you have these API functions
 
-// Color options for the path
 const colorOptions = [
   '#FF5733', '#33FF57', '#3357FF', '#F4C542', '#E94E77', '#8E44AD'
 ];
@@ -20,10 +19,11 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
     end_point: null,
     points: []
   });
-  const [ues, setUEs] = useState({});
+  const [cells, setCells] = useState([]);
+  const [ues, setUEs] = useState([]);
+  const [paths, setPaths] = useState([]);
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState({ type: '', text: '' });
-  const [cells, setCells] = useState([]); 
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
@@ -56,17 +56,20 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
         mapInstanceRef.current.removeSource('path-line');
       }
 
-      // Fetch cells when modal becomes visible
-      getCells()
-        .then(response => {
-          setCells(response.data);
-          // Add cells to map once fetched
+      Promise.all([getCells(), getUEs(), getPaths()])
+        .then(([cellsData, uesData, pathsData]) => {
+          setCells(cellsData);
+          setUEs(uesData);
+          setPaths(pathsData);
+
           if (mapInstanceRef.current) {
-            addCellsToMap(mapInstanceRef.current, response.data);
+            addCellsToMap(mapInstanceRef.current, cellsData);
+            addUEsToMap(mapInstanceRef.current, uesData);
+            addPathsToMap(mapInstanceRef.current, pathsData);
           }
         })
         .catch(error => {
-          console.error('Error fetching cells:', error);
+          console.error('Error fetching data:', error);
         });
 
       setTimeout(() => {
@@ -84,8 +87,9 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
           });
 
           mapInstanceRef.current.on('style.load', () => {
-            // Add cells and paths to map
             addCellsToMap(mapInstanceRef.current, cells);
+            addUEsToMap(mapInstanceRef.current, ues);
+            addPathsToMap(mapInstanceRef.current, paths);
             updatePath();
           });
         }
@@ -129,6 +133,11 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
     }
   };
 
+  const convertRadiusToPixels = (radius, latitude, zoom) => {
+    const metersPerPixel = 156543.03392 * Math.cos((latitude * Math.PI) / 180) / Math.pow(2, zoom);
+    return radius / metersPerPixel;
+  };
+
   const updatePath = () => {
     if (mapInstanceRef.current && formData.points.length) {
       const lineCoordinates = formData.points.map(point => [parseFloat(point.lon), parseFloat(point.lat)]);
@@ -163,161 +172,168 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
           },
           paint: {
             'line-color': formData.color || '#FF0000',
-            'line-width': 2 // Thinner line
+            'line-width': 2
           }
         });
       }
     }
   };
 
-  const addCellsToMap = (mapInstanceRef, cells) => {
-    useEffect(() => {
-      if (visible) {
-        setTimeout(() => {
-          if (mapRef.current) {
-            if (!mapInstanceRef.current) {
-              mapInstanceRef.current = new maplibre.Map({
-                container: mapRef.current,
-                style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
-                center: [23.81953, 37.99803],
-                zoom: 14,  // Zoom level to focus on the cluster
-              });
   
-              mapInstanceRef.current.on('click', (e) => {
-                const { lng, lat } = e.lngLat;
+  const addCellsToMap = (map, cells) => {
+    cells.forEach((cell, index) => {
+      const radius = cell.radius || 100;
   
-                setFormData(prev => ({
-                  ...prev,
-                  latitude: lat.toFixed(5),
-                  longitude: lng.toFixed(5)
-                }));
+      const feature = {
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [cell.longitude, cell.latitude]
+        },
+        properties: {
+          description: cell.description,
+          color: '#FF0000',
+          radius: radius
+        }
+      };
   
-                // Check if the source already exists
-                if (mapInstanceRef.current.getSource(sourceId)) {
-                  // Remove existing layers
-                  if (mapInstanceRef.current.getLayer(circleLayerId)) {
-                    mapInstanceRef.current.removeLayer(circleLayerId);
-                  }
-                  if (mapInstanceRef.current.getLayer(dotLayerId)) {
-                    mapInstanceRef.current.removeLayer(dotLayerId);
-                  }
-                  // Remove the existing source
-                  mapInstanceRef.current.removeSource(sourceId);
-                }
+      map.addSource(`cell-source-${index}`, {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: [feature]
+        }
+      });
   
-                // Add or update the source
-                mapInstanceRef.current.addSource(sourceId, {
-                  type: 'geojson',
-                  data: {
-                    type: 'FeatureCollection',
-                    features: [
-                      {
-                        type: 'Feature',
-                        geometry: {
-                          type: 'Point',
-                          coordinates: [lng, lat]
-                        }
-                      }
-                    ]
-                  }
-                });
+      map.addLayer({
+        id: `cell-layer-${index}`,
+        type: 'circle',
+        source: `cell-source-${index}`,
+        paint: {
+          'circle-color': ['get', 'color'],
+          'circle-radius': ['interpolate', ['linear'], ['zoom'],
+            10, ['/', ['get', 'radius'], 10],
+            15, ['/', ['get', 'radius'], 2]
+          ],
+          'circle-opacity': 0.1
+        }
+      });
   
-                // Add or update the circle layer
-                mapInstanceRef.current.addLayer({
-                  id: circleLayerId,
-                  type: 'circle',
-                  source: sourceId,
-                  paint: {
-                    'circle-color': 'rgba(255, 0, 0, 0.1)',  // Very low opacity red color
-                    'circle-radius': convertRadiusToPixels(parseFloat(formData.radius), lat, mapInstanceRef.current.getZoom()),
-                    'circle-opacity': 0.1  // Very low opacity
-                  }
-                });
+      map.addLayer({
+        id: `cell-center-dot-${index}`,
+        type: 'circle',
+        source: `cell-source-${index}`,
+        paint: {
+          'circle-color': '#FF0000',
+          'circle-radius': 5,
+          'circle-opacity': 1
+        }
+      });
+    });
+  };
   
-                // Add or update the dot layer
-                mapInstanceRef.current.addLayer({
-                  id: dotLayerId,
-                  type: 'circle',
-                  source: sourceId,
-                  paint: {
-                    'circle-color': '#FF0000',  // Red color for the dot
-                    'circle-radius': 5,  // Dot size
-                    'circle-opacity': 1  // Fully opaque dot
-                  }
-                });
-              });
-  
-              mapInstanceRef.current.on('load', () => {
-                mapInstanceRef.current.addSource('cellsSource', {
-                  type: 'geojson',
-                  data: {
-                    type: 'FeatureCollection',
-                    features: cells.map(cell => ({
-                      type: 'Feature',
-                      geometry: {
-                        type: 'Point',
-                        coordinates: [cell.longitude, cell.latitude]
-                      },
-                      properties: {
-                        description: cell.description,
-                        color: '#FF0000',  // Red for all cells
-                        radius: cell.radius || 100  // Real-world radius in meters
-                      }
-                    }))
-                  }
-                });
-  
-                mapInstanceRef.current.addLayer({
-                  id: 'cellsLayer',
-                  type: 'circle',
-                  source: 'cellsSource',
-                  paint: {
-                    'circle-color': ['get', 'color'],
-                    'circle-radius': ['interpolate', ['linear'], ['zoom'],
-                      10, ['/', ['get', 'radius'], 10],
-                      15, ['/', ['get', 'radius'], 2]
-                    ],
-                    'circle-opacity': 0.1  // Higher opacity for circles
-                  }
-                });
-  
-                // Add a red dot in the center of each cell
-                mapInstanceRef.current.addLayer({
-                  id: 'centerDotsLayer',
-                  type: 'circle',
-                  source: 'cellsSource',
-                  paint: {
-                    'circle-color': '#FF0000',  // Red color
-                    'circle-radius': 5,  // Small dot size
-                    'circle-opacity': 1  // Fully opaque
-                  }
-                });
-              });
-            }
+
+  const addUEsToMap = (map, ues) => {
+    ues.forEach((ue, index) => {
+      const feature = {
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [ue.longitude, ue.latitude]
+        },
+        properties: {
+          description: ue.description,
+          color: '#00FF00', // Example color for UEs
+          radius: 10
+        }
+      };
+
+      map.addSource(`ue-source-${index}`, {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: [feature]
+        }
+      });
+
+      map.addLayer({
+        id: `ue-layer-${index}`,
+        type: 'circle',
+        source: `ue-source-${index}`,
+        paint: {
+          'circle-color': ['get', 'color'],
+          'circle-radius': ['interpolate', ['linear'], ['zoom'],
+            10, ['/', ['get', 'radius'], 10],
+            15, ['/', ['get', 'radius'], 2]
+          ],
+          'circle-opacity': 0.7
+        }
+      });
+
+      map.addLayer({
+        id: `ue-center-dot-${index}`,
+        type: 'circle',
+        source: `ue-source-${index}`,
+        paint: {
+          'circle-color': '#00FF00',
+          'circle-radius': 5,
+          'circle-opacity': 1
+        }
+      });
+    });
+  };
+
+  const addPathsToMap = (map, paths) => {
+    paths.forEach((path, index) => {
+      const lineCoordinates = path.points.map(point => [point.lon, point.lat]);
+
+      map.addSource(`path-source-${index}`, {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: lineCoordinates
           }
-        }, 500);
-      } else if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-    }, []);
+        }
+      });
+
+      map.addLayer({
+        id: `path-layer-${index}`,
+        type: 'line',
+        source: `path-source-${index}`,
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        paint: {
+          'line-color': path.color || '#0000FF',
+          'line-width': 2
+        }
+      });
+    });
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleColorClick = (color) => {
-    setFormData(prev => ({ ...prev, color }));
+    setFormData(prev => ({
+      ...prev,
+      color
+    }));
   };
 
   const validateForm = () => {
     const errors = {};
     if (!formData.description) errors.description = 'Description is required';
     if (!formData.color) errors.color = 'Color is required';
-    if (!formData.start_point) errors.start_point = 'Start point is required';
-    if (!formData.end_point) errors.end_point = 'End point is required';
+    if (formData.points.length < 2) errors.points = 'At least two points are required';
     setErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -326,17 +342,9 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
     if (validateForm()) {
       const dataToSubmit = {
         ...formData,
-        start_point: {
-          latitude: parseFloat(formData.start_point.lat),
-          longitude: parseFloat(formData.start_point.lon)
-        },
-        end_point: {
-          latitude: parseFloat(formData.end_point.lat),
-          longitude: parseFloat(formData.end_point.lon)
-        },
         points: formData.points.map(point => ({
-          latitude: point.lat,
-          longitude: point.lon
+          lat: parseFloat(point.lat),
+          lon: parseFloat(point.lon)
         }))
       };
       handleSubmit(dataToSubmit);
@@ -354,12 +362,12 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
         <h5>Add Path</h5>
       </CModalHeader>
       <CModalBody>
+        {message.text && (
+          <CAlert color={message.type} dismissible>
+            {message.text}
+          </CAlert>
+        )}
         <CForm>
-          {message.text && (
-            <CAlert color={message.type} dismissible>
-              {message.text}
-            </CAlert>
-          )}
           <div className="mb-3">
             <label htmlFor="description" className="form-label">Description</label>
             <input
@@ -378,7 +386,7 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
               {colorOptions.map(color => (
                 <div
                   key={color}
-                  style={{ backgroundColor: color, width: 24, height: 24, cursor: 'pointer' }}
+                  style={{ backgroundColor: color, width: 24, height: 24, cursor: 'pointer', borderRadius: '50%' }}
                   onClick={() => handleColorClick(color)}
                 ></div>
               ))}
@@ -420,6 +428,7 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
               rows={5}
               className="form-control"
             />
+            {errors.points && <div className="invalid-feedback">{errors.points}</div>}
           </div>
         </CForm>
       </CModalBody>
@@ -432,3 +441,4 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
 };
 
 export default AddPathModal;
+

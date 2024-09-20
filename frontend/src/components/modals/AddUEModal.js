@@ -54,6 +54,11 @@ const AddUEModal = ({ visible, handleClose, token }) => {
     fetchPaths();
   }, [token]);
 
+  const convertRadiusToPixels = (radius, latitude, zoom) => {
+    const metersPerPixel = 156543.03392 * Math.cos((latitude * Math.PI) / 180) / Math.pow(2, zoom);
+    return radius / metersPerPixel;
+  };
+
   useEffect(() => {
     if (visible) {
       setTimeout(() => {
@@ -65,6 +70,10 @@ const AddUEModal = ({ visible, handleClose, token }) => {
               center: [23.81953, 37.99803],
               zoom: 14,  // Zoom level to focus on the cluster
             });
+
+            const sourceId = 'ueSource';
+            const circleLayerId = 'ueCircleLayer';
+            const dotLayerId = 'ueDotLayer';
 
             mapInstanceRef.current.on('click', (e) => {
               const { lng, lat } = e.lngLat;
