@@ -5,42 +5,33 @@ import {
   CCardHeader,
   CRow,
   CCol,
-  CButton,
-  CTable,
-  CTableHead,
-  CTableRow,
-  CTableHeaderCell,
-  CTableBody,
-  CTableDataCell
+  CButton
 } from '@coreui/react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { getUEs, getCells, getPaths, readPath, state_ues, start_loop, stop_loop } from '../../utils/api';
+import { getUEs, getCells, start_loop, stop_loop, state_ues } from '../../utils/api';
 import {
   addUEsToMap,
   addCellsToMap,
-  addPathsToMap,
   removeMapLayersAndSources,
   handleUEClick
 } from './MapViewUtils';
+import * as turf from '@turf/turf';
+
 
 const MapView = ({ token }) => {
   const [ues, setUEs] = useState([]);
   const [cells, setCells] = useState([]);
-  const [paths, setPaths] = useState([]);
-  const [pathDetails, setPathDetails] = useState([]);
-  const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [isLooping, setIsLooping] = useState(false);
   const [currentSupi, setCurrentSupi] = useState(null);
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
-  const centerRef = useRef([23.7275, 37.9838]);
-  const zoomRef = useRef(12);
+  const counterRef = useRef(0);
+  const stepsRef = useRef(500);
   const intervalRef = useRef(null);
 
-  // Fetch initial data (UEs, Cells, Paths)
+  // Fetch initial data
   useEffect(() => {
     const fetchData = async () => {
       if (!token) {
@@ -50,15 +41,10 @@ const MapView = ({ token }) => {
       try {
         const uesData = await getUEs(token);
         const cellsData = await getCells(token);
-        const pathsData = await getPaths(token);
-        const pathDetailsData = await Promise.all(pathsData.map(path => readPath(token, path.id)));
-
         setUEs(uesData || []);
         setCells(cellsData || []);
-        setPaths(pathsData || []);
-        setPathDetails(pathDetailsData || []);
       } catch (err) {
-        setError(err.message);
+        console.error(err.message);
       } finally {
         setLoading(false);
       }
@@ -67,7 +53,7 @@ const MapView = ({ token }) => {
     fetchData();
   }, [token]);
 
-  // Initialize map and add UEs, Cells, Paths layers
+  // Initialize map
   useEffect(() => {
     if (loading || !token) return;
 
@@ -75,39 +61,17 @@ const MapView = ({ token }) => {
       mapInstanceRef.current = new maplibregl.Map({
         container: mapRef.current,
         style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
-        center: centerRef.current,
-        zoom: zoomRef.current,
+        center: [23.7275, 37.9838],
+        zoom: 12,
       });
     }
 
     const map = mapInstanceRef.current;
 
     map.on('style.load', () => {
-      // Apply saved center and zoom level
-      map.setCenter(centerRef.current);
-      map.setZoom(zoomRef.current);
-
-      // Remove existing layers and sources
       removeMapLayersAndSources(map, cells.map(cell => `cell-${cell.id}`));
-      removeMapLayersAndSources(map, paths.map(path => `path-${path.id}`));
-      removeMapLayersAndSources(map, ues.map(ue => `ue-${ue.id}`)); // Ensure UEs are removed before adding
-
-      // Add new layers
-      addUEsToMap(map, ues, paths, handleUEClick);
       addCellsToMap(map, cells);
-      addPathsToMap(map, ues, token);
-
-      // Adjust map bounds based on cells
-      const bounds = new maplibregl.LngLatBounds();
-      cells.forEach(cell => {
-        bounds.extend([cell.longitude, cell.latitude]);
-      });
-      map.fitBounds(bounds, { padding: 50 });
-    });
-
-    map.on('moveend', () => {
-      centerRef.current = map.getCenter();
-      zoomRef.current = map.getZoom();
+      addUEsToMap(map, ues, [], handleUEClick);
     });
 
     return () => {
@@ -116,48 +80,73 @@ const MapView = ({ token }) => {
         mapInstanceRef.current = null;
       }
     };
-  }, [loading, token, ues, cells, paths]);
+  }, [loading, token, ues, cells]);
 
-  // Periodically update UEs and paths on the map
   useEffect(() => {
-    const fetchUEState = async () => {
+    const animateUEs = async () => {
+      if (!isLooping || !mapInstanceRef.current) return;
+    
+      const map = mapInstanceRef.current;
+    
       try {
-        const uesState = await state_ues(token);
-
-        const uesArray = Object.values(uesState);
-
-        setUEs(uesArray);
-
-        const map = mapInstanceRef.current;
-        if (map) {
-          // Remove existing UE markers before adding new ones
-          removeMapLayersAndSources(map, ues.map(ue => `ue-${ue.id}`));
-
-          addUEsToMap(map, uesArray, paths, handleUEClick);
-        }
-      } catch (err) {
-        console.error('Error fetching UE state:', err);
+        const updatedUEsResponse = await state_ues(token);
+        const updatedUEs = Object.values(updatedUEsResponse);
+    
+        updatedUEs.forEach(ue => {
+          // Initialize previous coordinates if not set
+          if (!ue.previousLongitude || !ue.previousLatitude) {
+            ue.previousLongitude = ue.longitude;
+            ue.previousLatitude = ue.latitude;
+          }
+    
+          const startCoordinates = [ue.previousLongitude, ue.previousLatitude];
+          const endCoordinates = [ue.longitude, ue.latitude];
+    
+          const steps = 50; // Number of steps for the animation
+          let step = 0;
+    
+          const animate = () => {
+            if (step <= steps) {
+              const interpolate = (start, end) => start + (end - start) * (step / steps);
+              ue.latitude = interpolate(startCoordinates[1], endCoordinates[1]);
+              ue.longitude = interpolate(startCoordinates[0], endCoordinates[0]);
+    
+              addUEsToMap(map, [ue], [], handleUEClick);
+              step++;
+              requestAnimationFrame(animate);
+            } else {
+              // Update previous coordinates after animation
+              ue.previousLongitude = ue.longitude;
+              ue.previousLatitude = ue.latitude;
+            }
+          };
+    
+          animate(); // Start the animation for this UE
+        });
+      } catch (error) {
+        console.error('Error fetching updated UEs:', error);
       }
     };
-
+  
     if (isLooping) {
-      fetchUEState();
-      intervalRef.current = setInterval(fetchUEState, 5000);
+      animateUEs();
+      intervalRef.current = setInterval(animateUEs, 5000); // Update every 5 seconds
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
     }
-
+  
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isLooping, token, paths]);
+  }, [isLooping, token]);
+  
+  
 
-  // Start and Stop the movement loop
   const handleStartLoop = async () => {
     if (!token) {
       console.error('Token is missing');
@@ -201,56 +190,22 @@ const MapView = ({ token }) => {
   };
 
   return (
-    <>
-      <CCard className="mb-4" style={{ width: '100%' }}>
-        <CCardHeader>Map</CCardHeader>
-        <CCardBody>
-          <div ref={mapRef} style={{ height: '700px', width: '100%' }}></div>
-          <CRow className="mt-3">
-            <CCol>
-              <CButton color="primary" onClick={handleStartLoop} disabled={isLooping}>
-                Start Movement Loop
-              </CButton>
-              <CButton color="danger" onClick={handleStopLoop}>
-                Stop Movement Loop
-              </CButton>
-            </CCol>
-          </CRow>
-
-          <CCard className="mt-4">
-            <CCardHeader>API User Interface</CCardHeader>
-            <CCardBody>
-              <CTable hover>
-                <CTableHead>
-                  <CTableRow>
-                    <CTableHeaderCell>ID</CTableHeaderCell>
-                    <CTableHeaderCell>SERVICE</CTableHeaderCell>
-                    <CTableHeaderCell>TYPE</CTableHeaderCell>
-                    <CTableHeaderCell>METHOD</CTableHeaderCell>
-                    <CTableHeaderCell>RESPONSE</CTableHeaderCell>
-                    <CTableHeaderCell>TIMESTAMP</CTableHeaderCell>
-                    <CTableHeaderCell>DETAILS</CTableHeaderCell>
-                  </CTableRow>
-                </CTableHead>
-                <CTableBody>
-                  {logs.map((log, index) => (
-                    <CTableRow key={index}>
-                      <CTableDataCell>{log.id}</CTableDataCell>
-                      <CTableDataCell>{log.service}</CTableDataCell>
-                      <CTableDataCell>{log.type}</CTableDataCell>
-                      <CTableDataCell>{log.method}</CTableDataCell>
-                      <CTableDataCell>{log.response}</CTableDataCell>
-                      <CTableDataCell>{new Date(log.timestamp).toLocaleString()}</CTableDataCell>
-                      <CTableDataCell>{log.details}</CTableDataCell>
-                    </CTableRow>
-                  ))}
-                </CTableBody>
-              </CTable>
-            </CCardBody>
-          </CCard>
-        </CCardBody>
-      </CCard>
-    </>
+    <CCard className="mb-4" style={{ width: '100%' }}>
+      <CCardHeader>Map</CCardHeader>
+      <CCardBody>
+        <div ref={mapRef} style={{ height: '700px', width: '100%' }}></div>
+        <CRow className="mt-3">
+          <CCol>
+            <CButton color="primary" onClick={handleStartLoop} disabled={isLooping}>
+              Start Movement Loop
+            </CButton>
+            <CButton color="danger" onClick={handleStopLoop}>
+              Stop Movement Loop
+            </CButton>
+          </CCol>
+        </CRow>
+      </CCardBody>
+    </CCard>
   );
 };
 

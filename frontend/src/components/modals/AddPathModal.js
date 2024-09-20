@@ -187,7 +187,6 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
   };
   
 
-  
   const addCellsToMap = (map, cells) => {
     cells.forEach((cell, index) => {
       const radius = cell.radius || 100;
