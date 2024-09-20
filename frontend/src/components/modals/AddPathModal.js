@@ -83,8 +83,11 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
 
           mapInstanceRef.current.on('click', (e) => {
             const { lng, lat } = e.lngLat;
-            addPoint({ lat: lat.toFixed(6).toString(), lon: lng.toFixed(6).toString() });
+            addPoint({ latitude: lat.toFixed(6), longitude: lng.toFixed(6) });
           });
+                    
+          
+          
 
           mapInstanceRef.current.on('style.load', () => {
             addCellsToMap(mapInstanceRef.current, cells);
@@ -109,7 +112,7 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
 
   const addPoint = (point) => {
     setFormData(prev => {
-      const newPoints = [...prev.points, point];
+      const newPoints = [...prev.points, { latitude: parseFloat(point.latitude), longitude: parseFloat(point.longitude) }];
       return {
         ...prev,
         points: newPoints,
@@ -118,20 +121,24 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
       };
     });
   };
+  
+  
+  
 
   const updateMarkers = () => {
     if (mapInstanceRef.current && formData.points.length) {
       markersRef.current.forEach(marker => marker.remove());
       markersRef.current = [];
-
+  
       formData.points.forEach(point => {
         const marker = new maplibre.Marker({ color: formData.color || '#FF0000' })
-          .setLngLat([parseFloat(point.lon), parseFloat(point.lat)])
+          .setLngLat([parseFloat(point.longitude), parseFloat(point.latitude)])  // Using longitude and latitude
           .addTo(mapInstanceRef.current);
         markersRef.current.push(marker);
       });
     }
   };
+  
 
   const convertRadiusToPixels = (radius, latitude, zoom) => {
     const metersPerPixel = 156543.03392 * Math.cos((latitude * Math.PI) / 180) / Math.pow(2, zoom);
@@ -140,8 +147,8 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
 
   const updatePath = () => {
     if (mapInstanceRef.current && formData.points.length) {
-      const lineCoordinates = formData.points.map(point => [parseFloat(point.lon), parseFloat(point.lat)]);
-
+      const lineCoordinates = formData.points.map(point => [parseFloat(point.longitude), parseFloat(point.latitude)]);
+  
       if (mapInstanceRef.current.getSource('path-line')) {
         mapInstanceRef.current.getSource('path-line').setData({
           type: 'Feature',
@@ -161,7 +168,7 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
             }
           }
         });
-
+  
         mapInstanceRef.current.addLayer({
           id: 'path-line',
           type: 'line',
@@ -178,6 +185,7 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
       }
     }
   };
+  
 
   
   const addCellsToMap = (map, cells) => {
@@ -343,11 +351,12 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
       const dataToSubmit = {
         ...formData,
         points: formData.points.map(point => ({
-          lat: parseFloat(point.lat),
-          lon: parseFloat(point.lon)
+          latitude: point.latitude,   // Already a number
+          longitude: point.longitude  // Already a number
         }))
       };
-      handleSubmit(dataToSubmit);
+  
+      handleSubmit(dataToSubmit);  // Submit with latitude and longitude as keys
       setMessage({ type: 'success', text: 'Path added successfully!' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } else {
@@ -355,6 +364,7 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     }
   };
+  
 
   return (
     <CModal visible={visible} onClose={handleClose} size="lg">
