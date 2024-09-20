@@ -18,17 +18,13 @@ import {
 } from './MapViewUtils';
 import * as turf from '@turf/turf';
 
-
 const MapView = ({ token }) => {
   const [ues, setUEs] = useState([]);
   const [cells, setCells] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isLooping, setIsLooping] = useState(false);
-  const [currentSupi, setCurrentSupi] = useState(null);
+  const [activeLoops, setActiveLoops] = useState(new Set()); // Track active loops for UEs
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
-  const counterRef = useRef(0);
-  const stepsRef = useRef(500);
   const intervalRef = useRef(null);
 
   // Fetch initial data
@@ -61,8 +57,7 @@ const MapView = ({ token }) => {
       mapInstanceRef.current = new maplibregl.Map({
         container: mapRef.current,
         style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
-        center: [23.7275, 37.9838],
-        zoom: 12,
+        zoom: 14, // Set initial zoom level
       });
     }
 
@@ -72,6 +67,15 @@ const MapView = ({ token }) => {
       removeMapLayersAndSources(map, cells.map(cell => `cell-${cell.id}`));
       addCellsToMap(map, cells);
       addUEsToMap(map, ues, [], handleUEClick);
+      
+      if (cells.length > 0) {
+        // Calculate the centroid of the cells
+        const cellCoords = cells.map(cell => [cell.longitude, cell.latitude]);
+        const centroid = turf.centroid(turf.multiPoint(cellCoords));
+        
+        // Center the map on the centroid
+        map.setCenter(centroid.geometry.coordinates);
+      }
     });
 
     return () => {
@@ -84,33 +88,35 @@ const MapView = ({ token }) => {
 
   useEffect(() => {
     const animateUEs = async () => {
-      if (!isLooping || !mapInstanceRef.current) return;
-    
+      if (activeLoops.size === 0 || !mapInstanceRef.current) return;
+
       const map = mapInstanceRef.current;
-    
+
       try {
         const updatedUEsResponse = await state_ues(token);
         const updatedUEs = Object.values(updatedUEsResponse);
-    
+
         updatedUEs.forEach(ue => {
+          if (!activeLoops.has(ue.supi)) return; // Skip UEs that are not active
+
           // Initialize previous coordinates if not set
           if (!ue.previousLongitude || !ue.previousLatitude) {
             ue.previousLongitude = ue.longitude;
             ue.previousLatitude = ue.latitude;
           }
-    
+
           const startCoordinates = [ue.previousLongitude, ue.previousLatitude];
           const endCoordinates = [ue.longitude, ue.latitude];
-    
+
           const steps = 50; // Number of steps for the animation
           let step = 0;
-    
+
           const animate = () => {
             if (step <= steps) {
               const interpolate = (start, end) => start + (end - start) * (step / steps);
               ue.latitude = interpolate(startCoordinates[1], endCoordinates[1]);
               ue.longitude = interpolate(startCoordinates[0], endCoordinates[0]);
-    
+
               addUEsToMap(map, [ue], [], handleUEClick);
               step++;
               requestAnimationFrame(animate);
@@ -120,32 +126,21 @@ const MapView = ({ token }) => {
               ue.previousLatitude = ue.latitude;
             }
           };
-    
+
           animate(); // Start the animation for this UE
         });
       } catch (error) {
         console.error('Error fetching updated UEs:', error);
       }
     };
-  
-    if (isLooping) {
-      animateUEs();
-      intervalRef.current = setInterval(animateUEs, 5000); // Update every 5 seconds
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    }
-  
+
+    animateUEs();
+    intervalRef.current = setInterval(animateUEs, 5000); // Update every 5 seconds
+
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+      clearInterval(intervalRef.current);
     };
-  }, [isLooping, token]);
-  
-  
+  }, [activeLoops, token]);
 
   const handleStartLoop = async () => {
     if (!token) {
@@ -154,39 +149,55 @@ const MapView = ({ token }) => {
     }
 
     try {
-      const supi = ues.length > 0 ? ues[0].supi : null;
+      const supiSet = new Set(ues.map(ue => ue.supi));
+      const promises = []; // Store promises to ensure all loops start
 
-      if (supi) {
-        await start_loop(token, supi);
-        console.log(`Loop started for SUPI: ${supi}`);
-        setCurrentSupi(supi);
-        setIsLooping(true);
-      } else {
-        console.error('No SUPI found to start the loop');
+      for (const supi of supiSet) {
+        if (!activeLoops.has(supi)) { // Only start if not already active
+          promises.push(start_loop(token, supi));
+          activeLoops.add(supi);
+        }
       }
+
+      await Promise.all(promises); // Wait for all loops to start
+      setActiveLoops(new Set(activeLoops));
+      console.log(`Started loops for all UEs`);
     } catch (err) {
-      console.error('Error starting loop:', err);
+      console.error('Error starting loops:', err);
     }
   };
 
-  const handleStopLoop = async () => {
+  const handleStartIndividualLoop = async (supi) => {
     if (!token) {
       console.error('Token is missing');
       return;
     }
 
-    try {
-      if (currentSupi) {
-        console.log(`Stopping loop for SUPI: ${currentSupi}`);
-        await stop_loop(token, currentSupi);
-        setIsLooping(false);
-        console.log('Loop stopped');
-      } else {
-        console.error('No SUPI stored for stopping the loop');
-      }
-    } catch (err) {
-      console.error('Error stopping loop:', err);
+    if (activeLoops.has(supi)) {
+      // Stop loop for this UE
+      await stop_loop(token, supi);
+      activeLoops.delete(supi);
+      console.log(`Stopped loop for SUPI: ${supi}`);
+    } else {
+      // Start loop for this UE
+      await start_loop(token, supi);
+      activeLoops.add(supi);
+      console.log(`Started loop for SUPI: ${supi}`);
     }
+    setActiveLoops(new Set(activeLoops)); // Trigger re-render
+  };
+
+  const handleStopAllLoops = async () => {
+    if (!token) {
+      console.error('Token is missing');
+      return;
+    }
+
+    for (const supi of activeLoops) {
+      await stop_loop(token, supi);
+    }
+    setActiveLoops(new Set()); // Clear active loops
+    console.log('Stopped all loops');
   };
 
   return (
@@ -196,11 +207,21 @@ const MapView = ({ token }) => {
         <div ref={mapRef} style={{ height: '700px', width: '100%' }}></div>
         <CRow className="mt-3">
           <CCol>
-            <CButton color="primary" onClick={handleStartLoop} disabled={isLooping}>
-              Start Movement Loop
+            <CButton color="primary" onClick={handleStartLoop} disabled={activeLoops.size === ues.length}>
+              Start All
             </CButton>
-            <CButton color="danger" onClick={handleStopLoop}>
-              Stop Movement Loop
+            {ues.map((ue) => (
+              <CButton
+                key={ue.supi}
+                color={activeLoops.has(ue.supi) ? "danger" : "primary"}
+                onClick={() => handleStartIndividualLoop(ue.supi)}
+                className="ml-2"
+              >
+                {activeLoops.has(ue.supi) ? `Stop ${ue.name}` : `Start ${ue.name}`}
+              </CButton>
+            ))}
+            <CButton color="danger" onClick={handleStopAllLoops}>
+              Stop All
             </CButton>
           </CCol>
         </CRow>
