@@ -1,10 +1,48 @@
 import maplibregl from 'maplibre-gl';
 import { readPath } from '../../utils/api';
 
-let markersMap = new Map(); // Initialize an empty map to track markers
+let markersMap = new Map(); // Map to track UE markers
+
+export const addPathsToMap = async (mapInstance, ues, token) => {
+  console.log('Adding paths to map:', ues);
+
+  for (const ue of ues) {
+    if (ue.path_id) {
+      try {
+        const pathData = await readPath(token, ue.path_id);
+        const coordinates = pathData.points.map(point => [point.longitude, point.latitude]);
+
+        mapInstance.addLayer({
+          id: `path-${ue.path_id}`,
+          type: 'line',
+          source: {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              geometry: {
+                type: 'LineString',
+                coordinates,
+              },
+              properties: {
+                id: pathData.id,
+                color: pathData.color,
+              },
+            },
+          },
+          paint: {
+            'line-color': pathData.color || '#00F',
+            'line-width': 2,
+          },
+        });
+      } catch (error) {
+        console.error('Error fetching path:', error);
+      }
+    }
+  }
+};
 
 // Add or update UEs to the map
-export const addUEsToMap = (mapInstance, ues, paths, handleUEClick) => {
+export const addUEsToMap = (mapInstance, ues, handleUEClick) => {
   console.log('Adding UEs to map:', ues);
 
   const uesArray = Array.isArray(ues) ? ues : Object.values(ues);
@@ -14,27 +52,26 @@ export const addUEsToMap = (mapInstance, ues, paths, handleUEClick) => {
       // Remove existing marker if it exists
       if (markersMap.has(ue.id)) {
         const existingMarker = markersMap.get(ue.id);
-        existingMarker.remove();
-        markersMap.delete(ue.id);
+        existingMarker.remove(); // Remove the old marker
+        markersMap.delete(ue.id); // Delete marker from map
       }
 
-      // Add new UE marker
+      // Create new UE marker
       const marker = new maplibregl.Marker({ id: `ue-${ue.id}` })
         .setLngLat([ue.longitude, ue.latitude])
         .setPopup(new maplibregl.Popup().setHTML(`<h3>${ue.name}</h3><p>${ue.description}</p>`))
         .addTo(mapInstance);
 
-      // Store marker in the map
+      // Store the marker in the map
       markersMap.set(ue.id, marker);
 
-      // Add click event handler if needed
+      // Add click event handler
       marker.getElement().addEventListener('click', () => handleUEClick(ue));
     }
   });
 };
 
-
-// Function to add cells to the map
+// Add cells to the map
 export const addCellsToMap = (mapInstance, cells) => {
   console.log('Adding cells to map:', cells);
 
@@ -65,43 +102,7 @@ export const addCellsToMap = (mapInstance, cells) => {
   });
 };
 
-// Function to add paths to the map
-export const addPathsToMap = (mapInstance, ues, token) => {
-  console.log('Adding paths to map:', ues);
-
-  ues.forEach(async ue => {
-    try {
-      const path = await readPath(token, ue.pathId);
-      const coordinates = path.map(point => [point.longitude, point.latitude]);
-
-      mapInstance.addLayer({
-        id: `path-${ue.pathId}`,
-        type: 'line',
-        source: {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            geometry: {
-              type: 'LineString',
-              coordinates
-            },
-            properties: {
-              id: ue.pathId
-            }
-          }
-        },
-        paint: {
-          'line-color': '#00F',
-          'line-width': 2
-        }
-      });
-    } catch (error) {
-      console.error('Error fetching path:', error);
-    }
-  });
-};
-
-// Function to remove all layers and sources from the map
+// Remove layers and sources from the map
 export const removeMapLayersAndSources = (mapInstance, layerIds) => {
   layerIds.forEach(layerId => {
     if (mapInstance.getLayer(layerId)) {
@@ -112,11 +113,6 @@ export const removeMapLayersAndSources = (mapInstance, layerIds) => {
 };
 
 // Handle UE click event
-export const handleUEClick = (event) => {
-  const { features } = event;
-
-  if (features.length > 0) {
-    const feature = features[0];
-    console.log('UE clicked:', feature.properties);
-  }
+export const handleUEClick = (ue) => {
+  console.log('UE clicked:', ue);
 };

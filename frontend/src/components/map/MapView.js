@@ -14,20 +14,19 @@ import {
   addUEsToMap,
   addCellsToMap,
   removeMapLayersAndSources,
-  handleUEClick
+  handleUEClick,
+  addPathsToMap // Import the new function
 } from './MapViewUtils';
-import * as turf from '@turf/turf';
 
 const MapView = ({ token }) => {
   const [ues, setUEs] = useState([]);
   const [cells, setCells] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeLoops, setActiveLoops] = useState(new Set()); // Track active loops for UEs
+  const [activeLoops, setActiveLoops] = useState(new Set());
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const intervalRef = useRef(null);
 
-  // Fetch initial data
   useEffect(() => {
     const fetchData = async () => {
       if (!token) {
@@ -45,11 +44,9 @@ const MapView = ({ token }) => {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [token]);
 
-  // Initialize map
   useEffect(() => {
     if (loading || !token) return;
 
@@ -57,25 +54,20 @@ const MapView = ({ token }) => {
       mapInstanceRef.current = new maplibregl.Map({
         container: mapRef.current,
         style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
-        zoom: 14, // Set initial zoom level
+        center: [23.7275, 37.9838],
+        zoom: 14,
       });
     }
 
     const map = mapInstanceRef.current;
 
-    map.on('style.load', () => {
+    map.on('style.load', async () => {
       removeMapLayersAndSources(map, cells.map(cell => `cell-${cell.id}`));
       addCellsToMap(map, cells);
-      addUEsToMap(map, ues, [], handleUEClick);
+      addUEsToMap(map, ues, handleUEClick);
       
-      if (cells.length > 0) {
-        // Calculate the centroid of the cells
-        const cellCoords = cells.map(cell => [cell.longitude, cell.latitude]);
-        const centroid = turf.centroid(turf.multiPoint(cellCoords));
-        
-        // Center the map on the centroid
-        map.setCenter(centroid.geometry.coordinates);
-      }
+      // Add paths to the map
+      await addPathsToMap(map, ues, token);
     });
 
     return () => {
@@ -97,9 +89,8 @@ const MapView = ({ token }) => {
         const updatedUEs = Object.values(updatedUEsResponse);
 
         updatedUEs.forEach(ue => {
-          if (!activeLoops.has(ue.supi)) return; // Skip UEs that are not active
+          if (!activeLoops.has(ue.supi)) return;
 
-          // Initialize previous coordinates if not set
           if (!ue.previousLongitude || !ue.previousLatitude) {
             ue.previousLongitude = ue.longitude;
             ue.previousLatitude = ue.latitude;
@@ -108,7 +99,7 @@ const MapView = ({ token }) => {
           const startCoordinates = [ue.previousLongitude, ue.previousLatitude];
           const endCoordinates = [ue.longitude, ue.latitude];
 
-          const steps = 50; // Number of steps for the animation
+          const steps = 50;
           let step = 0;
 
           const animate = () => {
@@ -117,17 +108,16 @@ const MapView = ({ token }) => {
               ue.latitude = interpolate(startCoordinates[1], endCoordinates[1]);
               ue.longitude = interpolate(startCoordinates[0], endCoordinates[0]);
 
-              addUEsToMap(map, [ue], [], handleUEClick);
+              addUEsToMap(map, [ue], handleUEClick);
               step++;
               requestAnimationFrame(animate);
             } else {
-              // Update previous coordinates after animation
               ue.previousLongitude = ue.longitude;
               ue.previousLatitude = ue.latitude;
             }
           };
 
-          animate(); // Start the animation for this UE
+          animate();
         });
       } catch (error) {
         console.error('Error fetching updated UEs:', error);
@@ -135,7 +125,7 @@ const MapView = ({ token }) => {
     };
 
     animateUEs();
-    intervalRef.current = setInterval(animateUEs, 5000); // Update every 5 seconds
+    intervalRef.current = setInterval(animateUEs, 5000);
 
     return () => {
       clearInterval(intervalRef.current);
@@ -150,16 +140,16 @@ const MapView = ({ token }) => {
 
     try {
       const supiSet = new Set(ues.map(ue => ue.supi));
-      const promises = []; // Store promises to ensure all loops start
+      const promises = [];
 
       for (const supi of supiSet) {
-        if (!activeLoops.has(supi)) { // Only start if not already active
+        if (!activeLoops.has(supi)) {
           promises.push(start_loop(token, supi));
           activeLoops.add(supi);
         }
       }
 
-      await Promise.all(promises); // Wait for all loops to start
+      await Promise.all(promises);
       setActiveLoops(new Set(activeLoops));
       console.log(`Started loops for all UEs`);
     } catch (err) {
@@ -174,17 +164,15 @@ const MapView = ({ token }) => {
     }
 
     if (activeLoops.has(supi)) {
-      // Stop loop for this UE
       await stop_loop(token, supi);
       activeLoops.delete(supi);
       console.log(`Stopped loop for SUPI: ${supi}`);
     } else {
-      // Start loop for this UE
       await start_loop(token, supi);
       activeLoops.add(supi);
       console.log(`Started loop for SUPI: ${supi}`);
     }
-    setActiveLoops(new Set(activeLoops)); // Trigger re-render
+    setActiveLoops(new Set(activeLoops));
   };
 
   const handleStopAllLoops = async () => {
@@ -196,7 +184,7 @@ const MapView = ({ token }) => {
     for (const supi of activeLoops) {
       await stop_loop(token, supi);
     }
-    setActiveLoops(new Set()); // Clear active loops
+    setActiveLoops(new Set());
     console.log('Stopped all loops');
   };
 

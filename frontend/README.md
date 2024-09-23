@@ -21,9 +21,9 @@
     19. UEs edit Modals -> lock fields with prefill             DONE
     20. Login (token handling & redirection)                    DONE
     21. radius cell graphic display                             IN PROGRESS
-    22. websocket rxjs integration                              IN PROGRESS
+    22. websocket rxjs integration                              DELAYED
     
     23. Add cell -> gnb                             
     24. add UE -> cell & gnb   
-    25. success messages
+    25. success messages                                        DONE
     26. add cell -> error
