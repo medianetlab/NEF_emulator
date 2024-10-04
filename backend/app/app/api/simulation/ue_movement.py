@@ -11,12 +11,73 @@ from app.api import deps
 from app.schemas import Msg
 from app.tools import monitoring_callbacks, timer
 from sqlalchemy.orm import Session
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+import asyncio
+import json
+
+app = FastAPI()
 
 #Dictionary holding threads that are running per user id.
 threads = {}
 
-#Dictionary holding UEs' information
+# Dictionary holding UEs' information
 ues = {}
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            try:
+                await connection.send_text(message)
+            except Exception as e:
+                print(f"Error sending message: {e}")
+                self.disconnect(connection)  # Remove disconnected clients
+
+manager = ConnectionManager()
+
+# Long polling endpoint
+@app.get("/poll_ues")
+async def poll_ues():
+    while True:
+        await asyncio.sleep(5)  # Check for updates every 5 seconds
+
+        if ues:  # If there are UEs data
+            data = json.dumps(ues)
+            return JSONResponse(content={"data": data})
+
+        # Keep the connection open if there's no new data
+        await asyncio.sleep(1)  # Prevent tight loop
+
+# WebSocket endpoint to send UE updates every 5 seconds
+@app.websocket("/ws/ues")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)  # Open the WebSocket connection
+
+    try:
+        while True:
+            await asyncio.sleep(5)  # Send updates every 5 seconds
+
+            # Convert the ues dictionary to JSON
+            data = json.dumps(ues)
+
+            # Send the data to all connected WebSocket clients
+            await manager.broadcast(data)
+    except WebSocketDisconnect:
+        print(f"WebSocket disconnected: {websocket}")
+        manager.disconnect(websocket)
+    except Exception as e:
+        print(f"Error during WebSocket communication: {e}")
+        manager.disconnect(websocket)
+#=============================================================================================
 
 class BackgroundTasks(threading.Thread):
 

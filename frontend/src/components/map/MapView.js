@@ -8,14 +8,13 @@ import {
   CButton
 } from '@coreui/react';
 import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
-import { getUEs, getCells, start_loop, stop_loop, state_ues } from '../../utils/api';
+import { getUEs, getCells, start_loop, stop_loop } from '../../utils/api';
 import {
   addUEsToMap,
   addCellsToMap,
   removeMapLayersAndSources,
   handleUEClick,
-  addPathsToMap // Import the new function
+  addPathsToMap
 } from './MapViewUtils';
 
 const MapView = ({ token }) => {
@@ -23,9 +22,9 @@ const MapView = ({ token }) => {
   const [cells, setCells] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeLoops, setActiveLoops] = useState(new Set());
+  const [ws, setWs] = useState(null); // WebSocket connection state
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
-  const intervalRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -65,8 +64,6 @@ const MapView = ({ token }) => {
       removeMapLayersAndSources(map, cells.map(cell => `cell-${cell.id}`));
       addCellsToMap(map, cells);
       addUEsToMap(map, ues, handleUEClick);
-      
-      // Add paths to the map
       await addPathsToMap(map, ues, token);
     });
 
@@ -78,59 +75,37 @@ const MapView = ({ token }) => {
     };
   }, [loading, token, ues, cells]);
 
+  // WebSocket connection effect
   useEffect(() => {
-    const animateUEs = async () => {
-      if (activeLoops.size === 0 || !mapInstanceRef.current) return;
+    if (!token) return;
 
-      const map = mapInstanceRef.current;
+    // Establish WebSocket connection
+    const websocket = new WebSocket(`ws://localhost:4443/ws/ues`);
 
-      try {
-        const updatedUEsResponse = await state_ues(token);
-        const updatedUEs = Object.values(updatedUEsResponse);
-
-        updatedUEs.forEach(ue => {
-          if (!activeLoops.has(ue.supi)) return;
-
-          if (!ue.previousLongitude || !ue.previousLatitude) {
-            ue.previousLongitude = ue.longitude;
-            ue.previousLatitude = ue.latitude;
-          }
-
-          const startCoordinates = [ue.previousLongitude, ue.previousLatitude];
-          const endCoordinates = [ue.longitude, ue.latitude];
-
-          const steps = 50;
-          let step = 0;
-
-          const animate = () => {
-            if (step <= steps) {
-              const interpolate = (start, end) => start + (end - start) * (step / steps);
-              ue.latitude = interpolate(startCoordinates[1], endCoordinates[1]);
-              ue.longitude = interpolate(startCoordinates[0], endCoordinates[0]);
-
-              addUEsToMap(map, [ue], handleUEClick);
-              step++;
-              requestAnimationFrame(animate);
-            } else {
-              ue.previousLongitude = ue.longitude;
-              ue.previousLatitude = ue.latitude;
-            }
-          };
-
-          animate();
-        });
-      } catch (error) {
-        console.error('Error fetching updated UEs:', error);
-      }
+    websocket.onopen = () => {
+      console.log('WebSocket connection opened');
     };
 
-    animateUEs();
-    intervalRef.current = setInterval(animateUEs, 5000);
+    websocket.onmessage = (event) => {
+      const { data } = event;
+      const updatedUEs = JSON.parse(data);
+      setUEs(updatedUEs); // Update UEs with real-time data from WebSocket
+    };
+
+    websocket.onclose = () => {
+      console.log('WebSocket connection closed');
+    };
+
+    websocket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    setWs(websocket);
 
     return () => {
-      clearInterval(intervalRef.current);
+      websocket.close(); // Close WebSocket connection when component unmounts
     };
-  }, [activeLoops, token]);
+  }, [token]);
 
   const handleStartLoop = async () => {
     if (!token) {
@@ -152,6 +127,7 @@ const MapView = ({ token }) => {
       await Promise.all(promises);
       setActiveLoops(new Set(activeLoops));
       console.log(`Started loops for all UEs`);
+
     } catch (err) {
       console.error('Error starting loops:', err);
     }
@@ -195,7 +171,7 @@ const MapView = ({ token }) => {
         <div ref={mapRef} style={{ height: '700px', width: '100%' }}></div>
         <CRow className="mt-3">
           <CCol>
-            <CButton color="primary" onClick={handleStartLoop} disabled={activeLoops.size === ues.length}>
+            <CButton color="primary" onClick={handleStartLoop} disabled={activeLoops.size === ues.length || loading}>
               Start All
             </CButton>
             {ues.map((ue) => (
