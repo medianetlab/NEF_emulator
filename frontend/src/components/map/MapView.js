@@ -80,7 +80,7 @@ const MapView = ({ token }) => {
     if (!token) return;
 
     // Establish WebSocket connection
-    const websocket = new WebSocket(`ws://localhost:4443/ws/ues`);
+    const websocket = new WebSocket('wss://localhost:4443/ws/ues');
 
     websocket.onopen = () => {
       console.log('WebSocket connection opened');
@@ -89,7 +89,7 @@ const MapView = ({ token }) => {
     websocket.onmessage = (event) => {
       const { data } = event;
       const updatedUEs = JSON.parse(data);
-      setUEs(updatedUEs); // Update UEs with real-time data from WebSocket
+      setUEs(updatedUEs); // Update UEs with data from WebSocket
     };
 
     websocket.onclose = () => {
@@ -98,6 +98,10 @@ const MapView = ({ token }) => {
 
     websocket.onerror = (error) => {
       console.error('WebSocket error:', error);
+
+      if (error.message) {
+        console.error('Error message:', error.message);
+      }
     };
 
     setWs(websocket);

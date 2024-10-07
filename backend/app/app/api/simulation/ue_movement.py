@@ -48,35 +48,33 @@ manager = ConnectionManager()
 @app.get("/poll_ues")
 async def poll_ues():
     while True:
-        await asyncio.sleep(5)  # Check for updates every 5 seconds
+        await asyncio.sleep(5)
 
-        if ues:  # If there are UEs data
+        if ues:
             data = json.dumps(ues)
             return JSONResponse(content={"data": data})
 
-        # Keep the connection open if there's no new data
         await asyncio.sleep(1)  # Prevent tight loop
 
 # WebSocket endpoint to send UE updates every 5 seconds
 @app.websocket("/ws/ues")
 async def websocket_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)  # Open the WebSocket connection
+    await manager.connect(websocket)
 
     try:
         while True:
             await asyncio.sleep(5)  # Send updates every 5 seconds
-
             # Convert the ues dictionary to JSON
             data = json.dumps(ues)
-
-            # Send the data to all connected WebSocket clients
             await manager.broadcast(data)
+
     except WebSocketDisconnect:
         print(f"WebSocket disconnected: {websocket}")
         manager.disconnect(websocket)
     except Exception as e:
         print(f"Error during WebSocket communication: {e}")
         manager.disconnect(websocket)
+
 #=============================================================================================
 
 class BackgroundTasks(threading.Thread):
