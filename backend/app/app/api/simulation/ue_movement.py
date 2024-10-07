@@ -15,65 +15,12 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 import asyncio
 import json
 
-app = FastAPI()
 
 #Dictionary holding threads that are running per user id.
 threads = {}
 
 # Dictionary holding UEs' information
 ues = {}
-
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: list[WebSocket] = []
-
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
-
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
-
-    async def broadcast(self, message: str):
-        for connection in self.active_connections:
-            try:
-                await connection.send_text(message)
-            except Exception as e:
-                print(f"Error sending message: {e}")
-                self.disconnect(connection)  # Remove disconnected clients
-
-manager = ConnectionManager()
-
-# Long polling endpoint
-@app.get("/poll_ues")
-async def poll_ues():
-    while True:
-        await asyncio.sleep(5)
-
-        if ues:
-            data = json.dumps(ues)
-            return JSONResponse(content={"data": data})
-
-        await asyncio.sleep(1)  # Prevent tight loop
-
-# WebSocket endpoint to send UE updates every 5 seconds
-@app.websocket("/ws/ues")
-async def websocket_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
-
-    try:
-        while True:
-            await asyncio.sleep(5)  # Send updates every 5 seconds
-            # Convert the ues dictionary to JSON
-            data = json.dumps(ues)
-            await manager.broadcast(data)
-
-    except WebSocketDisconnect:
-        print(f"WebSocket disconnected: {websocket}")
-        manager.disconnect(websocket)
-    except Exception as e:
-        print(f"Error during WebSocket communication: {e}")
-        manager.disconnect(websocket)
 
 #=============================================================================================
 
@@ -418,6 +365,52 @@ class BackgroundTasks(threading.Thread):
 
 #API
 router = APIRouter()
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            try:
+                await connection.send_text(message)
+            except Exception as e:
+                print(f"Error sending message: {e}")
+                self.disconnect(connection)  # Remove disconnected clients
+
+manager = ConnectionManager()
+
+async def periodic_broadcast():
+    while True:
+        await asyncio.sleep(5)
+        data = json.dumps(ues)
+        await manager.broadcast(data)
+
+@router.websocket("/ws/ues")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+
+    broadcast_task = asyncio.create_task(periodic_broadcast())
+
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        print(f"WebSocket disconnected: {websocket}")
+        manager.disconnect(websocket)
+    except Exception as e:
+        print(f"Error during WebSocket communication: {e}")
+        manager.disconnect(websocket)
+    finally:
+        broadcast_task.cancel()
+
 
 @router.post("/start-loop", status_code=200)
 def initiate_movement(
