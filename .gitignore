@@ -4,6 +4,7 @@
 *.crt
 *.csr
 *.pem
+*.p12
 backend/app/app/core/certificates/capif_provider_details.json
 backend/app/app/core/certificates/CAPIF_service_as_session_with_qos.json
 backend/app/app/core/certificates/CAPIF_service_monitoring_event.json
