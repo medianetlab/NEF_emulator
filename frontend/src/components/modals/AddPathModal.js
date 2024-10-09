@@ -90,10 +90,10 @@ const AddPathModal = ({ visible, handleClose, handleSubmit, token }) => {
             addPoint({ latitude: lat.toFixed(6), longitude: lng.toFixed(6) });
           });
 
-          mapInstanceRef.current.on('style.load', () => {
+          mapInstanceRef.current.on('style.load', async () => { 
             addCellsToMap(mapInstanceRef.current, cells);
             addUEsToMap(mapInstanceRef.current, ues);
-            addPathsToMap(mapInstanceRef.current, paths);
+            await addPathsToMap(mapInstanceRef.current, paths); 
             updatePath();
           });
         }
