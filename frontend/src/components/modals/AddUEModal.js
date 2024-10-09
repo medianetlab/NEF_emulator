@@ -66,7 +66,7 @@ const AddUEModal = ({ visible, handleClose, handleSubmit, token }) => {
               container: mapRef.current,
               style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
               center: [23.819390, 37.997564],
-              zoom: 12,
+              zoom: 14,
             });
             mapInstanceRef.current.on('style.load', async () => {
               removeMapLayersAndSources(mapInstanceRef.current, cells.map(cell => `cell-${cell.id}`));

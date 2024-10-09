@@ -5,13 +5,13 @@ import {
 } from '@coreui/react';
 import maplibre from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { getCells, getUEs, getPaths } from '../../utils/api';  // Assuming you have these API functions
+import { getCells, getUEs, getPaths, getGNBs } from '../../utils/api'; // Assuming you have these API functions
 
 const colorOptions = [
   '#FF5733', '#33FF57', '#3357FF', '#F4C542', '#E94E77', '#8E44AD'
 ];
 
-const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
+const AddPathModal = ({ visible, handleClose, handleSubmit, token }) => {
   const [formData, setFormData] = useState({
     description: '',
     color: '',
@@ -19,15 +19,37 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
     end_point: null,
     points: []
   });
+  const [paths, setPaths] = useState([]);
+  const [gnbs, setGNBs] = useState([]);
   const [cells, setCells] = useState([]);
   const [ues, setUEs] = useState([]);
-  const [paths, setPaths] = useState([]);
-  const [errors, setErrors] = useState({});
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const [toasts, setToasts] = useState([]);
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
   const circleLayersRef = useRef([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!token) return;
+      try {
+        const [pathsData, gnbData, cellData, ueData] = await Promise.all([
+          getPaths(token),
+          getGNBs(token),
+          getCells(token),
+          getUEs(token),
+        ]);
+        setPaths(pathsData);
+        setGNBs(gnbData);
+        setCells(cellData);
+        setUEs(ueData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, [token]);
 
   useEffect(() => {
     if (visible) {
@@ -38,8 +60,6 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
         end_point: null,
         points: []
       });
-      setErrors({});
-      setMessage({ type: '', text: '' });
 
       markersRef.current.forEach(marker => marker.remove());
       markersRef.current = [];
@@ -56,38 +76,19 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
         mapInstanceRef.current.removeSource('path-line');
       }
 
-      Promise.all([getCells(), getUEs(), getPaths()])
-        .then(([cellsData, uesData, pathsData]) => {
-          setCells(cellsData);
-          setUEs(uesData);
-          setPaths(pathsData);
-
-          if (mapInstanceRef.current) {
-            addCellsToMap(mapInstanceRef.current, cellsData);
-            addUEsToMap(mapInstanceRef.current, uesData);
-            addPathsToMap(mapInstanceRef.current, pathsData);
-          }
-        })
-        .catch(error => {
-          console.error('Error fetching data:', error);
-        });
-
       setTimeout(() => {
         if (mapRef.current && !mapInstanceRef.current) {
           mapInstanceRef.current = new maplibre.Map({
             container: mapRef.current,
             style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
-            center: [23.7275, 37.9838],
-            zoom: 12,
+            center: [23.819390, 37.997564],
+            zoom: 14,
           });
 
           mapInstanceRef.current.on('click', (e) => {
             const { lng, lat } = e.lngLat;
             addPoint({ latitude: lat.toFixed(6), longitude: lng.toFixed(6) });
           });
-                    
-          
-          
 
           mapInstanceRef.current.on('style.load', () => {
             addCellsToMap(mapInstanceRef.current, cells);
@@ -121,15 +122,12 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
       };
     });
   };
-  
-  
-  
 
   const updateMarkers = () => {
     if (mapInstanceRef.current && formData.points.length) {
       markersRef.current.forEach(marker => marker.remove());
       markersRef.current = [];
-  
+
       formData.points.forEach(point => {
         const marker = new maplibre.Marker({ color: formData.color || '#FF0000' })
           .setLngLat([parseFloat(point.longitude), parseFloat(point.latitude)])  // Using longitude and latitude
@@ -138,17 +136,11 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
       });
     }
   };
-  
-
-  const convertRadiusToPixels = (radius, latitude, zoom) => {
-    const metersPerPixel = 156543.03392 * Math.cos((latitude * Math.PI) / 180) / Math.pow(2, zoom);
-    return radius / metersPerPixel;
-  };
 
   const updatePath = () => {
     if (mapInstanceRef.current && formData.points.length) {
       const lineCoordinates = formData.points.map(point => [parseFloat(point.longitude), parseFloat(point.latitude)]);
-  
+
       if (mapInstanceRef.current.getSource('path-line')) {
         mapInstanceRef.current.getSource('path-line').setData({
           type: 'Feature',
@@ -168,7 +160,7 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
             }
           }
         });
-  
+
         mapInstanceRef.current.addLayer({
           id: 'path-line',
           type: 'line',
@@ -185,12 +177,11 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
       }
     }
   };
-  
 
   const addCellsToMap = (map, cells) => {
     cells.forEach((cell, index) => {
       const radius = cell.radius || 100;
-  
+
       const feature = {
         type: 'Feature',
         geometry: {
@@ -203,7 +194,7 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
           radius: radius
         }
       };
-  
+
       map.addSource(`cell-source-${index}`, {
         type: 'geojson',
         data: {
@@ -211,7 +202,7 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
           features: [feature]
         }
       });
-  
+
       map.addLayer({
         id: `cell-layer-${index}`,
         type: 'circle',
@@ -225,7 +216,7 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
           'circle-opacity': 0.1
         }
       });
-  
+
       map.addLayer({
         id: `cell-center-dot-${index}`,
         type: 'circle',
@@ -238,7 +229,6 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
       });
     });
   };
-  
 
   const addUEsToMap = (map, ues) => {
     ues.forEach((ue, index) => {
@@ -321,133 +311,66 @@ const AddPathModal = ({ visible, handleClose, handleSubmit }) => {
     });
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    handleSubmit(formData);
+    handleClose();
   };
-
-  const handleColorClick = (color) => {
-    setFormData(prev => ({
-      ...prev,
-      color
-    }));
-  };
-
-  const validateForm = () => {
-    const errors = {};
-    if (!formData.description) errors.description = 'Description is required';
-    if (!formData.color) errors.color = 'Color is required';
-    if (formData.points.length < 2) errors.points = 'At least two points are required';
-    setErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleFormSubmit = () => {
-    if (validateForm()) {
-      const dataToSubmit = {
-        ...formData,
-        points: formData.points.map(point => ({
-          latitude: point.latitude,   // Already a number
-          longitude: point.longitude  // Already a number
-        }))
-      };
-  
-      handleSubmit(dataToSubmit);  // Submit with latitude and longitude as keys
-      setMessage({ type: 'success', text: 'Path added successfully!' });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    } else {
-      setMessage({ type: 'danger', text: 'Please correct the errors in the form.' });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    }
-  };
-  
 
   return (
     <CModal visible={visible} onClose={handleClose} size="lg">
-      <CModalHeader closeButton>
+      <CModalHeader onClose={handleClose}>
         <h5>Add Path</h5>
       </CModalHeader>
       <CModalBody>
-        {message.text && (
-          <CAlert color={message.type} dismissible>
-            {message.text}
-          </CAlert>
-        )}
-        <CForm>
-          <div className="mb-3">
-            <label htmlFor="description" className="form-label">Description</label>
-            <input
-              type="text"
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              className={`form-control ${errors.description ? 'is-invalid' : ''}`}
-            />
-            {errors.description && <div className="invalid-feedback">{errors.description}</div>}
+        <CForm onSubmit={handleFormSubmit}>
+          <div className="color-selection">
+            {colorOptions.map(color => (
+              <div
+                key={color}
+                onClick={() => setFormData(prev => ({ ...prev, color }))}
+                style={{
+                  backgroundColor: color,
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: '50%',
+                  display: 'inline-block',
+                  marginRight: '10px',
+                  cursor: 'pointer',
+                  border: formData.color === color ? '2px solid #000' : 'none'
+                }}
+              />
+            ))}
           </div>
-          <div className="mb-3">
-            <label className="form-label">Path Color</label>
-            <div className="d-flex gap-2">
-              {colorOptions.map(color => (
-                <div
-                  key={color}
-                  style={{ backgroundColor: color, width: 24, height: 24, cursor: 'pointer', borderRadius: '50%' }}
-                  onClick={() => handleColorClick(color)}
-                ></div>
+          <CFormTextarea
+            value={formData.description}
+            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            placeholder="Description"
+            rows={3}
+            className="mt-2"
+          />
+          <div className="points-preview">
+            <h6>Points:</h6>
+            <ul>
+              {formData.points.map((point, index) => (
+                <li key={index}>{`Lat: ${point.latitude}, Lon: ${point.longitude}`}</li>
               ))}
-            </div>
-            {errors.color && <div className="text-danger">{errors.color}</div>}
+            </ul>
           </div>
-          <div id="map" ref={mapRef} style={{ height: '400px', width: '100%' }}></div>
-          <div className="mb-3">
-            <label htmlFor="start_point" className="form-label">Start Point</label>
-            <input
-              type="text"
-              id="start_point"
-              name="start_point"
-              value={formData.start_point ? `${formData.start_point.lat}, ${formData.start_point.lon}` : ''}
-              readOnly
-              className={`form-control ${errors.start_point ? 'is-invalid' : ''}`}
-            />
-            {errors.start_point && <div className="invalid-feedback">{errors.start_point}</div>}
-          </div>
-          <div className="mb-3">
-            <label htmlFor="end_point" className="form-label">End Point</label>
-            <input
-              type="text"
-              id="end_point"
-              name="end_point"
-              value={formData.end_point ? `${formData.end_point.lat}, ${formData.end_point.lon}` : ''}
-              readOnly
-              className={`form-control ${errors.end_point ? 'is-invalid' : ''}`}
-            />
-            {errors.end_point && <div className="invalid-feedback">{errors.end_point}</div>}
-          </div>
-          <div className="mb-3">
-            <label htmlFor="points" className="form-label">Points</label>
-            <CFormTextarea
-              id="points"
-              name="points"
-              value={formData.points.map(point => `(${point.lat}, ${point.lon})`).join('\n')}
-              readOnly
-              rows={5}
-              className="form-control"
-            />
-            {errors.points && <div className="invalid-feedback">{errors.points}</div>}
-          </div>
+          <div ref={mapRef} style={{ width: '100%', height: '400px' }} />
+          {toasts.map((toast, index) => (
+            <CAlert key={index} color={toast.color}>
+              {toast.message}
+            </CAlert>
+          ))}
         </CForm>
       </CModalBody>
       <CModalFooter>
         <CButton color="secondary" onClick={handleClose}>Close</CButton>
-        <CButton color="primary" onClick={handleFormSubmit}>Save changes</CButton>
+        <CButton color="primary" type="submit" onClick={handleFormSubmit}>Add Path</CButton>
       </CModalFooter>
     </CModal>
   );
 };
 
 export default AddPathModal;
-
