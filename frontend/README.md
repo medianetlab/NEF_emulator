@@ -5,7 +5,7 @@
     3. BASE URL -> .env file   				                    DONE
     4. Path add modal -> map with point assign	                DONE
     5. Datatables -> arrows to sort Datatables                  DONE
-    6. UEs edit/add modal -> map with path display              DONE - DISPLAY PATHS  
+    6. UEs edit/add modal -> map with path display              DONE
     7. Path modal -> color choose boxes			                DONE
     8. MapLibre integration					                    DONE
     9. Ues popup when hovering                                  DONE
@@ -20,10 +20,10 @@
     18. Sidebar toggle                                          DONE
     19. UEs edit Modals -> lock fields with prefill             DONE
     20. Login (token handling & redirection)                    DONE
-    21. radius cell graphic display                             IN PROGRESS
-    22. websocket rxjs integration                              DELAYED
+    21. radius cell graphic display                             DONE
+    22. websocket rxjs integration                              IN PROGRESS
     
     23. Add cell -> gnb                             
     24. add UE -> cell & gnb   
     25. success messages                                        DONE
-    26. add cell -> error
+    26. add cell -> error                                           

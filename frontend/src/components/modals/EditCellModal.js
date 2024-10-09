@@ -1,58 +1,67 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   CModal, CModalHeader, CModalBody, CModalFooter, CButton,
-  CForm, CFormInput, CFormTextarea, CFormSelect, CAlert
+  CForm, CFormInput, CFormSelect, CAlert
 } from '@coreui/react';
 import maplibre from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { getGNBs } from '../../utils/api';
+import { getPaths, getCells } from '../../utils/api';
+import { removeMapLayersAndSources, addCellsToMap } from './ModalUtils';
 
-const EditCellModal = ({ visible, handleClose, handleSubmit, token, initialData }) => {
+const EditCellModal = ({ visible, handleClose, handleSubmit, initialData, token }) => {
   const [formData, setFormData] = useState({
     cell_id: '',
     name: '',
-    description: '',
-    gNB_id: '',
-    latitude: 0,
-    longitude: 0,
-    radius: ''
+    latitude: 0.0,
+    longitude: 0.0,
+    radius: 0,
+    path_id: '',
+    frequency: '',
+    bandwidth: ''
   });
 
-  const [gnbs, setGnbs] = useState([]);
-  const [message, setMessage] = useState({ type: '', text: '' }); // State for success/failure message
+  const [paths, setPaths] = useState([]);
+  const [cells, setCells] = useState([]);
+  const [message, setMessage] = useState({ type: '', text: '' });
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
-  const markerRef = useRef(null); // Ref to hold the map marker
+  const markerRef = useRef(null);
+  const circleRef = useRef(null);
 
-  // Fetch gNBs when modal is visible
+  // Fetch paths and cells data when component mounts or token changes
   useEffect(() => {
-    if (visible) {
-      getGNBs(token)
-        .then(setGnbs)
-        .catch(err => {
-          console.error("Failed to fetch gNBs", err);
-          setMessage({ type: 'failure', text: 'Error fetching gNBs. Please try again later.' });
-          setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-        });
-    }
-  }, [visible, token]);
+    const fetchPathsAndCells = async () => {
+      if (!token) return;
+      try {
+        const pathsData = await getPaths(token);
+        setPaths(pathsData);
 
-  // Pre-fill form data when modal opens
+        const cellsData = await getCells(token); // Fetch all cells
+        setCells(cellsData);
+      } catch (error) {
+        console.error('Error fetching paths or cells:', error);
+        setMessage({ type: 'failure', text: 'Error fetching paths or cells. Please try again later.' });
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      }
+    };
+
+    fetchPathsAndCells();
+  }, [token]);
+
+  // Update formData when initialData changes
   useEffect(() => {
-    if (initialData && visible) {
-      setFormData({
-        cell_id: initialData.cell_id || '',
-        name: initialData.name || '',
-        description: initialData.description || '',
-        gNB_id: initialData.gNB_id || '',
-        latitude: initialData.latitude || 0,
-        longitude: initialData.longitude || 0,
-        radius: initialData.radius || ''
-      });
+    if (initialData) {
+      setFormData(prev => ({
+        ...prev,
+        ...initialData,
+        latitude: initialData.position?.lat || initialData.latitude || 0.0,
+        longitude: initialData.position?.lng || initialData.longitude || 0.0,
+        radius: initialData.radius || 0 // Set the initial radius
+      }));
     }
-  }, [visible, initialData]);
+  }, [initialData, visible]);
 
-  // Initialize the map when the modal is visible
+  // Initialize or update MapLibre map, marker, and circle
   useEffect(() => {
     if (visible) {
       setTimeout(() => {
@@ -61,28 +70,34 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, initialData 
             mapInstanceRef.current = new maplibre.Map({
               container: mapRef.current,
               style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
-              center: [formData.longitude, formData.latitude], // Corrected order
-              zoom: 12,
+              center: [formData.longitude, formData.latitude],
+              zoom: 13,
             });
 
-            // Add a marker to the map at the initial position
+            mapInstanceRef.current.on('style.load', async () => {
+              removeMapLayersAndSources(mapInstanceRef.current, cells.map(cell => `cell-${cell.id}`));
+              addCellsToMap(mapInstanceRef.current, cells); 
+              drawCircle(); // Draw the initial circle
+            });
+
+            // Add marker to the map for the cell being edited
             markerRef.current = new maplibre.Marker()
-              .setLngLat([formData.longitude, formData.latitude]) // Corrected order
+              .setLngLat([formData.longitude, formData.latitude])
               .addTo(mapInstanceRef.current);
 
-            // Update the map marker and form fields on map click
+            // Add click event to update the marker and circle
             mapInstanceRef.current.on('click', (e) => {
               const { lng, lat } = e.lngLat;
-              setFormData(prev => ({
-                ...prev,
-                latitude: lat, // Latitude first
-                longitude: lng // Longitude second
-              }));
-              
-              if (markerRef.current) {
-                markerRef.current.setLngLat([lng, lat]); // Update marker position
-              }
+              setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
+              markerRef.current.setLngLat([lng, lat]);
+              drawCircle(); // Update the circle with the new coordinates
             });
+
+          } else {
+            // Update map center and marker position when formData changes
+            mapInstanceRef.current.setCenter([formData.longitude, formData.latitude]);
+            markerRef.current.setLngLat([formData.longitude, formData.latitude]);
+            drawCircle(); // Update the circle when coordinates change
           }
         }
       }, 500);
@@ -90,7 +105,57 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, initialData 
       mapInstanceRef.current.remove();
       mapInstanceRef.current = null;
     }
-  }, [visible, formData]);
+  }, [visible, formData.latitude, formData.longitude, cells]);
+
+  const drawCircle = () => {
+    if (!mapInstanceRef.current || !formData.radius) return;
+
+    const radius = formData.radius; // in meters
+    const lat = formData.latitude;
+    const lng = formData.longitude;
+
+    // Calculate the circle's boundary points
+    const circlePoints = [];
+
+    for (let i = 0; i < 360; i++) {
+      const angle = (i * Math.PI) / 180;
+      const x = lng + (radius / 111320) * Math.cos(angle); // convert meters to degrees
+      const y = lat + (radius / 111320) * Math.sin(angle);
+      circlePoints.push([x, y]);
+    }
+
+    // Remove previous circle layer if it exists
+    if (circleRef.current) {
+      mapInstanceRef.current.removeLayer('circle');
+      mapInstanceRef.current.removeSource('circle');
+    }
+
+    // Add a source for the circle
+    mapInstanceRef.current.addSource('circle', {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        geometry: {
+          type: 'Polygon',
+          coordinates: [circlePoints.concat([circlePoints[0]])] // close the circle
+        }
+      }
+    });
+
+    // Add a layer for the circle
+    mapInstanceRef.current.addLayer({
+      id: 'circle',
+      type: 'fill',
+      source: 'circle',
+      layout: {},
+      paint: {
+        'fill-color': '#888',
+        'fill-opacity': 0.5
+      }
+    });
+
+    circleRef.current = 'circle'; // Store reference to circle layer
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -99,19 +164,14 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, initialData 
 
   const handleFormSubmit = async () => {
     try {
-      const dataToSubmit = {
-        ...formData,
-        radius: parseFloat(formData.radius),
-        gNB_id: parseFloat(formData.gNB_id)
-      };
-
-      await handleSubmit(dataToSubmit);
+      await handleSubmit(formData);
       setMessage({ type: 'success', text: 'Cell updated successfully!' });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000); // Auto-hide after 3 seconds
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       handleClose(); // Close the modal after successful update
     } catch (error) {
-      setMessage({ type: 'failure', text: 'Error: Failed to update the cell.' });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000); // Auto-hide after 3 seconds
+      console.error('Error updating Cell:', error);
+      setMessage({ type: 'failure', text: 'Error: Failed to update the Cell.' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     }
   };
 
@@ -143,7 +203,6 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, initialData 
               label="Cell ID"
               value={formData.cell_id}
               onChange={handleChange}
-              disabled // Disable editing for Cell ID
             />
             <CFormInput
               id="name"
@@ -152,59 +211,63 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, token, initialData 
               value={formData.name}
               onChange={handleChange}
             />
-            <CFormTextarea
-              id="description"
-              name="description"
-              label="Description"
-              value={formData.description}
+            <CFormInput
+              id="frequency"
+              name="frequency"
+              label="Frequency"
+              value={formData.frequency}
+              onChange={handleChange}
+            />
+            <CFormInput
+              id="bandwidth"
+              name="bandwidth"
+              label="Bandwidth"
+              value={formData.bandwidth}
               onChange={handleChange}
             />
             <CFormSelect
-              id="gNB_id"
-              name="gNB_id"
-              label="Select gNB"
-              value={formData.gNB_id}
+              id="path_id"
+              name="path_id"
+              label="Path"
+              value={formData.path_id}
               onChange={handleChange}
             >
-              <option value="">Select gNB</option>
-              {gnbs.map(gnb => (
-                <option key={gnb.id} value={gnb.id}>
-                  {gnb.name} (ID: {gnb.id})
+              <option value="">Select a path</option>
+              {paths.map((path) => (
+                <option key={path.id} value={path.id}>
+                  {path.description}
                 </option>
               ))}
             </CFormSelect>
+
             <CFormInput
               id="latitude"
               name="latitude"
               label="Latitude"
               value={formData.latitude}
-              onChange={handleChange}
-              disabled
+              readOnly
             />
             <CFormInput
               id="longitude"
               name="longitude"
               label="Longitude"
               value={formData.longitude}
-              onChange={handleChange}
-              disabled
+              readOnly
             />
             <CFormInput
               id="radius"
               name="radius"
-              label="Radius"
+              label="Radius (meters)"
+              type="number"
               value={formData.radius}
               onChange={handleChange}
             />
-            <div
-              ref={mapRef}
-              style={{ height: '400px', marginTop: '20px' }}
-            ></div>
+            <div className="map-container" ref={mapRef} style={{ width: '100%', height: '400px' }} />
           </CForm>
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" onClick={handleClose}>Cancel</CButton>
-          <CButton color="primary" type="button" onClick={handleFormSubmit}>Save</CButton>
+          <CButton color="primary" onClick={handleFormSubmit}>Save Changes</CButton>
         </CModalFooter>
       </CModal>
     </>
