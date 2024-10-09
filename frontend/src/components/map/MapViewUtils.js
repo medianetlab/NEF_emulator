@@ -3,6 +3,36 @@ import { readPath } from '../../utils/api';
 
 let markersMap = new Map(); // Map to track UE markers
 
+// MapViewUtils.js
+
+export const updateUEPositionsOnMap = (map, updatedUEs, ueMarkers) => {
+  if (!map) return;
+
+  updatedUEs.forEach((ue) => {
+    const { supi, longitude, latitude } = ue;
+    const coordinates = [longitude, latitude];
+
+    if (ueMarkers[supi]) {
+      // Update existing marker position
+      ueMarkers[supi].setLngLat(coordinates);
+    } else {
+      // Create a new marker
+      const marker = new maplibregl.Marker({ color: 'blue' })
+        .setLngLat(coordinates)
+        .addTo(map);
+
+      // Store the marker reference
+      ueMarkers[supi] = marker;
+
+      // Optionally, add click handler
+      marker.getElement().addEventListener('click', () => {
+        handleUEClick(ue);
+      });
+    }
+  });
+};
+
+
 export const addPathsToMap = async (mapInstance, ues, token) => {
   console.log('Adding paths to map:', ues);
 

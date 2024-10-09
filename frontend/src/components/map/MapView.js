@@ -75,41 +75,45 @@ const MapView = ({ token }) => {
     };
   }, [loading, token, ues, cells]);
 
-  // WebSocket connection effect
-  useEffect(() => {
-    if (!token) return;
-
-    // Establish WebSocket connection
-    const websocket = new WebSocket('wss://localhost:4443/ws/ues');
-
-    websocket.onopen = () => {
-      console.log('WebSocket connection opened');
-    };
-
-    websocket.onmessage = (event) => {
-      const { data } = event;
-      const updatedUEs = JSON.parse(data);
-      setUEs(updatedUEs); // Update UEs with data from WebSocket
-    };
-
-    websocket.onclose = () => {
-      console.log('WebSocket connection closed');
-    };
-
-    websocket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-
-      if (error.message) {
-        console.error('Error message:', error.message);
-      }
-    };
-
-    setWs(websocket);
-
-    return () => {
-      websocket.close(); // Close WebSocket connection when component unmounts
-    };
-  }, [token]);
+    // WebSocket connection effect
+    useEffect(() => {
+      if (!token) return;
+  
+      // Always use wss:// regardless of http for the main site
+      const websocketURL = `wss://localhost:4443/api/v1/ue_movement/ws/ues`;
+  
+      console.log('Attempting WebSocket connection to', websocketURL);
+  
+      const websocket = new WebSocket(websocketURL);
+  
+      websocket.onopen = () => {
+        console.log('WebSocket connection opened');
+      };
+  
+      websocket.onmessage = (event) => {
+        const { data } = event;
+        const updatedUEs = JSON.parse(data);
+        console.log('WebSocket message received:', updatedUEs);
+        setUEs(updatedUEs); // Update UEs with data from WebSocket
+      };
+  
+      websocket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+  
+      websocket.onclose = (event) => {
+        console.log('WebSocket connection closed:', event.code, event.reason);
+      };
+  
+      // Set the WebSocket connection state
+      setWs(websocket);
+  
+      return () => {
+        console.log('Closing WebSocket connection');
+        websocket.close();
+      };
+    }, [token]);
+  
 
   const handleStartLoop = async () => {
     if (!token) {
