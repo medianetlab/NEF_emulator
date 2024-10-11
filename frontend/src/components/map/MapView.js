@@ -1,3 +1,4 @@
+// MapView.js
 import React, { useState, useEffect, useRef } from 'react';
 import {
   CCard,
@@ -8,24 +9,30 @@ import {
   CButton
 } from '@coreui/react';
 import maplibregl from 'maplibre-gl';
-import { getUEs, getCells, start_loop, stop_loop, readPath } from '../../utils/api';
+import {
+  getUEs,
+  getCells,
+  start_loop,
+  stop_loop,
+  readPath
+} from '../../utils/api';
 import {
   addUEsToMap,
   addCellsToMap,
   removeMapLayersAndSources,
   handleUEClick,
   updateUEPositionsOnMap,
-  addPathsToMap
+  addPathsToMap,
+  addCellRadiusToMap,
+  initializeMarkers
 } from './MapViewUtils';
-
-let markersMap = new Map(); // Map to track UE markers
 
 const MapView = ({ token }) => {
   const [ues, setUEs] = useState([]);
   const [cells, setCells] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeLoops, setActiveLoops] = useState(new Set());
-  const [ws, setWs] = useState(null); // WebSocket connection state
+  const [ws, setWs] = useState(null);
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
 
@@ -38,8 +45,8 @@ const MapView = ({ token }) => {
       try {
         const uesData = await getUEs(token);
         const cellsData = await getCells(token);
-        
-        setUEs(Array.isArray(uesData) ? uesData : []); // Ensure it's an array
+
+        setUEs(Array.isArray(uesData) ? uesData : []);
         setCells(cellsData || []);
       } catch (err) {
         console.error(err.message);
@@ -47,7 +54,7 @@ const MapView = ({ token }) => {
         setLoading(false);
       }
     };
-    
+
     fetchData();
   }, [token]);
 
@@ -59,7 +66,7 @@ const MapView = ({ token }) => {
         container: mapRef.current,
         style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
         center: [23.81953, 37.99803],
-        zoom: 14,
+        zoom: 16,
       });
     }
 
@@ -68,6 +75,8 @@ const MapView = ({ token }) => {
     map.on('style.load', async () => {
       removeMapLayersAndSources(map, cells.map(cell => `cell-${cell.id}`));
       addCellsToMap(map, cells);
+      addCellRadiusToMap(map, cells);
+      initializeMarkers(map); // Initialize MarkerManager
       addUEsToMap(map, ues, handleUEClick);
       await addPathsToMap(map, ues, token);
     });
@@ -94,18 +103,13 @@ const MapView = ({ token }) => {
     websocket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-    
-        // Convert the object to an array of values (UE data)
         const updatedUEs = Object.values(data);
-    
-        // Update UE positions on the map
         const map = mapInstanceRef.current;
-        updateUEPositionsOnMap(map, updatedUEs, markersMap); // Only update positions, no need to refresh the entire map
+        updateUEPositionsOnMap(map, updatedUEs); // Only update positions
       } catch (err) {
         console.error('Error parsing WebSocket message:', err);
       }
     };
-    
 
     websocket.onerror = (error) => {
       console.error('WebSocket error:', error);
@@ -138,8 +142,6 @@ const MapView = ({ token }) => {
       await Promise.all(promises);
       setActiveLoops(new Set(activeLoops));
       console.log(`Started loops for all UEs`);
-
-      // Now connect to the WebSocket after starting the loops
       connectWebSocket();
 
     } catch (err) {
@@ -161,8 +163,6 @@ const MapView = ({ token }) => {
       await start_loop(token, supi);
       activeLoops.add(supi);
       console.log(`Started loop for SUPI: ${supi}`);
-      
-      // Connect to the WebSocket when an individual loop is started
       connectWebSocket();
     }
     setActiveLoops(new Set(activeLoops));
@@ -196,12 +196,12 @@ const MapView = ({ token }) => {
                 key={ue.supi}
                 color={activeLoops.has(ue.supi) ? "danger" : "primary"}
                 onClick={() => handleStartIndividualLoop(ue.supi)}
-                className="ml-2"
+                className="ms-2"
               >
-                {activeLoops.has(ue.supi) ? `Stop ${ue.name}` : `Start ${ue.name}`}
+                {activeLoops.has(ue.supi) ? `Stop ${ue.supi}` : `Start ${ue.supi}`}
               </CButton>
             ))}
-            <CButton color="danger" onClick={handleStopAllLoops}>
+            <CButton color="danger" onClick={handleStopAllLoops} disabled={activeLoops.size === 0}>
               Stop All
             </CButton>
           </CCol>
