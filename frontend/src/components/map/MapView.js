@@ -1,11 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { CCard, CCardBody, CCardHeader, CRow, CCol, CButton, CTable, CTableBody, CTableHead, CTableRow, CTableDataCell } from '@coreui/react';
+import {
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CRow,
+  CCol,
+  CButton,
+  CTable,
+  CTableBody,
+  CTableHead,
+  CTableRow,
+  CTableDataCell,
+} from '@coreui/react';
 import maplibregl from 'maplibre-gl';
 import {
   getUEs,
   getCells,
   start_loop,
   stop_loop,
+  fetchLastNotifications, // Import the new function
   last_notification
 } from '../../utils/api';
 import {
@@ -13,26 +26,25 @@ import {
   addCellsToMap,
   removeMapLayersAndSources,
   handleUEClick,
-  updateUEPositionsOnMap,
   addPathsToMap,
   addCellRadiusToMap,
   initializeMarkers,
   handleStopAllLoops,
   handleStartIndividualLoop,
   handleStartLoop,
-  connectWebSocket,
-  handleLogEntry, // Import the new log handling function
 } from './MapViewUtils';
+
+var last_notification_id = -1;
 
 const MapView = ({ token }) => {
   const [ues, setUEs] = useState([]);
   const [cells, setCells] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeLoops, setActiveLoops] = useState(new Set());
-  const [ws, setWs] = useState(null); // State for WebSocket
   const [logs, setLogs] = useState([]); // State to hold log entries
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null); // Keep track of the map instance
+  const intervalRef = useRef(null); // To hold the interval ID
 
   useEffect(() => {
     const fetchData = async () => {
@@ -87,10 +99,30 @@ const MapView = ({ token }) => {
     };
   }, [loading, token, ues, cells]);
 
-  // This function will handle WebSocket messages for log entries
-  const handleWebSocketMessage = (event) => {
-    handleLogEntry(event, setLogs); // Call the log handling function
-  };
+  // Fetch logs periodically every 5 seconds
+  useEffect(() => {
+    const fetchLogs = async () => {
+      if (!token) return;
+      try {
+        // Fetch the last notifications
+        const logData = await last_notification(token, last_notification_id);
+        setLogs(logData); // Assuming logData is an array of log entries
+      } catch (error) {
+        console.error('Error fetching logs:', error);
+      }
+    };
+
+    // Initial fetch for existing notifications
+    fetchLogs();
+
+    // Set up interval to fetch logs every 5 seconds
+    intervalRef.current = setInterval(() => {
+      fetchLogs();
+    }, 5000); // 5000 milliseconds = 5 seconds
+
+    // Clear interval on component unmount
+    return () => clearInterval(intervalRef.current);
+  }, [token]); // Dependency array includes token
 
   return (
     <CCard className="mb-4" style={{ width: '100%' }}>
@@ -101,7 +133,7 @@ const MapView = ({ token }) => {
           <CCol>
             <CButton 
               color="primary" 
-              onClick={() => handleStartLoop(token, ues, activeLoops, setActiveLoops, start_loop, ws, setWs, mapInstanceRef)} 
+              onClick={() => handleStartLoop(token, ues, activeLoops, setActiveLoops, start_loop)} 
               disabled={activeLoops.size === ues.length || loading}
             >
               Start All
@@ -110,7 +142,7 @@ const MapView = ({ token }) => {
               <CButton
                 key={ue.supi}
                 color={activeLoops.has(ue.supi) ? "danger" : "primary"}
-                onClick={() => handleStartIndividualLoop(ue.supi, token, activeLoops, setActiveLoops, start_loop, stop_loop, ws, setWs, mapInstanceRef)}
+                onClick={() => handleStartIndividualLoop(ue.supi, token, activeLoops, setActiveLoops, start_loop, stop_loop)} 
                 className="ms-2"
               >
                 {activeLoops.has(ue.supi) ? `Stop ${ue.supi}` : `Start ${ue.supi}`}
@@ -118,7 +150,7 @@ const MapView = ({ token }) => {
             ))}
             <CButton 
               color="danger" 
-              onClick={() => handleStopAllLoops(token, ues, activeLoops, setActiveLoops, stop_loop, ws, setWs)} 
+              onClick={() => handleStopAllLoops(token, ues, activeLoops, setActiveLoops, stop_loop)} 
               disabled={activeLoops.size === 0}
             >
               Stop All
@@ -131,24 +163,24 @@ const MapView = ({ token }) => {
           <CTableHead>
             <CTableRow>
               <CTableDataCell>ID</CTableDataCell>
-              <CTableDataCell>SERVICE</CTableDataCell>
-              <CTableDataCell>TYPE</CTableDataCell>
-              <CTableDataCell>METHOD</CTableDataCell>
-              <CTableDataCell>RESPONSE</CTableDataCell>
-              <CTableDataCell>TIMESTAMP</CTableDataCell>
-              <CTableDataCell>DETAILS</CTableDataCell>
+              <CTableDataCell>Service API</CTableDataCell>
+              <CTableDataCell>Method</CTableDataCell>
+              <CTableDataCell>Status Code</CTableDataCell>
+              <CTableDataCell>Request Body</CTableDataCell>
+              <CTableDataCell>Response Body</CTableDataCell>
+              <CTableDataCell>Timestamp</CTableDataCell>
             </CTableRow>
           </CTableHead>
           <CTableBody>
             {logs.map((log, index) => (
-              <CTableRow key={index}>
-                <CTableDataCell>{log.ID}</CTableDataCell>
-                <CTableDataCell>{log.Service}</CTableDataCell>
-                <CTableDataCell>{log.Type}</CTableDataCell>
-                <CTableDataCell>{log.Method}</CTableDataCell>
-                <CTableDataCell>{log.Response}</CTableDataCell>
-                <CTableDataCell>{log.Timestamp}</CTableDataCell>
-                <CTableDataCell>{log.Details}</CTableDataCell>
+              <CTableRow key={log.id}> {/* Use log.id for the key */}
+                <CTableDataCell>{log.id}</CTableDataCell>
+                <CTableDataCell>{log.serviceAPI}</CTableDataCell>
+                <CTableDataCell>{log.method}</CTableDataCell>
+                <CTableDataCell>{log.status_code}</CTableDataCell>
+                <CTableDataCell>{JSON.stringify(log.request_body)}</CTableDataCell>
+                <CTableDataCell>{JSON.stringify(log.response_body)}</CTableDataCell>
+                <CTableDataCell>{new Date(log.timestamp).toLocaleString()}</CTableDataCell> {/* Format the timestamp */}
               </CTableRow>
             ))}
           </CTableBody>

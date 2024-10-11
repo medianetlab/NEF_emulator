@@ -25,17 +25,17 @@ export const getToken = async (username, password) => {
 };
 
 //last notifications
-export const last_notification = async (token, notificationId = -1) => {
+export const last_notification = async (token, notificationId) => {
   try {
     const response = await axios.get(`${BASE_URL}/utils/monitoring/last_notifications?id=${notificationId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
-    return response.data; // Return the response data to be used in the component
+    return response.data; 
   } catch (error) {
     console.error('Error fetching last notifications:', error.response ? error.response.data : error.message);
-    throw error; // Re-throw error to handle it in the calling function
+    throw error;
   }
 };
 
