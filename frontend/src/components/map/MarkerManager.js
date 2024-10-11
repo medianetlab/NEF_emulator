@@ -1,10 +1,9 @@
-// MarkerManager.js
 import maplibregl from 'maplibre-gl';
 
 class MarkerManager {
   constructor(map) {
     this.map = map;
-    this.markers = new Map(); // Store markers by their unique identifiers
+    this.markers = new Map();
   }
 
   addMarker(id, coordinates, color = 'blue', onClick) {
