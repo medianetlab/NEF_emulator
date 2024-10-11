@@ -6,7 +6,7 @@ import {
 import maplibre from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { getGNBs, getUEs, getCells } from '../../utils/api';
-import { addCellsToMap } from './ModalUtils'; // Adjust the import path as needed
+import { addCellsToMap } from './ModalUtils'; 
 
 const AddCellModal = ({ visible, handleClose, token }) => {
   const [formData, setFormData] = useState({
@@ -22,7 +22,7 @@ const AddCellModal = ({ visible, handleClose, token }) => {
   const [gnbs, setGnbs] = useState([]);
   const [cells, setCells] = useState([]);
   const [ues, setUes] = useState([]);
-  const [message, setMessage] = useState({ type: '', text: '' }); 
+  const [message, setMessage] = useState({ type: '', text: '' });
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const circleLayerId = 'circleLayer';
@@ -38,7 +38,7 @@ const AddCellModal = ({ visible, handleClose, token }) => {
       } catch (error) {
         console.error('Error fetching gNBs:', error);
         setMessage({ type: 'danger', text: 'Error fetching gNBs. Please try again.' });
-        setTimeout(() => setMessage({ type: '', text: '' }), 3000); 
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       }
     };
 
@@ -51,7 +51,7 @@ const AddCellModal = ({ visible, handleClose, token }) => {
       } catch (error) {
         console.error('Error fetching cells or UEs:', error);
         setMessage({ type: 'danger', text: 'Error fetching cells or UEs. Please try again.' });
-        setTimeout(() => setMessage({ type: '', text: '' }), 3000); 
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       }
     };
 
@@ -82,21 +82,8 @@ const AddCellModal = ({ visible, handleClose, token }) => {
 
               // Check if the source already exists
               if (mapInstanceRef.current.getSource(sourceId)) {
-                // Remove existing layers
-                if (mapInstanceRef.current.getLayer(circleLayerId)) {
-                  mapInstanceRef.current.removeLayer(circleLayerId);
-                }
-                if (mapInstanceRef.current.getLayer(dotLayerId)) {
-                  mapInstanceRef.current.removeLayer(dotLayerId);
-                }
-                // Remove the existing source
-                mapInstanceRef.current.removeSource(sourceId);
-              }
-
-              // Add or update the source
-              mapInstanceRef.current.addSource(sourceId, {
-                type: 'geojson',
-                data: {
+                // Update the existing source with the new coordinates
+                mapInstanceRef.current.getSource(sourceId).setData({
                   type: 'FeatureCollection',
                   features: [
                     {
@@ -107,32 +94,60 @@ const AddCellModal = ({ visible, handleClose, token }) => {
                       }
                     }
                   ]
-                }
-              });
+                });
+              } else {
+                // Add the source if it doesn't exist
+                mapInstanceRef.current.addSource(sourceId, {
+                  type: 'geojson',
+                  data: {
+                    type: 'FeatureCollection',
+                    features: [
+                      {
+                        type: 'Feature',
+                        geometry: {
+                          type: 'Point',
+                          coordinates: [lng, lat]
+                        }
+                      }
+                    ]
+                  }
+                });
+              }
 
-              // Add or update the circle layer
-              mapInstanceRef.current.addLayer({
-                id: circleLayerId,
-                type: 'circle',
-                source: sourceId,
-                paint: {
-                  'circle-color': 'rgba(255, 0, 0, 0.1)',
-                  'circle-radius': convertRadiusToPixels(parseFloat(formData.radius), lat, mapInstanceRef.current.getZoom()),
-                  'circle-opacity': 0.1
-                }
-              });
+              // Update or add the circle layer for the radius
+              if (mapInstanceRef.current.getLayer(circleLayerId)) {
+                // Update existing layer
+                mapInstanceRef.current.setPaintProperty(circleLayerId, 'circle-radius', convertRadiusToPixels(parseFloat(formData.radius), lat, mapInstanceRef.current.getZoom()));
+                mapInstanceRef.current.setPaintProperty(circleLayerId, 'circle-opacity', 0.1);
+              } else {
+                // Add new circle layer
+                mapInstanceRef.current.addLayer({
+                  id: circleLayerId,
+                  type: 'circle',
+                  source: sourceId,
+                  paint: {
+                    'circle-color': 'rgba(255, 0, 0, 0.1)',
+                    'circle-radius': convertRadiusToPixels(parseFloat(formData.radius), lat, mapInstanceRef.current.getZoom()),
+                    'circle-opacity': 0.1
+                  }
+                });
+              }
 
-              // Add or update the dot layer
-              mapInstanceRef.current.addLayer({
-                id: dotLayerId,
-                type: 'circle',
-                source: sourceId,
-                paint: {
-                  'circle-color': '#FF0000',
-                  'circle-radius': 5,
-                  'circle-opacity': 1
-                }
-              });
+              // Update or add the dot layer
+              if (mapInstanceRef.current.getLayer(dotLayerId)) {
+                mapInstanceRef.current.setPaintProperty(dotLayerId, 'circle-opacity', 1);
+              } else {
+                mapInstanceRef.current.addLayer({
+                  id: dotLayerId,
+                  type: 'circle',
+                  source: sourceId,
+                  paint: {
+                    'circle-color': '#FF0000',
+                    'circle-radius': 5,
+                    'circle-opacity': 1
+                  }
+                });
+              }
             });
 
             mapInstanceRef.current.on('load', () => {
@@ -207,7 +222,7 @@ const AddCellModal = ({ visible, handleClose, token }) => {
     }
 
     try {
-      await addCellsToMap({  
+      await addCellsToMap({
         ...formData,
         radius: parseFloat(formData.radius),
         gNB_id: formData.gNB_id.trim()
@@ -245,69 +260,62 @@ const AddCellModal = ({ visible, handleClose, token }) => {
         <CModalBody>
           <CForm>
             <CFormInput
-              id="cell_id"
-              name="cell_id"
               label="Cell ID"
+              name="cell_id"
               value={formData.cell_id}
               onChange={handleChange}
+              required
             />
             <CFormInput
-              id="name"
-              name="name"
               label="Name"
+              name="name"
               value={formData.name}
               onChange={handleChange}
+              required
             />
             <CFormInput
-              id="description"
-              name="description"
               label="Description"
+              name="description"
               value={formData.description}
               onChange={handleChange}
             />
             <CFormSelect
-              id="gNB_id"
+              label="gNB"
               name="gNB_id"
-              label="Select gNB"
               value={formData.gNB_id}
               onChange={handleChange}
+              required
             >
-              <option value="">Select gNB</option>
+              <option value="" disabled>Select a gNB</option>
               {gnbs.map(gnb => (
-                <option key={gnb.id} value={gnb.id}>{gnb.name}</option>
+                <option key={gnb.gNB_id} value={gnb.gNB_id}>{gnb.name}</option>
               ))}
             </CFormSelect>
             <CFormInput
-              id="latitude"
-              name="latitude"
               label="Latitude"
-              type="number"
+              name="latitude"
               value={formData.latitude}
-              onChange={handleChange}
               readOnly
             />
             <CFormInput
-              id="longitude"
-              name="longitude"
               label="Longitude"
-              type="number"
+              name="longitude"
               value={formData.longitude}
-              onChange={handleChange}
               readOnly
             />
             <CFormInput
-              id="radius"
+              label="Radius (meters)"
               name="radius"
-              label="Radius (m)"
               type="number"
               value={formData.radius}
               onChange={handleChange}
+              required
             />
+            <div ref={mapRef} style={{ width: '100%', height: '400px' }} />
           </CForm>
-          <div ref={mapRef} style={{ width: '100%', height: '300px' }} />
         </CModalBody>
         <CModalFooter>
-          <CButton color="secondary" onClick={handleClose}>Cancel</CButton>
+          <CButton color="secondary" onClick={handleClose}>Close</CButton>
           <CButton color="primary" onClick={handleFormSubmit}>Add Cell</CButton>
         </CModalFooter>
       </CModal>

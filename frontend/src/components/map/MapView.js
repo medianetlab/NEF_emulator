@@ -8,14 +8,17 @@ import {
   CButton
 } from '@coreui/react';
 import maplibregl from 'maplibre-gl';
-import { getUEs, getCells, start_loop, stop_loop } from '../../utils/api';
+import { getUEs, getCells, start_loop, stop_loop, readPath } from '../../utils/api';
 import {
   addUEsToMap,
   addCellsToMap,
   removeMapLayersAndSources,
   handleUEClick,
+  updateUEPositionsOnMap,
   addPathsToMap
 } from './MapViewUtils';
+
+let markersMap = new Map(); // Map to track UE markers
 
 const MapView = ({ token }) => {
   const [ues, setUEs] = useState([]);
@@ -35,7 +38,8 @@ const MapView = ({ token }) => {
       try {
         const uesData = await getUEs(token);
         const cellsData = await getCells(token);
-        setUEs(uesData || []);
+        
+        setUEs(Array.isArray(uesData) ? uesData : []); // Ensure it's an array
         setCells(cellsData || []);
       } catch (err) {
         console.error(err.message);
@@ -43,6 +47,7 @@ const MapView = ({ token }) => {
         setLoading(false);
       }
     };
+    
     fetchData();
   }, [token]);
 
@@ -53,7 +58,7 @@ const MapView = ({ token }) => {
       mapInstanceRef.current = new maplibregl.Map({
         container: mapRef.current,
         style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
-        center: [23.7275, 37.9838],
+        center: [23.81953, 37.99803],
         zoom: 14,
       });
     }
@@ -75,45 +80,43 @@ const MapView = ({ token }) => {
     };
   }, [loading, token, ues, cells]);
 
-    // WebSocket connection effect
-    useEffect(() => {
-      if (!token) return;
-  
-      // Always use wss:// regardless of http for the main site
-      const websocketURL = `wss://localhost:4443/api/v1/ue_movement/ws/ues`;
-  
-      console.log('Attempting WebSocket connection to', websocketURL);
-  
-      const websocket = new WebSocket(websocketURL);
-  
-      websocket.onopen = () => {
-        console.log('WebSocket connection opened');
-      };
-  
-      websocket.onmessage = (event) => {
-        const { data } = event;
-        const updatedUEs = JSON.parse(data);
-        console.log('WebSocket message received:', updatedUEs);
-        setUEs(updatedUEs); // Update UEs with data from WebSocket
-      };
-  
-      websocket.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
-  
-      websocket.onclose = (event) => {
-        console.log('WebSocket connection closed:', event.code, event.reason);
-      };
-  
-      // Set the WebSocket connection state
-      setWs(websocket);
-  
-      return () => {
-        console.log('Closing WebSocket connection');
-        websocket.close();
-      };
-    }, [token]);
-  
+  const connectWebSocket = () => {
+    const websocketURL = `wss://localhost:4443/api/v1/ue_movement/ws/ues`;
+
+    console.log('Attempting WebSocket connection to', websocketURL);
+
+    const websocket = new WebSocket(websocketURL);
+
+    websocket.onopen = () => {
+      console.log('WebSocket connection opened');
+    };
+
+    websocket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+    
+        // Convert the object to an array of values (UE data)
+        const updatedUEs = Object.values(data);
+    
+        // Update UE positions on the map
+        const map = mapInstanceRef.current;
+        updateUEPositionsOnMap(map, updatedUEs, markersMap); // Only update positions, no need to refresh the entire map
+      } catch (err) {
+        console.error('Error parsing WebSocket message:', err);
+      }
+    };
+    
+
+    websocket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    websocket.onclose = (event) => {
+      console.log('WebSocket connection closed:', event.code, event.reason);
+    };
+
+    setWs(websocket);
+  };
 
   const handleStartLoop = async () => {
     if (!token) {
@@ -136,6 +139,9 @@ const MapView = ({ token }) => {
       setActiveLoops(new Set(activeLoops));
       console.log(`Started loops for all UEs`);
 
+      // Now connect to the WebSocket after starting the loops
+      connectWebSocket();
+
     } catch (err) {
       console.error('Error starting loops:', err);
     }
@@ -155,6 +161,9 @@ const MapView = ({ token }) => {
       await start_loop(token, supi);
       activeLoops.add(supi);
       console.log(`Started loop for SUPI: ${supi}`);
+      
+      // Connect to the WebSocket when an individual loop is started
+      connectWebSocket();
     }
     setActiveLoops(new Set(activeLoops));
   };

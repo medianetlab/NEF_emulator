@@ -94,6 +94,7 @@ services:
       dockerfile: Dockerfile
     container_name: nef-front
     profiles: [ "debug", "dev" ]
+    stdin_open: true
     ports:
       - "3000:80"
     networks:

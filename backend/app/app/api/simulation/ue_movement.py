@@ -426,6 +426,7 @@ def initiate_movement(
         raise HTTPException(status_code=409, detail=f"There is a thread already running for this supi:{msg.supi}")
     
     #Check if UE 
+    
     UE = crud.ue.get_supi(db=db, supi=msg.supi)
     if not UE:
         logging.warning("UE not found")
