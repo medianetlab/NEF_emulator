@@ -112,7 +112,23 @@ const MapView = ({ token }) => {
       if (!token) return;
       try {
         const logData = await last_notification(token, last_notification_id);
-        setLogs(logData);
+        // Update the logs, replacing any with the same id
+        setLogs((prevLogs) => {
+          // Create a map of existing logs by id
+          const logMap = new Map(prevLogs.map(log => [log.id, log]));
+  
+          // Add new logs or replace logs with the same id
+          logData.forEach(log => {
+            logMap.set(log.id, log);
+          });
+  
+          // Convert the updated map back to an array
+          const updatedLogs = Array.from(logMap.values());
+  
+          // Limit the logs to the latest 100
+          return updatedLogs.slice(-100);
+        });
+  
         if (activeLoops.size > 0 && ws) {
           last_notification_id += 1;
         }
@@ -120,16 +136,17 @@ const MapView = ({ token }) => {
         console.error('Error fetching logs:', error);
       }
     };
-
+  
     fetchLogs();
-
+  
     intervalRef.current = setInterval(() => {
       fetchLogs();
     }, logFrequency);
-
+  
     // Clear interval on component unmount
     return () => clearInterval(intervalRef.current);
   }, [token, logFrequency, activeLoops, ws]);
+  
 
   const formatJson = (json) => {
     if (!json) return '';

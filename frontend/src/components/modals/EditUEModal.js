@@ -21,7 +21,7 @@ const EditUEModal = ({ visible, handleClose, handleSubmit, initialData, token })
     mnc: '',
     dnn: '',
     path_id: '',
-    speed: 'LOW',
+    speed: 'LOW',  // Default speed set to 'LOW'
     latitude: 0.0,
     longitude: 0.0
   });
