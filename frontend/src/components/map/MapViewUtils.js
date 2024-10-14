@@ -216,7 +216,7 @@ export const connectWebSocket = (setWs, mapInstanceRef) => {
 
 export const handleStartLoop = (token, ues, activeLoops, setActiveLoops, start_loop, ws, setWs, mapInstanceRef) => {
   if (!ws) {
-    connectWebSocket(setWs, mapInstanceRef); // Pass mapInstanceRef to connectWebSocket
+    connectWebSocket(setWs, mapInstanceRef);
   }
 
   ues.forEach(ue => {
@@ -253,8 +253,8 @@ export const handleStopAllLoops = (token, ues, activeLoops, setActiveLoops, stop
 
   setActiveLoops(new Set()); // Clear active loops
   if (ws) {
-    ws.close(); // Close WebSocket connection
-    setWs(null); // Clear WebSocket state
+    ws.close(); 
+    setWs(null); 
   }
 };
 
