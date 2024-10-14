@@ -82,7 +82,7 @@ const AddPathModal = ({ visible, handleClose, handleSubmit, token }) => {
             container: mapRef.current,
             style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
             center: [23.819390, 37.997564],
-            zoom: 14,
+            zoom: 15,
           });
 
           mapInstanceRef.current.on('click', (e) => {

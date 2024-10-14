@@ -15,6 +15,7 @@ import {
   CModalHeader,
   CModalBody,
   CModalFooter,
+  CFormSelect
 } from '@coreui/react';
 import maplibregl from 'maplibre-gl';
 import {
@@ -44,14 +45,15 @@ const MapView = ({ token }) => {
   const [cells, setCells] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeLoops, setActiveLoops] = useState(new Set());
-  const [logs, setLogs] = useState([]); // State to hold log entries
-  const [modalVisible, setModalVisible] = useState(false); // State for modal visibility
-  const [selectedLog, setSelectedLog] = useState(null); // State for selected log
+  const [logs, setLogs] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedLog, setSelectedLog] = useState(null);
   const [ws, setWs] = useState(null);
+  const [logFrequency, setLogFrequency] = useState(5000); // State to hold log frequency
 
   const mapRef = useRef(null);
-  const mapInstanceRef = useRef(null); // Keep track of the map instance
-  const intervalRef = useRef(null); // To hold the interval ID
+  const mapInstanceRef = useRef(null);
+  const intervalRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,7 +94,6 @@ const MapView = ({ token }) => {
     map.on('style.load', async () => {
       removeMapLayersAndSources(map, cells.map(cell => `cell-${cell.id}`));
       addCellsToMap(map, cells);
-      addCellRadiusToMap(map, cells);
       initializeMarkers(map);
       addUEsToMap(map, ues, handleUEClick);
       await addPathsToMap(map, ues, token);
@@ -106,44 +107,42 @@ const MapView = ({ token }) => {
     };
   }, [loading, token, ues, cells]);
 
-  // Fetch logs periodically every 5 seconds
   useEffect(() => {
     const fetchLogs = async () => {
       if (!token) return;
       try {
         const logData = await last_notification(token, last_notification_id);
-        setLogs(logData); // Assuming logData is an array of log entries
+        setLogs(logData);
+        if (activeLoops.size > 0 && ws) {
+          last_notification_id += 1;
+        }
       } catch (error) {
         console.error('Error fetching logs:', error);
       }
     };
 
-    // Initial fetch for existing notifications
     fetchLogs();
 
-    // Set up interval to fetch logs every 5 seconds
     intervalRef.current = setInterval(() => {
       fetchLogs();
-    }, 5000); // 5000 milliseconds = 5 seconds
+    }, logFrequency);
 
     // Clear interval on component unmount
     return () => clearInterval(intervalRef.current);
-  }, [token]); // Dependency array includes token
+  }, [token, logFrequency, activeLoops, ws]);
 
   const formatJson = (json) => {
     if (!json) return '';
   
-    // Convert JSON to string and format it
     const jsonString = JSON.stringify(json, null, 2);
   
-    // Format the JSON string
     return jsonString
-      .replace(/\\/g, '') // Remove all backslashes
-      .replace(/:\s/g, ': ') // Ensure there's a space after the colon for readability
-      .replace(/,/g, ',\n') // Add new line after each comma for better readability
-      .replace(/\{([^{}]*)\}/g, '{\n$1\n}') // New line for braces
-      .replace(/\[\s*/g, '[\n') // New line after opening brackets
-      .replace(/\s*\]/g, '\n]'); // New line before closing brackets
+      .replace(/\\/g, '')
+      .replace(/:\s/g, ': ')
+      .replace(/,/g, ',\n')
+      .replace(/\{([^{}]*)\}/g, '{\n$1\n}')
+      .replace(/\[\s*/g, '[\n')
+      .replace(/\s*\]/g, '\n]');
   };
 
   return (
@@ -177,6 +176,25 @@ const MapView = ({ token }) => {
             >
               Stop All
             </CButton>
+          </CCol>
+        </CRow>
+
+        {/* Dropdown for log fetching frequency */}
+        <CRow className="mt-3">
+          <CCol>
+          {/* Log frequency selection dropdown */}
+          <CFormSelect 
+              size="sm" 
+              value={logFrequency}
+              onChange={(e) => setLogFrequency(Number(e.target.value))} 
+              aria-label="Select Log Fetch Frequency"
+              style={{ width: 'auto', display: 'inline-block' }} 
+            >
+              <option value={1000}>1 sec</option>
+              <option value={2000}>2 sec</option>
+              <option value={5000}>5 sec</option>
+              <option value={10000}>10 sec</option>
+            </CFormSelect>
           </CCol>
         </CRow>
 
@@ -220,67 +238,68 @@ const MapView = ({ token }) => {
 
         {/* Modal for log details */}
         <CModal size="lg" visible={modalVisible} onClose={() => setModalVisible(false)}>
-        <CModalHeader>
-          <h5>Log Details</h5>
-        </CModalHeader>
-        <CModalBody>
-          {selectedLog && (
-            <div>
-              {/* Service API and Endpoint Section */}
-              <CTable>
-                <CTableBody>
-                  <CTableRow>
-                    <CTableDataCell><strong>Service API:</strong></CTableDataCell>
-                    <CTableDataCell>{selectedLog.serviceAPI}</CTableDataCell>
-                  </CTableRow>
-                  <CTableRow>
-                    <CTableDataCell><strong>Endpoint:</strong></CTableDataCell>
-                    <CTableDataCell>{selectedLog.endpoint}</CTableDataCell>
-                  </CTableRow>
-                </CTableBody>
-              </CTable>
+          <CModalHeader>
+            <h5>Log Details</h5>
+          </CModalHeader>
+          <CModalBody>
+            {selectedLog && (
+              <div>
+                {/* Service API and Endpoint Section */}
+                <CTable>
+                  <CTableBody>
+                    <CTableRow>
+                      <CTableDataCell><strong>Service API:</strong></CTableDataCell>
+                      <CTableDataCell>{selectedLog.serviceAPI}</CTableDataCell>
+                    </CTableRow>
+                    <CTableRow>
+                      <CTableDataCell><strong>Endpoint:</strong></CTableDataCell>
+                      <CTableDataCell>{selectedLog.endpoint}</CTableDataCell>
+                    </CTableRow>
+                  </CTableBody>
+                </CTable>
+                
+                {/* Log Type, Status Code, Method, and Timestamp Section */}
+                <CTable>
+                  <CTableBody>
+                    <CTableRow>
+                      <CTableDataCell><strong>Type:</strong></CTableDataCell>
+                      <CTableDataCell>{selectedLog.type}</CTableDataCell>
+                    </CTableRow>
+                    <CTableRow>
+                      <CTableDataCell><strong>Status Code:</strong></CTableDataCell>
+                      <CTableDataCell>{selectedLog.status_code}</CTableDataCell>
+                    </CTableRow>
+                    <CTableRow>
+                      <CTableDataCell><strong>Method:</strong></CTableDataCell>
+                      <CTableDataCell>{selectedLog.method}</CTableDataCell>
+                    </CTableRow>
+                    <CTableRow>
+                      <CTableDataCell><strong>Timestamp:</strong></CTableDataCell>
+                      <CTableDataCell>{new Date(selectedLog.timestamp).toLocaleString()}</CTableDataCell>
+                    </CTableRow>
+                  </CTableBody>
+                </CTable>
 
-              {/* Type, Status Code, Method, and Timestamp Section */}
-              <CTable>
-                <CTableBody>
-                  <CTableRow>
-                    <CTableDataCell><strong>Type:</strong></CTableDataCell>
-                    <CTableDataCell>{selectedLog.type}</CTableDataCell>
-                    <CTableDataCell><strong>Status Code:</strong></CTableDataCell>
-                    <CTableDataCell>{selectedLog.status_code}</CTableDataCell>
-                    <CTableDataCell><strong>Method:</strong></CTableDataCell>
-                    <CTableDataCell>{selectedLog.method}</CTableDataCell>
-                    <CTableDataCell><strong>Timestamp:</strong></CTableDataCell>
-                    <CTableDataCell>{new Date(selectedLog.timestamp).toLocaleString()}</CTableDataCell>
-                  </CTableRow>
-                </CTableBody>
-              </CTable>
+                {/* Request Body Section */}
+                <div style={{ backgroundColor: '#f8f9fa', padding: '1rem', marginTop: '1rem' }}>
+                  <strong>Request Body:</strong>
+                  <pre>{formatJson(selectedLog.request_body)}</pre>
+                </div>
 
-              {/* Request Body Section */}
-              <div style={{ backgroundColor: '#f8f9fa', padding: '10px', borderRadius: '5px', overflow: 'auto' }}>
-                <strong>Request Body:</strong>
-                <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word', margin: '0', fontFamily: 'monospace', backgroundColor: '#f0f0f0', padding: '10px', borderRadius: '5px' }}>
-                  {formatJson(selectedLog.request_body)}
-                </pre>
+                {/* Response Body Section */}
+                <div style={{ backgroundColor: '#f8f9fa', padding: '1rem', marginTop: '1rem' }}>
+                  <strong>Response Body:</strong>
+                  <pre>{formatJson(selectedLog.response_body)}</pre>
+                </div>
               </div>
-
-              {/* Response Body Section */}
-              <div style={{ backgroundColor: '#f8f9fa', padding: '10px', borderRadius: '5px', marginTop: '10px', overflow: 'auto' }}>
-                <strong>Response Body:</strong>
-                <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word', margin: '0', fontFamily: 'monospace', backgroundColor: '#f0f0f0', padding: '10px', borderRadius: '5px' }}>
-                  {formatJson(selectedLog.response_body)}
-                </pre>
-              </div>
-            </div>
-          )}
-        </CModalBody>
-        <CModalFooter>
-          <CButton color="secondary" onClick={() => setModalVisible(false)}>
-            Close
-          </CButton>
-        </CModalFooter>
-      </CModal>
-
+            )}
+          </CModalBody>
+          <CModalFooter>
+            <CButton color="secondary" onClick={() => setModalVisible(false)}>
+              Close
+            </CButton>
+          </CModalFooter>
+        </CModal>
       </CCardBody>
     </CCard>
   );

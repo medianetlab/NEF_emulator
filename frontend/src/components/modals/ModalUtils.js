@@ -1,3 +1,4 @@
+import * as turf from '@turf/turf';
 import maplibregl from 'maplibre-gl';
 import { readPath } from '../../utils/api';
 
@@ -11,7 +12,7 @@ let markersMap = new Map();
 export const addCellsToMap = (mapInstance, cells) => {
   if (!mapInstance || !cells) return;
 
-  // Add the source for cells
+  // Add a GeoJSON source for all cells
   mapInstance.addSource('cellsSource', {
     type: 'geojson',
     data: {
@@ -24,76 +25,57 @@ export const addCellsToMap = (mapInstance, cells) => {
         },
         properties: {
           description: cell.description,
-          color: '#FF0000', // Red for all cells
-          radius: cell.radius || 100, // Real-world radius in meters
+          color: '#0000FF',
+          radius: cell.radius || 100,
         },
       })),
     },
   });
 
-  // Add the layer for cell circles
-  mapInstance.addLayer({
-    id: 'cellsLayer',
-    type: 'circle',
-    source: 'cellsSource',
-    paint: {
-      'circle-color': ['get', 'color'],
-      'circle-radius': [
-        'interpolate',
-        ['linear'],
-        ['zoom'],
-        10, ['/', ['get', 'radius'], 10],
-        15, ['/', ['get', 'radius'], 2],
-      ],
-      'circle-opacity': 0.1, // Higher opacity for circles
-    },
-  });
+  // Iterate through each cell and add its radius as a circle
+  cells.forEach(cell => {
+    const radiusCenter = [cell.longitude, cell.latitude];
+    const radius = (cell.radius || 100) / 1000; // Convert radius from meters to kilometers
 
-  // Add a layer for center dots
-  mapInstance.addLayer({
-    id: 'centerDotsLayer',
-    type: 'circle',
-    source: 'cellsSource',
-    paint: {
-      'circle-color': '#FF0000', // Red color
-      'circle-radius': 5, // Small dot size
-      'circle-opacity': 1, // Fully opaque
-    },
-  });
-};
+    // Generate a circle using Turf.js
+    const options = {
+      steps: 64,
+      units: 'kilometers' 
+    };
+    const circle = turf.circle(radiusCenter, radius, options);
 
-export const addCellRadiusToMap = (map, cell) => {
-  const radius = (cell.radius || 0) / 2; // Adjust the radius to be smaller (e.g., divide by 2)
-  const center = [cell.longitude, cell.latitude];
-  
-  // Adding a circle for cell radius
-  map.addSource(`cell-radius-${cell.id}`, {
+    // Add the circle as a GeoJSON source
+    mapInstance.addSource(`cell-radius-${cell.id}`, {
       type: 'geojson',
-      data: {
-          type: 'FeatureCollection',
-          features: [
-              {
-                  type: 'Feature',
-                  geometry: {
-                      type: 'Point',
-                      coordinates: center
-                  }
-              }
-          ]
-      }
-  });
+      data: circle
+    });
 
-  map.addLayer({
+    // Add a fill layer for the circle with some transparency
+    mapInstance.addLayer({
       id: `cell-radius-${cell.id}`,
-      type: 'circle',
+      type: 'fill',
       source: `cell-radius-${cell.id}`,
       paint: {
-          'circle-radius': radius, // Smaller radius
-          'circle-color': '#FF5733',
-          'circle-opacity': 0.1 // More opaque (increase the opacity)
+        'fill-color': '#8CCFFF', 
+        'fill-opacity': 0.2
       }
+    });
+  });
+
+  // Add a layer for cell centers
+  mapInstance.addLayer({
+    id: 'cell-centers-layer',
+    type: 'circle',
+    source: 'cellsSource',
+    paint: {
+      'circle-color': '#0000FF', 
+      'circle-radius': 5, 
+      'circle-opacity': 1,
+    },
   });
 };
+
+
 
 
 export const addPathsToMap = async (mapInstance, ues, token) => {

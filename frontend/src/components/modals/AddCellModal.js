@@ -6,7 +6,8 @@ import {
 import maplibre from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { getGNBs, getUEs, getCells } from '../../utils/api';
-import { addCellsToMap } from './ModalUtils'; 
+import { addCellsToMap, addUEsToMap, addPathsToMap, removeMapLayersAndSources, handleUEClick } from './ModalUtils'; 
+import { buffer, point } from '@turf/turf'; // Import Turf.js functions
 
 const AddCellModal = ({ visible, handleClose, token }) => {
   const [formData, setFormData] = useState({
@@ -68,7 +69,7 @@ const AddCellModal = ({ visible, handleClose, token }) => {
               container: mapRef.current,
               style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
               center: [23.81953, 37.99803],
-              zoom: 14,
+              zoom: 15,
             });
 
             mapInstanceRef.current.on('click', (e) => {
@@ -80,120 +81,61 @@ const AddCellModal = ({ visible, handleClose, token }) => {
                 longitude: lng.toFixed(5)
               }));
 
-              // Check if the source already exists
+              // Create the Turf.js circle
+              const radiusInMeters = parseFloat(formData.radius);
+              const radiusInKilometers = radiusInMeters / 1000; // Convert meters to kilometers
+              const circleGeoJSON = buffer(point([lng, lat]), radiusInKilometers, { units: 'kilometers' });
+
+              // Add the source and layer for the radius
               if (mapInstanceRef.current.getSource(sourceId)) {
-                // Update the existing source with the new coordinates
-                mapInstanceRef.current.getSource(sourceId).setData({
-                  type: 'FeatureCollection',
-                  features: [
-                    {
-                      type: 'Feature',
-                      geometry: {
-                        type: 'Point',
-                        coordinates: [lng, lat]
-                      }
-                    }
-                  ]
-                });
+                // Update existing source
+                mapInstanceRef.current.getSource(sourceId).setData(circleGeoJSON);
               } else {
-                // Add the source if it doesn't exist
+                // Add new source
                 mapInstanceRef.current.addSource(sourceId, {
                   type: 'geojson',
-                  data: {
-                    type: 'FeatureCollection',
-                    features: [
-                      {
-                        type: 'Feature',
-                        geometry: {
-                          type: 'Point',
-                          coordinates: [lng, lat]
-                        }
-                      }
-                    ]
-                  }
+                  data: circleGeoJSON
                 });
-              }
 
-              // Update or add the circle layer for the radius
-              if (mapInstanceRef.current.getLayer(circleLayerId)) {
-                // Update existing layer
-                mapInstanceRef.current.setPaintProperty(circleLayerId, 'circle-radius', convertRadiusToPixels(parseFloat(formData.radius), lat, mapInstanceRef.current.getZoom()));
-                mapInstanceRef.current.setPaintProperty(circleLayerId, 'circle-opacity', 0.1);
-              } else {
-                // Add new circle layer
+                // Add fill layer for the circle
                 mapInstanceRef.current.addLayer({
                   id: circleLayerId,
-                  type: 'circle',
+                  type: 'fill',
                   source: sourceId,
                   paint: {
-                    'circle-color': 'rgba(255, 0, 0, 0.1)',
-                    'circle-radius': convertRadiusToPixels(parseFloat(formData.radius), lat, mapInstanceRef.current.getZoom()),
-                    'circle-opacity': 0.1
+                    'fill-color': 'rgba(255, 0, 0, 0.5)', // Circle color
+                    'fill-opacity': 0.5 // Circle opacity
                   }
                 });
               }
 
-              // Update or add the dot layer
+              // Add the center point layer
               if (mapInstanceRef.current.getLayer(dotLayerId)) {
+                // Update existing dot layer
                 mapInstanceRef.current.setPaintProperty(dotLayerId, 'circle-opacity', 1);
               } else {
+                // Add new dot layer for the center
                 mapInstanceRef.current.addLayer({
                   id: dotLayerId,
                   type: 'circle',
-                  source: sourceId,
+                  source: {
+                    type: 'geojson',
+                    data: point([lng, lat]) // Center point
+                  },
                   paint: {
                     'circle-color': '#FF0000',
-                    'circle-radius': 5,
+                    'circle-radius': 8, // Center point radius
                     'circle-opacity': 1
                   }
                 });
               }
             });
 
-            mapInstanceRef.current.on('load', () => {
-              mapInstanceRef.current.addSource('cellsSource', {
-                type: 'geojson',
-                data: {
-                  type: 'FeatureCollection',
-                  features: cells.map(cell => ({
-                    type: 'Feature',
-                    geometry: {
-                      type: 'Point',
-                      coordinates: [cell.longitude, cell.latitude]
-                    },
-                    properties: {
-                      description: cell.description,
-                      color: '#FF0000',
-                      radius: cell.radius || 100
-                    }
-                  }))
-                }
-              });
-
-              mapInstanceRef.current.addLayer({
-                id: 'cellsLayer',
-                type: 'circle',
-                source: 'cellsSource',
-                paint: {
-                  'circle-color': ['get', 'color'],
-                  'circle-radius': ['interpolate', ['linear'], ['zoom'],
-                    10, ['/', ['get', 'radius'], 10],
-                    15, ['/', ['get', 'radius'], 2]
-                  ],
-                  'circle-opacity': 0.1
-                }
-              });
-
-              mapInstanceRef.current.addLayer({
-                id: 'centerDotsLayer',
-                type: 'circle',
-                source: 'cellsSource',
-                paint: {
-                  'circle-color': '#FF0000',
-                  'circle-radius': 5,
-                  'circle-opacity': 1
-                }
-              });
+            mapInstanceRef.current.on('style.load', async () => {
+              removeMapLayersAndSources(mapInstanceRef.current, cells.map(cell => `cell-${cell.id}`));
+              addCellsToMap(mapInstanceRef.current, cells);
+              addUEsToMap(mapInstanceRef.current, ues, handleUEClick);
+              await addPathsToMap(mapInstanceRef.current, ues, token);
             });
           }
         }
@@ -203,11 +145,6 @@ const AddCellModal = ({ visible, handleClose, token }) => {
       mapInstanceRef.current = null;
     }
   }, [visible, formData.radius, cells, ues]);
-
-  const convertRadiusToPixels = (radius, latitude, zoom) => {
-    const metersPerPixel = 156543.03392 * Math.cos((latitude * Math.PI) / 180) / Math.pow(2, zoom);
-    return radius / metersPerPixel;
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -222,11 +159,17 @@ const AddCellModal = ({ visible, handleClose, token }) => {
     }
 
     try {
-      await addCellsToMap({
-        ...formData,
-        radius: parseFloat(formData.radius),
-        gNB_id: formData.gNB_id.trim()
-      });
+      // Call the addCellsToMap function with the new cell data
+      await addCellsToMap(mapInstanceRef.current, [{
+        cell_id: formData.cell_id,
+        name: formData.name,
+        description: formData.description,
+        gNB_id: formData.gNB_id,
+        latitude: parseFloat(formData.latitude),
+        longitude: parseFloat(formData.longitude),
+        radius: parseFloat(formData.radius)
+      }]);
+      
       setMessage({ type: 'success', text: 'Cell successfully added!' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       handleClose();
@@ -304,19 +247,19 @@ const AddCellModal = ({ visible, handleClose, token }) => {
               readOnly
             />
             <CFormInput
-              label="Radius (meters)"
-              name="radius"
+              label="Radius (m)"
               type="number"
+              name="radius"
               value={formData.radius}
               onChange={handleChange}
               required
             />
-            <div ref={mapRef} style={{ width: '100%', height: '400px' }} />
+            <div ref={mapRef} style={{ width: '100%', height: '300px' }} />
           </CForm>
         </CModalBody>
         <CModalFooter>
-          <CButton color="secondary" onClick={handleClose}>Close</CButton>
           <CButton color="primary" onClick={handleFormSubmit}>Add Cell</CButton>
+          <CButton color="secondary" onClick={handleClose}>Cancel</CButton>
         </CModalFooter>
       </CModal>
     </>

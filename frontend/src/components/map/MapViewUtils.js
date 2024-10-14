@@ -1,3 +1,4 @@
+import * as turf from '@turf/turf';
 import { readPath } from '../../utils/api';
 import MarkerManager from './MarkerManager';
 
@@ -82,10 +83,10 @@ export const addPathsToMap = async (mapInstance, ues, token) => {
 };
 
 
-// Add cells to the map
 export const addCellsToMap = (mapInstance, cells) => {
   if (!mapInstance || !cells) return;
 
+  // Add a GeoJSON source for all cells
   mapInstance.addSource('cellsSource', {
     type: 'geojson',
     data: {
@@ -105,61 +106,50 @@ export const addCellsToMap = (mapInstance, cells) => {
     },
   });
 
-  // Add cell circles
-  mapInstance.addLayer({
-    id: 'cellsLayer',
-    type: 'circle',
-    source: 'cellsSource',
-    paint: {
-      'circle-color': ['get', 'color'],
-      'circle-radius': [
-        'interpolate',
-        ['linear'],
-        ['zoom'],
-        10, ['/', ['get', 'radius'], 10],
-        15, ['/', ['get', 'radius'], 2],
-      ],
-      'circle-opacity': 0.1,
-    },
+  // Iterate through each cell and add its radius as a circle
+  cells.forEach(cell => {
+    const radiusCenter = [cell.longitude, cell.latitude];
+    const radius = (cell.radius || 100) / 1000; // Convert radius from meters to kilometers
+
+    // Generate a circle using Turf.js
+    const options = {
+      steps: 64,
+      units: 'kilometers' 
+    };
+    const circle = turf.circle(radiusCenter, radius, options);
+
+    // Add the circle as a GeoJSON source
+    mapInstance.addSource(`cell-radius-${cell.id}`, {
+      type: 'geojson',
+      data: circle
+    });
+
+    // Add a fill layer for the circle with some transparency
+    mapInstance.addLayer({
+      id: `cell-radius-${cell.id}`,
+      type: 'fill',
+      source: `cell-radius-${cell.id}`,
+      paint: {
+        'fill-color': '#8CCFFF', 
+        'fill-opacity': 0.2
+      }
+    });
   });
 
-  // Add center dots for cells
+  // Add a layer for cell centers
   mapInstance.addLayer({
-    id: 'centerDotsLayer',
+    id: 'cell-centers-layer',
     type: 'circle',
     source: 'cellsSource',
     paint: {
-      'circle-color': '#0000FF',
-      'circle-radius': 5,
+      'circle-color': '#0000FF', 
+      'circle-radius': 5, 
       'circle-opacity': 1,
     },
   });
 };
 
-// Add radius visualization for individual cells
-export const addCellRadiusToMap = (map, cell) => {
-  const radius = (cell.radius || 0) / 2;
-  const center = [cell.longitude, cell.latitude];
 
-  map.addSource(`cell-radius-${cell.id}`, {
-    type: 'geojson',
-    data: {
-      type: 'FeatureCollection',
-      features: [{ type: 'Feature', geometry: { type: 'Point', coordinates: center } }],
-    },
-  });
-
-  map.addLayer({
-    id: `cell-radius-layer-${cell.id}`,
-    type: 'circle',
-    source: `cell-radius-${cell.id}`,
-    paint: {
-      'circle-color': '#0000FF',
-      'circle-radius': radius,
-      'circle-opacity': 0.3,
-    },
-  });
-};
 
 // Remove map layers and sources
 export const removeMapLayersAndSources = (map, layerIds) => {

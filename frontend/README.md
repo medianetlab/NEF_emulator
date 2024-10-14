@@ -1,6 +1,6 @@
 #=========================================== NOTES ================================================
 
-    1. Edit Modals: prefill data				                DONE - DISPLAY PATHS
+    1. Edit Modals: prefill data				                DONE
     2. Edit Modals: lock certain fields			                DONE
     3. BASE URL -> .env file   				                    DONE
     4. Path add modal -> map with point assign	                DONE
@@ -16,14 +16,18 @@
     14. Appearence                                              IN PROGRESS
     15. Import							                        DONE
     16. Export							                        DONE
-    17. MapView                                                 IN PROGRESS
+    17. MapView                                                 DONE
     18. Sidebar toggle                                          DONE
     19. UEs edit Modals -> lock fields with prefill             DONE
     20. Login (token handling & redirection)                    DONE
-    21. radius cell graphic display                             DONE
-    22. websocket rxjs integration                              IN PROGRESS
-    
-    23. Add cell -> gnb                             
-    24. add UE -> cell & gnb   
+    21. radius cell graphic display                             DONE - increase size
+    22. websocket integration                                   DONE
+    23. Add cell -> gnb                                         IN PROGRESS   
+    24. add UE -> cell & gnb                                    IN PROGRESS
     25. success messages                                        DONE
-    26. add cell -> error                                           
+    26. add cell -> error                                       DONE
+    27. log messages display                                    IN PROGRESS -> scroll
+    28. WebSocket alot of time to open                          IN PROGRESS - IMPORTANT
+    29. Add cell -> new cell with radius change position        IN PROGRESS
+    30. Add Path -> path.points error & points markers          IN PROGRESS
+    31. Add UE                                                  DONE

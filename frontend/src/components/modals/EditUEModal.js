@@ -5,7 +5,8 @@ import {
 } from '@coreui/react';
 import maplibre from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { getPaths } from '../../utils/api';
+import { getPaths, getCells, getGNBs, getUEs } from '../../utils/api';
+import { removeMapLayersAndSources, addCellsToMap, addPathsToMap, addUEsToMap, handleUEClick } from './ModalUtils';
 
 const EditUEModal = ({ visible, handleClose, handleSubmit, initialData, token }) => {
   const [formData, setFormData] = useState({
@@ -25,27 +26,34 @@ const EditUEModal = ({ visible, handleClose, handleSubmit, initialData, token })
     longitude: 0.0
   });
 
+  const [message, setMessage] = useState({ type: '', text: '' }); 
   const [paths, setPaths] = useState([]);
-  const [message, setMessage] = useState({ type: '', text: '' }); // State for success/failure message
+  const [gnbs, setGNBs] = useState([]);
+  const [cells, setCells] = useState([]);
+  const [ues, setUEs] = useState([]);
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
-  const markerRef = useRef(null);
 
-  // Fetch paths data when component mounts or token changes
   useEffect(() => {
-    const fetchPaths = async () => {
+    const fetchData = async () => {
       if (!token) return;
       try {
-        const pathsData = await getPaths(token);
+        const [pathsData, gnbData, cellData, ueData] = await Promise.all([
+          getPaths(token),
+          getGNBs(token),
+          getCells(token),
+          getUEs(token),
+        ]);
         setPaths(pathsData);
+        setGNBs(gnbData);
+        setCells(cellData);
+        setUEs(ueData);
       } catch (error) {
-        console.error('Error fetching paths:', error);
-        setMessage({ type: 'failure', text: 'Error fetching paths. Please try again later.' });
-        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+        console.error('Error fetching data:', error);
       }
     };
 
-    fetchPaths();
+    fetchData();
   }, [token]);
 
   // Update formData when initialData changes
@@ -60,7 +68,7 @@ const EditUEModal = ({ visible, handleClose, handleSubmit, initialData, token })
     }
   }, [initialData, visible]);
 
-  // Initialize or update MapLibre map and marker
+  // Initialize or update MapLibre map
   useEffect(() => {
     if (visible) {
       setTimeout(() => {
@@ -70,26 +78,18 @@ const EditUEModal = ({ visible, handleClose, handleSubmit, initialData, token })
               container: mapRef.current,
               style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
               center: [formData.longitude, formData.latitude],
-              zoom: 13,
+              zoom: 15,
             });
 
-            // Add marker to the map
-            markerRef.current = new maplibre.Marker()
-              .setLngLat([formData.longitude, formData.latitude])
-              .addTo(mapInstanceRef.current);
-
-            // Update formData when the map is clicked
-            mapInstanceRef.current.on('click', (e) => {
-              const { lng, lat } = e.lngLat;
-              setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
-
-              // Move marker to the clicked location
-              markerRef.current.setLngLat([lng, lat]);
+            mapInstanceRef.current.on('style.load', async () => {
+              removeMapLayersAndSources(mapInstanceRef.current, cells.map(cell => `cell-${cell.id}`));
+              addCellsToMap(mapInstanceRef.current, cells);
+              addUEsToMap(mapInstanceRef.current, ues, handleUEClick);
+              await addPathsToMap(mapInstanceRef.current, ues, token);
             });
           } else {
-            // Update map center and marker position when formData changes
+            // Update map center when formData changes
             mapInstanceRef.current.setCenter([formData.longitude, formData.latitude]);
-            markerRef.current.setLngLat([formData.longitude, formData.latitude]);
           }
         }
       }, 500);
