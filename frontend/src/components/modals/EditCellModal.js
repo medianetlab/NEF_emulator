@@ -6,46 +6,51 @@ import {
 import maplibre from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import * as turf from '@turf/turf';
-import { getCells, getGNBs } from '../../utils/api'; // Importing getCells and getGNBs
-import { removeMapLayersAndSources } from './ModalUtils';
+import { getCells, getGNBs, getPaths, getUEs } from '../../utils/api';
+import { removeMapLayersAndSources, addCellsToMap, addUEsToMap, addPathsToMap, handleUEClick } from './ModalUtils';
 
 const EditCellModal = ({ visible, handleClose, handleSubmit, initialData, token }) => {
   const [formData, setFormData] = useState({
     cell_id: '',
     name: '',
-    gnb_id: '', // New field for GNB selection
-    description: '', // New field for description
+    gnb_id: '', 
+    description: '', 
     latitude: 0.0,
     longitude: 0.0,
     radius: 0,
   });
 
   const [cells, setCells] = useState([]);
-  const [gnbs, setGNBs] = useState([]); // State to store GNBs
+  const [gnbs, setGNBs] = useState([]); 
   const [message, setMessage] = useState({ type: '', text: '' });
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
   const circleLayerId = useRef(`cell-radius-${initialData?.cell_id || 'default'}`);
+  const [paths, setPaths] = useState([]);
+  const [ues, setUEs] = useState([]);
 
-  // Fetch cells and GNBs data when component mounts or token changes
+
   useEffect(() => {
-    const fetchCellsAndGNBs = async () => {
+    const fetchData = async () => {
       if (!token) return;
       try {
-        const cellsData = await getCells(token); // Fetch all cells
-        setCells(cellsData);
-        
-        const gnbsData = await getGNBs(token); // Fetch GNBs
-        setGNBs(gnbsData);
+        const [pathsData, gnbData, cellData, ueData] = await Promise.all([
+          getPaths(token),
+          getGNBs(token),
+          getCells(token),
+          getUEs(token),
+        ]);
+        setPaths(pathsData);
+        setGNBs(gnbData);
+        setCells(cellData);
+        setUEs(ueData);
       } catch (error) {
         console.error('Error fetching data:', error);
-        setMessage({ type: 'failure', text: 'Error fetching data. Please try again later.' });
-        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       }
     };
 
-    fetchCellsAndGNBs();
+    fetchData();
   }, [token]);
 
   // Update formData when initialData changes
@@ -72,13 +77,15 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, initialData, token 
             mapInstanceRef.current = new maplibre.Map({
               container: mapRef.current,
               style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
-              center: [23.81953, 37.99803], // Center the map here
-              zoom: 15, // Set zoom level to 15
+              center: [23.81953, 37.99803], 
+              zoom: 15, 
             });
 
             mapInstanceRef.current.on('style.load', async () => {
-              // Add all cells to the map
+              removeMapLayersAndSources(mapInstanceRef.current, cells.map(cell => `cell-${cell.id}`));
               addCellsToMap(mapInstanceRef.current, cells);
+              addUEsToMap(mapInstanceRef.current, ues, handleUEClick);
+              await addPathsToMap(mapInstanceRef.current, token);
               updateCellRepresentation(formData.latitude, formData.longitude); // Draw the circle for the currently editing cell
             });
 
