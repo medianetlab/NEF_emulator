@@ -1,6 +1,6 @@
 import * as turf from '@turf/turf';
 import maplibregl from 'maplibre-gl';
-import { readPath } from '../../utils/api';
+import { readPath, getPaths } from '../../utils/api';
 
 let markersMap = new Map();
 
@@ -25,7 +25,7 @@ export const addCellsToMap = (mapInstance, cells) => {
         },
         properties: {
           description: cell.description,
-          color: '#0000FF',
+          color: '#FF0000',
           radius: cell.radius || 100,
         },
       })),
@@ -56,8 +56,8 @@ export const addCellsToMap = (mapInstance, cells) => {
       type: 'fill',
       source: `cell-radius-${cell.id}`,
       paint: {
-        'fill-color': '#8CCFFF', 
-        'fill-opacity': 0.2
+        'fill-color': '#FF0000', 
+        'fill-opacity': 0.1
       }
     });
   });
@@ -68,27 +68,31 @@ export const addCellsToMap = (mapInstance, cells) => {
     type: 'circle',
     source: 'cellsSource',
     paint: {
-      'circle-color': '#0000FF', 
-      'circle-radius': 5, 
+      'circle-color': '#FF0000', 
+      'circle-radius': 2, 
       'circle-opacity': 1,
     },
   });
 };
 
 
+export const addPathsToMap = async (mapInstance, token) => {
+  try {
+    // Fetch paths using the token (await the result since getPaths is likely asynchronous)
+    const paths = await getPaths(token);
 
-
-export const addPathsToMap = async (mapInstance, ues, token) => {
-    console.log('Adding paths to map:', ues);
-  
-    for (const ue of ues) {
-      if (ue.path_id) {
+    for (const path of paths) {
+      if (path.id) {
         try {
-          const pathData = await readPath(token, ue.path_id);
+          // Read path data based on the path_id
+          const pathData = await readPath(token, path.id);
+
+          // Map the points to GeoJSON coordinates
           const coordinates = pathData.points.map(point => [point.longitude, point.latitude]);
-  
+
+          // Add the path as a new layer to the map
           mapInstance.addLayer({
-            id: `path-${ue.path_id}`,
+            id: `path-${path.id}`,
             type: 'line',
             source: {
               type: 'geojson',
@@ -105,20 +109,26 @@ export const addPathsToMap = async (mapInstance, ues, token) => {
               },
             },
             paint: {
-              'line-color': pathData.color || '#00F',
+              'line-color': pathData.color || '#00F', // Use default color if none provided
               'line-width': 2,
+              'line-opacity': 0.4
             },
           });
+
         } catch (error) {
-          console.error('Error fetching path:', error);
+          console.error(`Error fetching path data for path_id ${path.path_id}:`, error);
         }
       }
     }
-  };
+
+  } catch (error) {
+    console.error('Error fetching paths:', error);
+  }
+};
+
   
   // Add or update UEs to the map
   export const addUEsToMap = (mapInstance, ues, handleUEClick) => {
-    console.log('Adding UEs to map:', ues);
   
     const uesArray = Array.isArray(ues) ? ues : Object.values(ues);
   

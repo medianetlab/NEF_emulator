@@ -73,6 +73,7 @@ export const addPathsToMap = async (mapInstance, ues, token) => {
           paint: {
             'line-color': pathData.color || '#00F',
             'line-width': 2,
+            'line-opacity': 0.5
           },
         });
       } catch (error) {
@@ -99,7 +100,7 @@ export const addCellsToMap = (mapInstance, cells) => {
         },
         properties: {
           description: cell.description,
-          color: '#0000FF',
+          color: '#FF0000',
           radius: cell.radius || 100,
         },
       })),
@@ -130,8 +131,8 @@ export const addCellsToMap = (mapInstance, cells) => {
       type: 'fill',
       source: `cell-radius-${cell.id}`,
       paint: {
-        'fill-color': '#8CCFFF', 
-        'fill-opacity': 0.2
+        'fill-color': '#FF0000', 
+        'fill-opacity': 0.1
       }
     });
   });
@@ -142,8 +143,8 @@ export const addCellsToMap = (mapInstance, cells) => {
     type: 'circle',
     source: 'cellsSource',
     paint: {
-      'circle-color': '#0000FF', 
-      'circle-radius': 5, 
+      'circle-color': '#FF0000', 
+      'circle-radius': 2, 
       'circle-opacity': 1,
     },
   });

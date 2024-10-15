@@ -5,7 +5,8 @@ import {
 } from '@coreui/react';
 import maplibre from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { getCells, getUEs, getPaths, getGNBs } from '../../utils/api'; // Assuming you have these API functions
+import { getCells, getUEs, getPaths, getGNBs } from '../../utils/api';
+import { addCellsToMap, addUEsToMap, addPathsToMap, removeMapLayersAndSources, handleUEClick } from './ModalUtils';
 
 const colorOptions = [
   '#FF5733', '#33FF57', '#3357FF', '#F4C542', '#E94E77', '#8E44AD'
@@ -14,7 +15,7 @@ const colorOptions = [
 const AddPathModal = ({ visible, handleClose, handleSubmit, token }) => {
   const [formData, setFormData] = useState({
     description: '',
-    color: '',
+    color: '#FF0000', // Set default color
     start_point: null,
     end_point: null,
     points: []
@@ -55,7 +56,7 @@ const AddPathModal = ({ visible, handleClose, handleSubmit, token }) => {
     if (visible) {
       setFormData({
         description: '',
-        color: '',
+        color: '#FF0000', // Reset color when modal opens
         start_point: null,
         end_point: null,
         points: []
@@ -90,11 +91,11 @@ const AddPathModal = ({ visible, handleClose, handleSubmit, token }) => {
             addPoint({ latitude: lat.toFixed(6), longitude: lng.toFixed(6) });
           });
 
-          mapInstanceRef.current.on('style.load', async () => { 
+          mapInstanceRef.current.on('style.load', async () => {
+            removeMapLayersAndSources(mapInstanceRef.current, cells.map(cell => `cell-${cell.id}`));
             addCellsToMap(mapInstanceRef.current, cells);
-            addUEsToMap(mapInstanceRef.current, ues);
-            await addPathsToMap(mapInstanceRef.current, paths); 
-            updatePath();
+            addUEsToMap(mapInstanceRef.current, ues, handleUEClick);
+            await addPathsToMap(mapInstanceRef.current, token);
           });
         }
       }, 500);
@@ -109,7 +110,13 @@ const AddPathModal = ({ visible, handleClose, handleSubmit, token }) => {
       updateMarkers();
       updatePath();
     }
-  }, [formData.points, formData.color]);
+  }, [formData.points]);
+
+  useEffect(() => {
+    if (mapInstanceRef.current) {
+      updatePath(); // Call updatePath to change color
+    }
+  }, [formData.color]); // Monitor color changes
 
   const addPoint = (point) => {
     setFormData(prev => {
@@ -124,17 +131,20 @@ const AddPathModal = ({ visible, handleClose, handleSubmit, token }) => {
   };
 
   const updateMarkers = () => {
+    /*
     if (mapInstanceRef.current && formData.points.length) {
       markersRef.current.forEach(marker => marker.remove());
       markersRef.current = [];
 
       formData.points.forEach(point => {
-        const marker = new maplibre.Marker({ color: formData.color || '#FF0000' })
-          .setLngLat([parseFloat(point.longitude), parseFloat(point.latitude)])  // Using longitude and latitude
+        // Create a transparent marker
+        const transparentMarker = new maplibre.Marker({ color: 'transparent' }) // Transparent color
+          .setLngLat([parseFloat(point.longitude), parseFloat(point.latitude)])
           .addTo(mapInstanceRef.current);
-        markersRef.current.push(marker);
+        markersRef.current.push(transparentMarker);
       });
     }
+      */
   };
 
   const updatePath = () => {
@@ -175,199 +185,79 @@ const AddPathModal = ({ visible, handleClose, handleSubmit, token }) => {
           }
         });
       }
+
+      // Update the color of the path
+      if (mapInstanceRef.current.getLayer('path-line')) {
+        mapInstanceRef.current.setPaintProperty('path-line', 'line-color', formData.color);
+      }
     }
   };
 
-  const addCellsToMap = (map, cells) => {
-    cells.forEach((cell, index) => {
-      const radius = cell.radius || 100;
-
-      const feature = {
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: [cell.longitude, cell.latitude]
-        },
-        properties: {
-          description: cell.description,
-          color: '#FF0000',
-          radius: radius
-        }
+  const handleAddPath = async () => {
+    try {
+      const newPath = {
+        description: formData.description,
+        color: formData.color,
+        start_point: formData.start_point,
+        end_point: formData.end_point,
+        points: formData.points,
       };
 
-      map.addSource(`cell-source-${index}`, {
-        type: 'geojson',
-        data: {
-          type: 'FeatureCollection',
-          features: [feature]
-        }
-      });
-
-      map.addLayer({
-        id: `cell-layer-${index}`,
-        type: 'circle',
-        source: `cell-source-${index}`,
-        paint: {
-          'circle-color': ['get', 'color'],
-          'circle-radius': ['interpolate', ['linear'], ['zoom'],
-            10, ['/', ['get', 'radius'], 10],
-            15, ['/', ['get', 'radius'], 2]
-          ],
-          'circle-opacity': 0.1
-        }
-      });
-
-      map.addLayer({
-        id: `cell-center-dot-${index}`,
-        type: 'circle',
-        source: `cell-source-${index}`,
-        paint: {
-          'circle-color': '#FF0000',
-          'circle-radius': 5,
-          'circle-opacity': 1
-        }
-      });
-    });
-  };
-
-  const addUEsToMap = (map, ues) => {
-    ues.forEach((ue, index) => {
-      const feature = {
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: [ue.longitude, ue.latitude]
-        },
-        properties: {
-          description: ue.description,
-          color: '#00FF00', // Example color for UEs
-          radius: 10
-        }
-      };
-
-      map.addSource(`ue-source-${index}`, {
-        type: 'geojson',
-        data: {
-          type: 'FeatureCollection',
-          features: [feature]
-        }
-      });
-
-      map.addLayer({
-        id: `ue-layer-${index}`,
-        type: 'circle',
-        source: `ue-source-${index}`,
-        paint: {
-          'circle-color': ['get', 'color'],
-          'circle-radius': ['interpolate', ['linear'], ['zoom'],
-            10, ['/', ['get', 'radius'], 10],
-            15, ['/', ['get', 'radius'], 2]
-          ],
-          'circle-opacity': 0.7
-        }
-      });
-
-      map.addLayer({
-        id: `ue-center-dot-${index}`,
-        type: 'circle',
-        source: `ue-source-${index}`,
-        paint: {
-          'circle-color': '#00FF00',
-          'circle-radius': 5,
-          'circle-opacity': 1
-        }
-      });
-    });
-  };
-
-  const addPathsToMap = (map, paths) => {
-    paths.forEach((path, index) => {
-      const lineCoordinates = path.points.map(point => [point.lon, point.lat]);
-
-      map.addSource(`path-source-${index}`, {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          geometry: {
-            type: 'LineString',
-            coordinates: lineCoordinates
-          }
-        }
-      });
-
-      map.addLayer({
-        id: `path-layer-${index}`,
-        type: 'line',
-        source: `path-source-${index}`,
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
-        paint: {
-          'line-color': path.color || '#0000FF',
-          'line-width': 2
-        }
-      });
-    });
-  };
-
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    handleSubmit(formData);
-    handleClose();
+      await handleSubmit(newPath);
+      handleClose(); // Close modal after submission
+    } catch (error) {
+      console.error('Error adding path:', error);
+      setToasts(prev => [...prev, { text: 'Error adding path!', color: 'danger' }]);
+    }
   };
 
   return (
-    <CModal visible={visible} onClose={handleClose} size="lg">
-      <CModalHeader onClose={handleClose}>
-        <h5>Add Path</h5>
-      </CModalHeader>
+    <CModal visible={visible} onClose={handleClose} size="lg"> {/* Set modal size to large */}
+      <CModalHeader closeButton>Add Path</CModalHeader>
       <CModalBody>
-        <CForm onSubmit={handleFormSubmit}>
-          <div className="color-selection">
-            {colorOptions.map(color => (
-              <div
-                key={color}
-                onClick={() => setFormData(prev => ({ ...prev, color }))}
-                style={{
-                  backgroundColor: color,
-                  width: '30px',
-                  height: '30px',
-                  borderRadius: '50%',
-                  display: 'inline-block',
-                  marginRight: '10px',
-                  cursor: 'pointer',
-                  border: formData.color === color ? '2px solid #000' : 'none'
-                }}
-              />
-            ))}
+        <CForm>
+          <div className="mb-3">
+            <label htmlFor="description" className="form-label">Description</label>
+            <CFormTextarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            />
           </div>
-          <CFormTextarea
-            value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-            placeholder="Description"
-            rows={3}
-            className="mt-2"
-          />
-          <div className="points-preview">
-            <h6>Points:</h6>
-            <ul>
-              {formData.points.map((point, index) => (
-                <li key={index}>{`Lat: ${point.latitude}, Lon: ${point.longitude}`}</li>
+          <div className="mb-3">
+            <label htmlFor="color" className="form-label">Color</label>
+            <div className="d-flex flex-wrap">
+              {colorOptions.map((color, index) => (
+                <div
+                  key={index}
+                  onClick={() => setFormData(prev => ({ ...prev, color }))}
+                  style={{
+                    backgroundColor: color,
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    cursor: 'pointer',
+                    margin: '5px',
+                    border: formData.color === color ? '2px solid #000' : 'none'
+                  }}
+                />
               ))}
-            </ul>
+            </div>
           </div>
-          <div ref={mapRef} style={{ width: '100%', height: '400px' }} />
-          {toasts.map((toast, index) => (
-            <CAlert key={index} color={toast.color}>
-              {toast.message}
+          <div className="mb-3" ref={mapRef} style={{ width: '100%', height: '400px' }}></div> {/* Increase height */}
+          {formData.points.length > 0 && (
+            <CAlert color="info">
+              Points: {formData.points.map(p => `(${p.latitude}, ${p.longitude})`).join(', ')}
             </CAlert>
+          )}
+          {toasts.map((toast, index) => (
+            <CAlert key={index} color={toast.color}>{toast.text}</CAlert>
           ))}
         </CForm>
       </CModalBody>
       <CModalFooter>
         <CButton color="secondary" onClick={handleClose}>Close</CButton>
-        <CButton color="primary" type="submit" onClick={handleFormSubmit}>Add Path</CButton>
+        <CButton color="primary" onClick={handleAddPath}>Add Path</CButton>
       </CModalFooter>
     </CModal>
   );

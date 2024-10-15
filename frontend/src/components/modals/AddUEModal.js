@@ -72,17 +72,9 @@ const AddUEModal = ({ visible, handleClose, handleSubmit, token }) => {
               removeMapLayersAndSources(mapInstanceRef.current, cells.map(cell => `cell-${cell.id}`));
               addCellsToMap(mapInstanceRef.current, cells);
               addUEsToMap(mapInstanceRef.current, ues, handleUEClick);
-              await addPathsToMap(mapInstanceRef.current, ues, token);
+              await addPathsToMap(mapInstanceRef.current, token);
             });
-            /*
-            mapInstanceRef.current.on('load', () => {
-              addCellsToMap(mapInstanceRef.current, cells);
-              addUEsToMap(mapInstanceRef.current, gnbs, (ue) => {
-                console.log('UE clicked:', ue);
-              });
-              addPathsToMap(mapInstanceRef.current, gnbs, token);
-            });
-            */
+
             markerRef.current = new maplibre.Marker()
               .setLngLat([parseFloat(formData.lon) || 23.7275, parseFloat(formData.lat) || 37.9838])
               .addTo(mapInstanceRef.current);

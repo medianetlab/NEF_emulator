@@ -26,7 +26,7 @@
     24. add UE -> cell & gnb                                    IN PROGRESS
     25. success messages                                        DONE
     26. add cell -> error                                       DONE
-    27. log messages display                                    IN PROGRESS -> scroll
+    27. log messages display                                    DONE
     28. WebSocket alot of time to open                          IN PROGRESS - IMPORTANT
     29. Add cell -> new cell with radius change position        IN PROGRESS
     30. Add Path -> path.points error & points markers          IN PROGRESS

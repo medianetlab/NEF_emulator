@@ -7,7 +7,7 @@ import maplibre from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { getGNBs, getUEs, getCells } from '../../utils/api';
 import { addCellsToMap, addUEsToMap, addPathsToMap, removeMapLayersAndSources, handleUEClick } from './ModalUtils'; 
-import { buffer, point } from '@turf/turf'; // Import Turf.js functions
+import { buffer, point } from '@turf/turf';
 
 const AddCellModal = ({ visible, handleClose, token }) => {
   const [formData, setFormData] = useState({
@@ -72,21 +72,22 @@ const AddCellModal = ({ visible, handleClose, token }) => {
               zoom: 15,
             });
 
+            
             mapInstanceRef.current.on('click', (e) => {
               const { lng, lat } = e.lngLat;
-
+              
               setFormData(prev => ({
                 ...prev,
                 latitude: lat.toFixed(5),
                 longitude: lng.toFixed(5)
               }));
-
-              // Create the Turf.js circle
+            
+              // Use the form's radius (preserving the updated value)
               const radiusInMeters = parseFloat(formData.radius);
               const radiusInKilometers = radiusInMeters / 1000; // Convert meters to kilometers
               const circleGeoJSON = buffer(point([lng, lat]), radiusInKilometers, { units: 'kilometers' });
-
-              // Add the source and layer for the radius
+            
+              // Add or update the source and layer for the radius
               if (mapInstanceRef.current.getSource(sourceId)) {
                 // Update existing source
                 mapInstanceRef.current.getSource(sourceId).setData(circleGeoJSON);
@@ -96,46 +97,49 @@ const AddCellModal = ({ visible, handleClose, token }) => {
                   type: 'geojson',
                   data: circleGeoJSON
                 });
-
+            
                 // Add fill layer for the circle
                 mapInstanceRef.current.addLayer({
                   id: circleLayerId,
                   type: 'fill',
                   source: sourceId,
                   paint: {
-                    'fill-color': 'rgba(255, 0, 0, 0.5)', // Circle color
-                    'fill-opacity': 0.5 // Circle opacity
+                    'fill-color': '#0000FF', // Circle color
+                    'fill-opacity': 0.2 // Circle opacity
                   }
                 });
               }
-
-              // Add the center point layer
-              if (mapInstanceRef.current.getLayer(dotLayerId)) {
-                // Update existing dot layer
-                mapInstanceRef.current.setPaintProperty(dotLayerId, 'circle-opacity', 1);
+            
+              // Update or add the center point (dot) layer
+              if (mapInstanceRef.current.getSource(dotLayerId)) {
+                // Update the data for the center point
+                mapInstanceRef.current.getSource(dotLayerId).setData(point([lng, lat]));
               } else {
-                // Add new dot layer for the center
+                // Add new source and layer for the center point
+                mapInstanceRef.current.addSource(dotLayerId, {
+                  type: 'geojson',
+                  data: point([lng, lat]) // Center point
+                });
+            
                 mapInstanceRef.current.addLayer({
                   id: dotLayerId,
                   type: 'circle',
-                  source: {
-                    type: 'geojson',
-                    data: point([lng, lat]) // Center point
-                  },
+                  source: dotLayerId,
                   paint: {
-                    'circle-color': '#FF0000',
-                    'circle-radius': 8, // Center point radius
+                    'circle-color': '#0000FF',
+                    'circle-radius': 2, // Center point radius
                     'circle-opacity': 1
                   }
                 });
               }
             });
+                        
 
             mapInstanceRef.current.on('style.load', async () => {
               removeMapLayersAndSources(mapInstanceRef.current, cells.map(cell => `cell-${cell.id}`));
               addCellsToMap(mapInstanceRef.current, cells);
               addUEsToMap(mapInstanceRef.current, ues, handleUEClick);
-              await addPathsToMap(mapInstanceRef.current, ues, token);
+              await addPathsToMap(mapInstanceRef.current, token);
             });
           }
         }
@@ -145,6 +149,18 @@ const AddCellModal = ({ visible, handleClose, token }) => {
       mapInstanceRef.current = null;
     }
   }, [visible, formData.radius, cells, ues]);
+
+  useEffect(() => {
+    if (formData.latitude && formData.longitude && mapInstanceRef.current) {
+      const radiusInMeters = parseFloat(formData.radius);
+      const radiusInKilometers = radiusInMeters / 1000;
+      const circleGeoJSON = buffer(point([parseFloat(formData.longitude), parseFloat(formData.latitude)]), radiusInKilometers, { units: 'kilometers' });
+
+      if (mapInstanceRef.current.getSource(sourceId)) {
+        mapInstanceRef.current.getSource(sourceId).setData(circleGeoJSON);
+      }
+    }
+  }, [formData.radius]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -231,35 +247,44 @@ const AddCellModal = ({ visible, handleClose, token }) => {
             >
               <option value="" disabled>Select a gNB</option>
               {gnbs.map(gnb => (
-                <option key={gnb.gNB_id} value={gnb.gNB_id}>{gnb.name}</option>
+                <option key={gnb.id} value={gnb.id}>
+                  {gnb.name}
+                </option>
               ))}
             </CFormSelect>
             <CFormInput
               label="Latitude"
               name="latitude"
               value={formData.latitude}
-              readOnly
+              onChange={handleChange}
+              required
+              type="number"
+              step="0.00001"
             />
             <CFormInput
               label="Longitude"
               name="longitude"
               value={formData.longitude}
-              readOnly
+              onChange={handleChange}
+              required
+              type="number"
+              step="0.00001"
             />
             <CFormInput
-              label="Radius (m)"
-              type="number"
+              label="Radius (meters)"
               name="radius"
               value={formData.radius}
               onChange={handleChange}
               required
+              type="number"
             />
-            <div ref={mapRef} style={{ width: '100%', height: '300px' }} />
           </CForm>
+          {/* Map */}
+          <div ref={mapRef} style={{ height: '400px', width: '100%', marginTop: '20px' }}></div>
         </CModalBody>
         <CModalFooter>
-          <CButton color="primary" onClick={handleFormSubmit}>Add Cell</CButton>
           <CButton color="secondary" onClick={handleClose}>Cancel</CButton>
+          <CButton color="primary" onClick={handleFormSubmit}>Add Cell</CButton>
         </CModalFooter>
       </CModal>
     </>
