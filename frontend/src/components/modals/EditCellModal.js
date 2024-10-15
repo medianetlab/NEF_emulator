@@ -5,47 +5,47 @@ import {
 } from '@coreui/react';
 import maplibre from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { getPaths, getCells } from '../../utils/api';
-import { removeMapLayersAndSources, addCellsToMap } from './ModalUtils';
+import * as turf from '@turf/turf';
+import { getCells, getGNBs } from '../../utils/api'; // Importing getCells and getGNBs
+import { removeMapLayersAndSources } from './ModalUtils';
 
 const EditCellModal = ({ visible, handleClose, handleSubmit, initialData, token }) => {
   const [formData, setFormData] = useState({
     cell_id: '',
     name: '',
+    gnb_id: '', // New field for GNB selection
+    description: '', // New field for description
     latitude: 0.0,
     longitude: 0.0,
     radius: 0,
-    path_id: '',
-    frequency: '',
-    bandwidth: ''
   });
 
-  const [paths, setPaths] = useState([]);
   const [cells, setCells] = useState([]);
+  const [gnbs, setGNBs] = useState([]); // State to store GNBs
   const [message, setMessage] = useState({ type: '', text: '' });
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
-  const circleRef = useRef(null);
+  const circleLayerId = useRef(`cell-radius-${initialData?.cell_id || 'default'}`);
 
-  // Fetch paths and cells data when component mounts or token changes
+  // Fetch cells and GNBs data when component mounts or token changes
   useEffect(() => {
-    const fetchPathsAndCells = async () => {
+    const fetchCellsAndGNBs = async () => {
       if (!token) return;
       try {
-        const pathsData = await getPaths(token);
-        setPaths(pathsData);
-
         const cellsData = await getCells(token); // Fetch all cells
         setCells(cellsData);
+        
+        const gnbsData = await getGNBs(token); // Fetch GNBs
+        setGNBs(gnbsData);
       } catch (error) {
-        console.error('Error fetching paths or cells:', error);
-        setMessage({ type: 'failure', text: 'Error fetching paths or cells. Please try again later.' });
+        console.error('Error fetching data:', error);
+        setMessage({ type: 'failure', text: 'Error fetching data. Please try again later.' });
         setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       }
     };
 
-    fetchPathsAndCells();
+    fetchCellsAndGNBs();
   }, [token]);
 
   // Update formData when initialData changes
@@ -54,6 +54,8 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, initialData, token 
       setFormData(prev => ({
         ...prev,
         ...initialData,
+        gnb_id: initialData.gnb_id || '', // Set GNB ID from initial data
+        description: initialData.description || '', // Set description from initial data
         latitude: initialData.position?.lat || initialData.latitude || 0.0,
         longitude: initialData.position?.lng || initialData.longitude || 0.0,
         radius: initialData.radius || 0 // Set the initial radius
@@ -61,7 +63,7 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, initialData, token 
     }
   }, [initialData, visible]);
 
-  // Initialize or update MapLibre map, marker, and circle
+  // Initialize or update MapLibre map and marker
   useEffect(() => {
     if (visible) {
       setTimeout(() => {
@@ -70,34 +72,31 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, initialData, token 
             mapInstanceRef.current = new maplibre.Map({
               container: mapRef.current,
               style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
-              center: [formData.longitude, formData.latitude],
-              zoom: 13,
+              center: [23.81953, 37.99803], // Center the map here
+              zoom: 15, // Set zoom level to 15
             });
 
             mapInstanceRef.current.on('style.load', async () => {
-              removeMapLayersAndSources(mapInstanceRef.current, cells.map(cell => `cell-${cell.id}`));
-              addCellsToMap(mapInstanceRef.current, cells); 
-              drawCircle(); // Draw the initial circle
+              // Add all cells to the map
+              addCellsToMap(mapInstanceRef.current, cells);
+              updateCellRepresentation(formData.latitude, formData.longitude); // Draw the circle for the currently editing cell
             });
 
-            // Add marker to the map for the cell being edited
-            markerRef.current = new maplibre.Marker()
-              .setLngLat([formData.longitude, formData.latitude])
-              .addTo(mapInstanceRef.current);
+            // Add marker for the cell being edited
+            addMarker(formData.latitude, formData.longitude);
 
             // Add click event to update the marker and circle
             mapInstanceRef.current.on('click', (e) => {
               const { lng, lat } = e.lngLat;
+              // Update formData with new latitude and longitude
               setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
-              markerRef.current.setLngLat([lng, lat]);
-              drawCircle(); // Update the circle with the new coordinates
+              updateCellRepresentation(lat, lng); // Update the representation for the cell
             });
 
           } else {
-            // Update map center and marker position when formData changes
-            mapInstanceRef.current.setCenter([formData.longitude, formData.latitude]);
-            markerRef.current.setLngLat([formData.longitude, formData.latitude]);
-            drawCircle(); // Update the circle when coordinates change
+            // Update marker position when formData changes
+            addMarker(formData.latitude, formData.longitude);
+            updateCellRepresentation(formData.latitude, formData.longitude);
           }
         }
       }, 500);
@@ -107,54 +106,123 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, initialData, token 
     }
   }, [visible, formData.latitude, formData.longitude, cells]);
 
-  const drawCircle = () => {
-    if (!mapInstanceRef.current || !formData.radius) return;
+  // Function to draw cells on the map
+  const addCellsToMap = (mapInstance, cells) => {
+    if (!mapInstance || !cells) return;
 
-    const radius = formData.radius; // in meters
-    const lat = formData.latitude;
-    const lng = formData.longitude;
+    // Remove existing sources and layers before adding new ones
+    removeMapLayersAndSources(mapInstance, cells.map(cell => `cell-${cell.id}`));
 
-    // Calculate the circle's boundary points
-    const circlePoints = [];
-
-    for (let i = 0; i < 360; i++) {
-      const angle = (i * Math.PI) / 180;
-      const x = lng + (radius / 111320) * Math.cos(angle); // convert meters to degrees
-      const y = lat + (radius / 111320) * Math.sin(angle);
-      circlePoints.push([x, y]);
-    }
-
-    // Remove previous circle layer if it exists
-    if (circleRef.current) {
-      mapInstanceRef.current.removeLayer('circle');
-      mapInstanceRef.current.removeSource('circle');
-    }
-
-    // Add a source for the circle
-    mapInstanceRef.current.addSource('circle', {
+    // Add a GeoJSON source for all cells
+    mapInstance.addSource('cellsSource', {
       type: 'geojson',
       data: {
-        type: 'Feature',
-        geometry: {
-          type: 'Polygon',
-          coordinates: [circlePoints.concat([circlePoints[0]])] // close the circle
+        type: 'FeatureCollection',
+        features: cells.map(cell => ({
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [cell.longitude, cell.latitude],
+          },
+          properties: {
+            description: cell.description,
+            color: '#FF0000', // Default color for other cells
+            radius: cell.radius || 100,
+          },
+        })),
+      },
+    });
+
+    // Iterate through each cell to add its radius as a circle
+    cells.forEach(cell => {
+      const radiusCenter = [cell.longitude, cell.latitude];
+      const radius = (cell.radius || 100) / 1000; // Convert radius from meters to kilometers
+
+      // Generate a circle using Turf.js
+      const options = {
+        steps: 64,
+        units: 'kilometers'
+      };
+      const circle = turf.circle(radiusCenter, radius, options);
+
+      // Add the circle as a GeoJSON source
+      mapInstance.addSource(`cell-radius-${cell.id}`, {
+        type: 'geojson',
+        data: circle
+      });
+
+      // Add a fill layer for the circle with some transparency
+      mapInstance.addLayer({
+        id: `cell-radius-${cell.id}`,
+        type: 'fill',
+        source: `cell-radius-${cell.id}`,
+        paint: {
+          'fill-color': '#FF0000', // Color for other cells
+          'fill-opacity': 0.1
         }
-      }
+      });
     });
 
-    // Add a layer for the circle
-    mapInstanceRef.current.addLayer({
-      id: 'circle',
-      type: 'fill',
-      source: 'circle',
-      layout: {},
+    // Add a layer for cell centers
+    mapInstance.addLayer({
+      id: 'cell-centers-layer',
+      type: 'circle',
+      source: 'cellsSource',
       paint: {
-        'fill-color': '#888',
-        'fill-opacity': 0.5
-      }
+        'circle-color': '#FF0000', // Color for other cells
+        'circle-radius': 3, // Smaller for better visibility
+        'circle-opacity': 1,
+      },
+    });
+  };
+
+  const addMarker = (lat, lng) => {
+    // Remove existing marker if it exists
+    if (markerRef.current) {
+      markerRef.current.remove();
+    }
+    // Create a new marker for the currently editing cell
+    markerRef.current = new maplibre.Marker()
+      .setLngLat([lng, lat])
+      .addTo(mapInstanceRef.current);
+  };
+
+  const updateCellRepresentation = (lat, lng) => {
+    if (!mapInstanceRef.current || !formData.radius) return;
+
+    // Remove previous cell representation if it exists
+    if (mapInstanceRef.current.getLayer(circleLayerId.current)) {
+      mapInstanceRef.current.removeLayer(circleLayerId.current);
+      mapInstanceRef.current.removeSource(circleLayerId.current);
+    }
+
+    // Add a new marker for the updated position
+    addMarker(lat, lng);
+
+    // Generate the new circle using Turf.js
+    const radius = (formData.radius || 100) / 1000; // Convert radius from meters to kilometers
+    const options = {
+      steps: 64,
+      units: 'kilometers'
+    };
+    const circle = turf.circle([lng, lat], radius, options);
+
+    // Add the new circle as a GeoJSON source
+    mapInstanceRef.current.addSource(circleLayerId.current, {
+      type: 'geojson',
+      data: circle,
     });
 
-    circleRef.current = 'circle'; // Store reference to circle layer
+    // Add a fill layer for the circle with transparency and blue color
+    mapInstanceRef.current.addLayer({
+      id: circleLayerId.current,
+      type: 'fill',
+      source: circleLayerId.current,
+      paint: {
+        'fill-color': '#0000FF', // Blue color for the editing cell
+        'fill-opacity': 0.1
+      }
+    });
   };
 
   const handleChange = (e) => {
@@ -167,110 +235,99 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, initialData, token 
       await handleSubmit(formData);
       setMessage({ type: 'success', text: 'Cell updated successfully!' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-      handleClose(); // Close the modal after successful update
+      handleClose(); // Close the modal after submission
     } catch (error) {
-      console.error('Error updating Cell:', error);
-      setMessage({ type: 'failure', text: 'Error: Failed to update the Cell.' });
+      console.error('Error updating cell:', error);
+      setMessage({ type: 'failure', text: 'Failed to update cell. Please try again.' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     }
   };
 
   return (
-    <>
-      {/* Status message display */}
-      {message.text && (
-        <CAlert
-          color={message.type === 'success' ? 'success' : 'danger'}
-          style={{
-            position: 'fixed',
-            bottom: '20px',
-            right: '20px',
-            zIndex: 9999
-          }}
-        >
-          {message.text}
-        </CAlert>
-      )}
-
-      {/* Edit Cell Modal */}
-      <CModal visible={visible} onClose={handleClose} size="lg">
-        <CModalHeader closeButton>Edit Cell</CModalHeader>
-        <CModalBody>
-          <CForm>
-            <CFormInput
-              id="cell_id"
-              name="cell_id"
-              label="Cell ID"
-              value={formData.cell_id}
-              onChange={handleChange}
-            />
-            <CFormInput
-              id="name"
-              name="name"
-              label="Name"
-              value={formData.name}
-              onChange={handleChange}
-            />
-            <CFormInput
-              id="frequency"
-              name="frequency"
-              label="Frequency"
-              value={formData.frequency}
-              onChange={handleChange}
-            />
-            <CFormInput
-              id="bandwidth"
-              name="bandwidth"
-              label="Bandwidth"
-              value={formData.bandwidth}
-              onChange={handleChange}
-            />
-            <CFormSelect
-              id="path_id"
-              name="path_id"
-              label="Path"
-              value={formData.path_id}
-              onChange={handleChange}
-            >
-              <option value="">Select a path</option>
-              {paths.map((path) => (
-                <option key={path.id} value={path.id}>
-                  {path.description}
-                </option>
-              ))}
-            </CFormSelect>
-
-            <CFormInput
-              id="latitude"
-              name="latitude"
-              label="Latitude"
-              value={formData.latitude}
-              readOnly
-            />
-            <CFormInput
-              id="longitude"
-              name="longitude"
-              label="Longitude"
-              value={formData.longitude}
-              readOnly
-            />
-            <CFormInput
-              id="radius"
-              name="radius"
-              label="Radius (meters)"
-              type="number"
-              value={formData.radius}
-              onChange={handleChange}
-            />
-            <div className="map-container" ref={mapRef} style={{ width: '100%', height: '400px' }} />
-          </CForm>
-        </CModalBody>
-        <CModalFooter>
-          <CButton color="secondary" onClick={handleClose}>Cancel</CButton>
-          <CButton color="primary" onClick={handleFormSubmit}>Save Changes</CButton>
-        </CModalFooter>
-      </CModal>
-    </>
+    <CModal visible={visible} onClose={handleClose} size="lg">
+      <CModalHeader>
+        <h5>Edit Cell</h5>
+      </CModalHeader>
+      <CModalBody>
+        {message.text && (
+          <CAlert color={message.type === 'failure' ? 'danger' : 'success'}>
+            {message.text}
+          </CAlert>
+        )}
+        <CForm>
+          <CFormInput
+            type="text"
+            id="cell_id"
+            name="cell_id"
+            label="Cell ID"
+            value={formData.cell_id}
+            disabled // Set to disabled
+          />
+          <CFormInput
+            type="text"
+            id="name"
+            name="name"
+            label="Cell Name"
+            value={formData.name}
+            onChange={handleChange}
+          />
+          <CFormSelect
+            id="gnb_id"
+            name="gnb_id"
+            label="Select GNB"
+            value={formData.gnb_id}
+            onChange={handleChange}
+          >
+            <option value="">Choose GNB</option>
+            {gnbs.map(gnb => (
+              <option key={gnb.id} value={gnb.id}>{gnb.name}</option>
+            ))}
+          </CFormSelect>
+          <CFormInput
+            type="text"
+            id="description"
+            name="description"
+            label="Description"
+            value={formData.description}
+            onChange={handleChange}
+          />
+          <CFormInput
+            type="number"
+            id="latitude"
+            name="latitude"
+            label="Latitude"
+            value={formData.latitude}
+            disabled // Set to disabled
+          />
+          <CFormInput
+            type="number"
+            id="longitude"
+            name="longitude"
+            label="Longitude"
+            value={formData.longitude}
+            disabled // Set to disabled
+          />
+          <CFormInput
+            type="number"
+            id="radius"
+            name="radius"
+            label="Radius (in meters)"
+            value={formData.radius}
+            disabled // Set to disabled
+          />
+          <div style={{ margin: '20px 0' }} /> {/* Add margin between form and map */}
+          <div style={{ height: '300px', width: '100%' }} ref={mapRef}></div>
+        </CForm>
+      </CModalBody>
+      <CModalFooter>
+        <CButton color="primary" onClick={handleFormSubmit}>
+          Submit
+        </CButton>
+        <CButton color="secondary" onClick={handleClose}>
+          Cancel
+        </CButton>
+      </CModalFooter>
+    </CModal>
   );
 };
 
