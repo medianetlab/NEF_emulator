@@ -20,14 +20,16 @@
     18. Sidebar toggle                                          DONE
     19. UEs edit Modals -> lock fields with prefill             DONE
     20. Login (token handling & redirection)                    DONE
-    21. radius cell graphic display                             DONE - increase size
+    21. radius cell graphic display                             DONE
     22. websocket integration                                   DONE
-    23. Add cell -> gnb                                         IN PROGRESS   
-    24. add UE -> cell & gnb                                    IN PROGRESS
+    23. Add cell -> gnb                                         DONE
+    24. add UE -> cell & gnb                                    DONE
     25. success messages                                        DONE
     26. add cell -> error                                       DONE
     27. log messages display                                    DONE
     28. WebSocket alot of time to open                          IN PROGRESS - IMPORTANT
-    29. Add cell -> new cell with radius change position        IN PROGRESS
-    30. Add Path -> path.points error & points markers          IN PROGRESS
+    29. Add cell -> new cell with radius change position        DONE
+    30. Add Path -> path.points error & points markers          DONE
     31. Add UE                                                  DONE
+    32. Edit cell - style not done loading error                IN PROGRESS
+    33. Edit UEs not all fields prefill                         IN PROGRESS

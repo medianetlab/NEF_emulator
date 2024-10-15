@@ -85,7 +85,7 @@ const EditUEModal = ({ visible, handleClose, handleSubmit, initialData, token })
               removeMapLayersAndSources(mapInstanceRef.current, cells.map(cell => `cell-${cell.id}`));
               addCellsToMap(mapInstanceRef.current, cells);
               addUEsToMap(mapInstanceRef.current, ues, handleUEClick);
-              await addPathsToMap(mapInstanceRef.current, ues, token);
+              await addPathsToMap(mapInstanceRef.current, token);
             });
           } else {
             // Update map center when formData changes
@@ -167,6 +167,7 @@ const EditUEModal = ({ visible, handleClose, handleSubmit, initialData, token })
               label="Cell ID"
               value={formData.cell_id}
               onChange={handleChange}
+              disabled
             />
             <CFormInput
               id="ip_address_v4"
@@ -245,6 +246,7 @@ const EditUEModal = ({ visible, handleClose, handleSubmit, initialData, token })
               label="Latitude"
               value={formData.latitude}
               readOnly
+              disabled
             />
             <CFormInput
               id="longitude"
@@ -252,6 +254,7 @@ const EditUEModal = ({ visible, handleClose, handleSubmit, initialData, token })
               label="Longitude"
               value={formData.longitude}
               readOnly
+              disabled
             />
             <div className="mt-3">
               <label className="form-label">Map</label>
