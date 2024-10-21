@@ -7,7 +7,7 @@ import maplibre from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { getCells } from '../../utils/api';
 import { removeMapLayersAndSources, addCellsToMap, addUEsToMap } from './ModalUtils';
-import turf from '@turf/turf';
+import *  as turf from '@turf/turf';
 
 const EditCellModal = ({ visible, handleClose, handleSubmit, initialData, token, ues, handleUEClick }) => {
   const [formData, setFormData] = useState({

@@ -7,7 +7,7 @@ import maplibre from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { getGNBs, getUEs, getCells } from '../../utils/api';
 import { addCellsToMap, addUEsToMap, addPathsToMap, removeMapLayersAndSources, handleUEClick } from './ModalUtils'; 
-import { buffer, point } from '@turf/turf';
+import * as turf from '@turf/turf';
 
 const AddCellModal = ({ visible, handleClose, token }) => {
   const [formData, setFormData] = useState({
@@ -85,7 +85,7 @@ const AddCellModal = ({ visible, handleClose, token }) => {
               // Use the form's radius (preserving the updated value)
               const radiusInMeters = parseFloat(formData.radius);
               const radiusInKilometers = radiusInMeters / 1000; // Convert meters to kilometers
-              const circleGeoJSON = buffer(point([lng, lat]), radiusInKilometers, { units: 'kilometers' });
+              const circleGeoJSON = turf.buffer(turf.point([lng, lat]), radiusInKilometers, { units: 'kilometers' });
             
               // Add or update the source and layer for the radius
               if (mapInstanceRef.current.getSource(sourceId)) {
@@ -113,13 +113,10 @@ const AddCellModal = ({ visible, handleClose, token }) => {
               // Update or add the center point (dot) layer
               if (mapInstanceRef.current.getSource(dotLayerId)) {
                 // Update the data for the center point
-                mapInstanceRef.current.getSource(dotLayerId).setData(point([lng, lat]));
+                mapInstanceRef.current.getSource(dotLayerId).setData(turf.point([lng, lat]));
               } else {
                 // Add new source and layer for the center point
-                mapInstanceRef.current.addSource(dotLayerId, {
-                  type: 'geojson',
-                  data: point([lng, lat]) // Center point
-                });
+                mapInstanceRef.current.getSource(dotLayerId).setData(turf.point([lng, lat]));
             
                 mapInstanceRef.current.addLayer({
                   id: dotLayerId,
@@ -154,10 +151,10 @@ const AddCellModal = ({ visible, handleClose, token }) => {
     if (formData.latitude && formData.longitude && mapInstanceRef.current) {
       const radiusInMeters = parseFloat(formData.radius);
       const radiusInKilometers = radiusInMeters / 1000;
-      const circleGeoJSON = buffer(point([parseFloat(formData.longitude), parseFloat(formData.latitude)]), radiusInKilometers, { units: 'kilometers' });
+      const circleGeoJSON = turf.buffer(turf.point([parseFloat(formData.longitude), parseFloat(formData.latitude)]), radiusInKilometers, { units: 'kilometers' });
 
       if (mapInstanceRef.current.getSource(sourceId)) {
-        mapInstanceRef.current.getSource(sourceId).setData(circleGeoJSON);
+        const circleGeoJSON = turf.buffer(turf.point([parseFloat(formData.longitude), parseFloat(formData.latitude)]), radiusInKilometers, { units: 'kilometers' });
       }
     }
   }, [formData.radius]);
