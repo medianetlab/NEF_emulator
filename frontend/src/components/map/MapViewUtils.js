@@ -184,7 +184,7 @@ export const connectWebSocket = (setWs, mapInstanceRef) => {
       const data = JSON.parse(event.data);
       const updatedUEs = Object.values(data);
       const map = mapInstanceRef.current; // Use mapInstanceRef passed as parameter
-      updateUEPositionsOnMap(map, updatedUEs); // Only update positions
+      updateUEPositionsOnMap(map, updatedUEs); 
     } catch (err) {
       console.error('Error parsing WebSocket message:', err);
     }
