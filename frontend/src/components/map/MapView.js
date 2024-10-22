@@ -37,6 +37,7 @@ import {
   handleStartIndividualLoop,
   handleStartLoop,
 } from './MapViewUtils';
+import UEInfoModal from '../modals/UEInfoModal';
 
 let last_notification_id = -1;
 
@@ -49,7 +50,9 @@ const MapView = ({ token }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedLog, setSelectedLog] = useState(null);
   const [ws, setWs] = useState(null);
-  const [logFrequency, setLogFrequency] = useState(5000); // State to hold log frequency
+  const [logFrequency, setLogFrequency] = useState(5000);
+  const [showUEModal, setShowUEModal] = useState(false);
+  const [selectedUE, setSelectedUE] = useState(null);
 
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -95,7 +98,7 @@ const MapView = ({ token }) => {
       removeMapLayersAndSources(map, cells.map(cell => `cell-${cell.id}`));
       addCellsToMap(map, cells);
       initializeMarkers(map);
-      addUEsToMap(map, ues, handleUEClick);
+      addUEsToMap(map, ues, (ue) => handleUEClick(ue, setSelectedUE, setShowUEModal));
       await addPathsToMap(map, ues, token);
     });
 
@@ -233,7 +236,7 @@ const MapView = ({ token }) => {
               <CTableRow key={log.id}>
                 <CTableDataCell>{log.id}</CTableDataCell>
                 <CTableDataCell>{log.serviceAPI}</CTableDataCell>
-                <CTableDataCell>{log.type}</CTableDataCell>
+                <CTableDataCell>{log.isNotification ? 'Notification' : 'Request'}</CTableDataCell>
                 <CTableDataCell>{log.method}</CTableDataCell>
                 <CTableDataCell>{log.status_code}</CTableDataCell>
                 <CTableDataCell>{new Date(log.timestamp).toLocaleString()}</CTableDataCell>
@@ -280,7 +283,7 @@ const MapView = ({ token }) => {
                   <CTableBody>
                     <CTableRow>
                       <CTableDataCell><strong>Type:</strong></CTableDataCell>
-                      <CTableDataCell>{selectedLog.type}</CTableDataCell>
+                      <CTableDataCell>{selectedLog.isNotification ? 'Notification' : 'Request'}</CTableDataCell>
                     </CTableRow>
                     <CTableRow>
                       <CTableDataCell><strong>Status Code:</strong></CTableDataCell>
@@ -317,6 +320,12 @@ const MapView = ({ token }) => {
             </CButton>
           </CModalFooter>
         </CModal>
+        {/* UEModal for displaying UE information */}
+        <UEInfoModal
+          visible={showUEModal}
+          onClose={() => setShowUEModal(false)}
+          ue={selectedUE}
+        />
       </CCardBody>
     </CCard>
   );

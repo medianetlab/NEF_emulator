@@ -10,7 +10,7 @@ let markersMap = new Map();
  * @param {Array} cells - Array of cell objects containing longitude, latitude, and other properties.
  */
 export const addCellsToMap = (mapInstance, cells) => {
-  if (!mapInstance || !cells) return;
+  if (!mapInstance || !cells || cells.length === 0) return;
 
   // Add a GeoJSON source for all cells
   mapInstance.addSource('cellsSource', {
@@ -76,18 +76,24 @@ export const addCellsToMap = (mapInstance, cells) => {
 };
 
 
+/**
+ * Fetch and add paths to the map.
+ * @param {Object} mapInstance - The MapLibre map instance.
+ * @param {string} token - The token for API authentication.
+ */
 export const addPathsToMap = async (mapInstance, token) => {
+  if (!mapInstance) {
+    console.error('Map instance is null. Cannot add paths.');
+    return;
+  }
+
   try {
-    // Fetch paths using the token (await the result since getPaths is likely asynchronous)
     const paths = await getPaths(token);
 
     for (const path of paths) {
       if (path.id) {
         try {
-          // Read path data based on the path_id
           const pathData = await readPath(token, path.id);
-
-          // Map the points to GeoJSON coordinates
           const coordinates = pathData.points.map(point => [point.longitude, point.latitude]);
 
           // Add the path as a new layer to the map
@@ -126,38 +132,52 @@ export const addPathsToMap = async (mapInstance, token) => {
   }
 };
 
-  
-  // Add or update UEs to the map
-  export const addUEsToMap = (mapInstance, ues, handleUEClick) => {
-  
-    const uesArray = Array.isArray(ues) ? ues : Object.values(ues);
-  
-    uesArray.forEach(ue => {
-      if (ue && ue.latitude && ue.longitude) {
-        // Remove existing marker if it exists
-        if (markersMap.has(ue.id)) {
-          const existingMarker = markersMap.get(ue.id);
-          existingMarker.remove(); // Remove the old marker
-          markersMap.delete(ue.id); // Delete marker from map
-        }
-  
-        // Create new UE marker
-        const marker = new maplibregl.Marker({ id: `ue-${ue.id}` })
-          .setLngLat([ue.longitude, ue.latitude])
-          .setPopup(new maplibregl.Popup().setHTML(`<h3>${ue.name}</h3><p>${ue.description}</p>`))
-          .addTo(mapInstance);
-  
-        // Store the marker in the map
-        markersMap.set(ue.id, marker);
-  
-        // Add click event handler
-        marker.getElement().addEventListener('click', () => handleUEClick(ue));
-      }
-    });
-  };
 
-// Remove layers and sources from the map
+/**
+ * Add or update UEs to the map
+ * @param {Object} mapInstance - The MapLibre map instance.
+ * @param {Array} ues - Array of UE objects containing longitude and latitude.
+ * @param {Function} handleUEClick - Callback function for UE click events.
+ */
+export const addUEsToMap = (mapInstance, ues, handleUEClick) => {
+  if (!mapInstance || !Array.isArray(ues)) return;
+
+  ues.forEach(ue => {
+    if (ue && ue.latitude && ue.longitude) {
+      // Remove existing marker if it exists
+      if (markersMap.has(ue.id)) {
+        const existingMarker = markersMap.get(ue.id);
+        existingMarker.remove(); // Remove the old marker
+        markersMap.delete(ue.id); // Delete marker from map
+      }
+
+      // Create new UE marker
+      const marker = new maplibregl.Marker({ id: `ue-${ue.id}` })
+        .setLngLat([ue.longitude, ue.latitude])
+        .setPopup(new maplibregl.Popup().setHTML(`<h3>${ue.name}</h3><p>${ue.description}</p>`))
+        .addTo(mapInstance);
+
+      // Store the marker in the map
+      markersMap.set(ue.id, marker);
+
+      // Add click event handler
+      marker.getElement().addEventListener('click', () => handleUEClick(ue));
+    }
+  });
+};
+
+
+/**
+ * Remove layers and sources from the map
+ * @param {Object} mapInstance - The MapLibre map instance.
+ * @param {Array} layerIds - Array of layer IDs to be removed.
+ */
 export const removeMapLayersAndSources = (mapInstance, layerIds) => {
+  if (!mapInstance) {
+    console.error('Map instance is null. Cannot remove layers or sources.');
+    return;
+  }
+
   layerIds.forEach(layerId => {
     if (mapInstance.getLayer(layerId)) {
       mapInstance.removeLayer(layerId);
@@ -166,7 +186,18 @@ export const removeMapLayersAndSources = (mapInstance, layerIds) => {
   });
 };
 
-// Handle UE click event
+
+/**
+ * Handle click events on UEs.
+ * @param {Object} ue - UE object containing information to display.
+ */
 export const handleUEClick = (ue) => {
-  console.log('UE clicked:', ue);
+  const ueInfo = `
+    Location: [${ue.latitude}, ${ue.longitude}]
+    Cell ID: ${ue.cell_id || 'N/A'}
+    External Identifier: ${ue.external_identifier || 'N/A'}
+    Speed: ${ue.speed || 'Unknown'}
+  `;
+
+  alert(ueInfo);
 };

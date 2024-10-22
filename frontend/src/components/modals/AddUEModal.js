@@ -1,63 +1,62 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   CModal, CModalHeader, CModalBody, CModalFooter, CButton,
-  CForm, CFormInput, CAlert
+  CForm, CFormInput, CFormSelect, CToaster, CToast, CToastBody, CToastClose
 } from '@coreui/react';
 import maplibre from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { getCells } from '../../utils/api';
-import { removeMapLayersAndSources, addCellsToMap, addUEsToMap } from './ModalUtils';
-import *  as turf from '@turf/turf';
+import { getPaths, getGNBs, getCells, getUEs } from '../../utils/api';
+import { addCellsToMap, addUEsToMap, addPathsToMap, removeMapLayersAndSources, handleUEClick } from './ModalUtils';
 
-const EditCellModal = ({ visible, handleClose, handleSubmit, initialData, token, ues, handleUEClick }) => {
+const AddUEModal = ({ visible, handleClose, handleSubmit, token }) => {
   const [formData, setFormData] = useState({
-    cell_id: '',
-    name: '',
-    latitude: 0.0,
-    longitude: 0.0,
-    radius: 0,
-    frequency: '',
-    bandwidth: ''
+    supi: '202010000000001',
+    name: 'UE1',
+    ext_identifier: '10001@domain.com',
+    cell_id: 1,
+    ip_address_v4: '10.0.0.1',
+    ip_address_v6: '::1',
+    mac: '22-00-00-00-00-01',
+    mcc: '202',
+    mnc: '1',
+    dnn: 'province1.mnc01.mcc202.gprs',
+    path_id: '', 
+    speed: 'LOW',
+    lat: '',
+    lon: ''
   });
 
+  const [paths, setPaths] = useState([]);
+  const [gnbs, setGNBs] = useState([]);
   const [cells, setCells] = useState([]);
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const [ues, setUEs] = useState([]);
+  const [toasts, setToasts] = useState([]);
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
-  const circleRef = useRef(null);
 
-  // Fetch cells data when component mounts or token changes
   useEffect(() => {
-    const fetchCells = async () => {
+    const fetchData = async () => {
       if (!token) return;
       try {
-        const cellsData = await getCells(token);
-        setCells(cellsData);
+        const [pathsData, gnbData, cellData, ueData] = await Promise.all([
+          getPaths(token),
+          getGNBs(token),
+          getCells(token),
+          getUEs(token),
+        ]);
+        setPaths(pathsData);
+        setGNBs(gnbData);
+        setCells(cellData);
+        setUEs(ueData);
       } catch (error) {
-        console.error('Error fetching cells:', error);
-        setMessage({ type: 'failure', text: 'Error fetching cells. Please try again later.' });
-        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+        console.error('Error fetching data:', error);
       }
     };
 
-    fetchCells();
+    fetchData();
   }, [token]);
 
-  // Update formData when initialData changes
-  useEffect(() => {
-    if (initialData) {
-      setFormData(prev => ({
-        ...prev,
-        ...initialData,
-        latitude: initialData.position?.lat || initialData.latitude || 0.0,
-        longitude: initialData.position?.lng || initialData.longitude || 0.0,
-        radius: initialData.radius || 0
-      }));
-    }
-  }, [initialData, visible]);
-
-  // Initialize or update MapLibre map, marker, and circle
   useEffect(() => {
     if (visible) {
       setTimeout(() => {
@@ -66,181 +65,217 @@ const EditCellModal = ({ visible, handleClose, handleSubmit, initialData, token,
             mapInstanceRef.current = new maplibre.Map({
               container: mapRef.current,
               style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_API_KEY}`,
-              center: [formData.longitude, formData.latitude],
-              zoom: 13,
+              center: [23.819390, 37.997564],
+              zoom: 15,
             });
-
             mapInstanceRef.current.on('style.load', async () => {
               removeMapLayersAndSources(mapInstanceRef.current, cells.map(cell => `cell-${cell.id}`));
-              addCellsToMap(mapInstanceRef.current, cells); 
+              addCellsToMap(mapInstanceRef.current, cells);
               addUEsToMap(mapInstanceRef.current, ues, handleUEClick);
+              await addPathsToMap(mapInstanceRef.current, token);
             });
 
-            // Add marker to the map for the cell being edited
-            markerRef.current = new maplibre.Marker({ color: 'blue' })
-              .setLngLat([formData.longitude, formData.latitude])
+            markerRef.current = new maplibre.Marker()
+              .setLngLat([parseFloat(formData.lon) || 23.7275, parseFloat(formData.lat) || 37.9838])
               .addTo(mapInstanceRef.current);
 
-            // Add click event to update the marker and circle
             mapInstanceRef.current.on('click', (e) => {
               const { lng, lat } = e.lngLat;
-              setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
+              setFormData(prev => ({
+                ...prev,
+                lat: lat.toFixed(6),
+                lon: lng.toFixed(6)
+              }));
               markerRef.current.setLngLat([lng, lat]);
-              drawCircle(); // Update the circle with the new coordinates
             });
-
-          } else {
-            // Update map center and marker position when formData changes
-            mapInstanceRef.current.setCenter([formData.longitude, formData.latitude]);
-            markerRef.current.setLngLat([formData.longitude, formData.latitude]);
-            drawCircle(); // Update the circle when coordinates change
           }
         }
       }, 500);
     } else if (mapInstanceRef.current) {
       mapInstanceRef.current.remove();
       mapInstanceRef.current = null;
+      markerRef.current = null;
     }
-  }, [visible, formData.latitude, formData.longitude, cells, ues]);
-
-  const drawCircle = () => {
-    if (!mapInstanceRef.current || !formData.radius) return;
-
-    const radius = formData.radius; // in meters
-    const lat = formData.latitude;
-    const lng = formData.longitude;
-
-    // Create a circle using Turf.js
-    const center = turf.point([lng, lat]);
-    const circle = turf.circle(center, radius / 1000, { steps: 64, units: 'kilometers' });
-
-    // Remove previous circle layer if it exists
-    if (circleRef.current) {
-      mapInstanceRef.current.removeLayer('circle');
-      mapInstanceRef.current.removeSource('circle');
-    }
-
-    // Add a source for the circle
-    mapInstanceRef.current.addSource('circle', {
-      type: 'geojson',
-      data: circle
-    });
-
-    // Add a layer for the circle
-    mapInstanceRef.current.addLayer({
-      id: 'circle',
-      type: 'fill',
-      source: 'circle',
-      layout: {},
-      paint: {
-        'fill-color': '#888',
-        'fill-opacity': 0.5
-      }
-    });
-
-    circleRef.current = 'circle'; // Store reference to circle layer
-  };
+  }, [visible, cells, gnbs, paths, token]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFormSubmit = async () => {
-    try {
-      await handleSubmit(formData);
-      setMessage({ type: 'success', text: 'Cell updated successfully!' });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-      handleClose(); // Close the modal after successful update
-    } catch (error) {
-      console.error('Error updating Cell:', error);
-      setMessage({ type: 'failure', text: 'Error: Failed to update the Cell.' });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+  const addToast = (message, color) => {
+    setToasts([...toasts, { message, color }]);
+  };
+
+  const handleFormSubmit = () => {
+    if (gnbs.length === 0 || cells.length === 0) {
+      addToast('Error: No gNBs or Cells available. Please add at least one.', 'danger');
+      return;
     }
+
+    handleSubmit(formData);
+    addToast('UE added successfully!', 'success');
+    handleClose();
   };
 
   return (
     <>
-      {/* Status message display */}
-      {message.text && (
-        <CAlert
-          color={message.type === 'success' ? 'success' : 'danger'}
-          style={{
-            position: 'fixed',
-            bottom: '20px',
-            right: '20px',
-            zIndex: 9999
-          }}
-        >
-          {message.text}
-        </CAlert>
-      )}
-
-      {/* Edit Cell Modal */}
       <CModal visible={visible} onClose={handleClose} size="lg">
-        <CModalHeader closeButton>Edit Cell</CModalHeader>
+        <CModalHeader closeButton>Add UE</CModalHeader>
         <CModalBody>
           <CForm>
-            <CFormInput
-              id="cell_id"
-              name="cell_id"
-              label="Cell ID"
-              value={formData.cell_id}
-              onChange={handleChange}
-            />
-            <CFormInput
-              id="name"
-              name="name"
-              label="Name"
-              value={formData.name}
-              onChange={handleChange}
-            />
-            <CFormInput
-              id="frequency"
-              name="frequency"
-              label="Frequency"
-              value={formData.frequency}
-              onChange={handleChange}
-            />
-            <CFormInput
-              id="bandwidth"
-              name="bandwidth"
-              label="Bandwidth"
-              value={formData.bandwidth}
-              onChange={handleChange}
-            />
-            <CFormInput
-              id="latitude"
-              name="latitude"
-              label="Latitude"
-              value={formData.latitude}
-              readOnly
-            />
-            <CFormInput
-              id="longitude"
-              name="longitude"
-              label="Longitude"
-              value={formData.longitude}
-              readOnly
-            />
-            <CFormInput
-              id="radius"
-              name="radius"
-              label="Radius (meters)"
-              type="number"
-              value={formData.radius}
-              onChange={handleChange}
-            />
-            <div className="map-container" ref={mapRef} style={{ width: '100%', height: '400px' }} />
+            <div className="mb-3">
+              <CFormInput
+                label="SUPI"
+                name="supi"
+                value={formData.supi}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="mb-3">
+              <CFormInput
+                label="Name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="mb-3">
+              <CFormInput
+                label="External Identifier"
+                name="ext_identifier"
+                value={formData.ext_identifier}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="mb-3">
+              <CFormSelect
+                label="Cell ID"
+                name="cell_id"
+                value={formData.cell_id}
+                onChange={handleChange}
+              >
+                {cells.map(cell => (
+                  <option key={cell.id} value={cell.id}>{cell.description}</option>
+                ))}
+              </CFormSelect>
+            </div>
+            <div className="mb-3">
+              <CFormInput
+                label="IPv4 Address"
+                name="ip_address_v4"
+                value={formData.ip_address_v4}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="mb-3">
+              <CFormInput
+                label="IPv6 Address"
+                name="ip_address_v6"
+                value={formData.ip_address_v6}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="mb-3">
+              <CFormInput
+                label="MAC Address"
+                name="mac"
+                value={formData.mac}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="mb-3">
+              <CFormInput
+                label="MCC"
+                name="mcc"
+                value={formData.mcc}
+                onChange={handleChange}
+                disabled // Disable the field
+              />
+            </div>
+            <div className="mb-3">
+              <CFormInput
+                label="MNC"
+                name="mnc"
+                value={formData.mnc}
+                onChange={handleChange}
+                disabled // Disable the field
+              />
+            </div>
+            <div className="mb-3">
+              <CFormInput
+                label="DNN"
+                name="dnn"
+                value={formData.dnn}
+                onChange={handleChange}
+                disabled // Disable the field
+              />
+            </div>
+            <div className="mb-3">
+              <CFormSelect
+                label="Speed"
+                name="speed"
+                value={formData.speed}
+                onChange={handleChange}
+              >
+                <option value="LOW">LOW</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="HIGH">HIGH</option>
+              </CFormSelect>
+            </div>
+            <div className="mb-3">
+              <CFormSelect
+                label="Path"
+                name="path" 
+                value={formData.path_id}
+                onChange={handleChange}
+              >
+                <option value="" disabled>Select a path</option>
+                {paths.map(path => (
+                  <option key={path.id} value={path.id}>{path.description}</option>
+                ))}
+              </CFormSelect>
+            </div>
+            <div className="mb-3">
+              <CFormInput
+                label="Latitude"
+                name="lat"
+                value={formData.lat}
+                onChange={handleChange}
+                disabled 
+              />
+            </div>
+            <div className="mb-3">
+              <CFormInput
+                label="Longitude"
+                name="lon"
+                value={formData.lon}
+                onChange={handleChange}
+                disabled 
+              />
+            </div>
           </CForm>
+
+          <div id="ueMap" ref={mapRef} style={{ height: '400px', marginTop: '20px' }}></div>
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" onClick={handleClose}>Cancel</CButton>
-          <CButton color="primary" onClick={handleFormSubmit}>Save Changes</CButton>
+          <CButton color="primary" onClick={handleFormSubmit}>Save</CButton>
         </CModalFooter>
       </CModal>
+
+      <CToaster placement="bottom-end">
+        {toasts.map((toast, index) => (
+          <CToast key={index} color={toast.color} autohide={true} delay={5000} visible={true}>
+            <div className="d-flex">
+              <CToastBody>{toast.message}</CToastBody>
+              <CToastClose className="me-2 m-auto" />
+            </div>
+          </CToast>
+        ))}
+      </CToaster>
     </>
   );
 };
 
-export default EditCellModal;
+export default AddUEModal;

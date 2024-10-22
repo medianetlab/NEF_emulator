@@ -20,9 +20,16 @@ export const fetchData = async (token, setGnbs, setCells, setUEs, setPaths) => {
   }
 };
 
-export const handleAdd = (type, setCurrentEntity, setEntityType, setShowAddGNBModal, setShowCellModal, setShowUEModal, setShowPathModal) => {
+export const handleAdd = (type, setCurrentEntity, setEntityType, setShowAddGNBModal, setShowCellModal, setShowUEModal, setShowPathModal, gnbs, cells, showToast) => {
   setCurrentEntity(null); 
   setEntityType(type);
+
+  if (type === 'UE') {
+    if (gnbs.length === 0 || cells.length === 0) {
+      showToast("You cannot add UEs without first having at least a cell and a GNB");
+      return; 
+    }
+  }
 
   switch(type) {
     case 'GNB':

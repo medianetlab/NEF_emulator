@@ -75,30 +75,28 @@ const AddCellModal = ({ visible, handleClose, token }) => {
             
             mapInstanceRef.current.on('click', (e) => {
               const { lng, lat } = e.lngLat;
-              
+            
+              // Update form data with new coordinates
               setFormData(prev => ({
                 ...prev,
                 latitude: lat.toFixed(5),
                 longitude: lng.toFixed(5)
               }));
             
-              // Use the form's radius (preserving the updated value)
+              // Use the form's radius
               const radiusInMeters = parseFloat(formData.radius);
               const radiusInKilometers = radiusInMeters / 1000; // Convert meters to kilometers
               const circleGeoJSON = turf.buffer(turf.point([lng, lat]), radiusInKilometers, { units: 'kilometers' });
             
-              // Add or update the source and layer for the radius
-              if (mapInstanceRef.current.getSource(sourceId)) {
-                // Update existing source
-                mapInstanceRef.current.getSource(sourceId).setData(circleGeoJSON);
-              } else {
-                // Add new source
+              // Ensure the source exists before updating
+              if (!mapInstanceRef.current.getSource(sourceId)) {
+                // Add new source for the circle
                 mapInstanceRef.current.addSource(sourceId, {
                   type: 'geojson',
                   data: circleGeoJSON
                 });
             
-                // Add fill layer for the circle
+                // Add the circle layer
                 mapInstanceRef.current.addLayer({
                   id: circleLayerId,
                   type: 'fill',
@@ -108,16 +106,20 @@ const AddCellModal = ({ visible, handleClose, token }) => {
                     'fill-opacity': 0.2 // Circle opacity
                   }
                 });
+              } else {
+                // Update existing source data
+                mapInstanceRef.current.getSource(sourceId).setData(circleGeoJSON);
               }
             
-              // Update or add the center point (dot) layer
-              if (mapInstanceRef.current.getSource(dotLayerId)) {
-                // Update the data for the center point
-                mapInstanceRef.current.getSource(dotLayerId).setData(turf.point([lng, lat]));
-              } else {
-                // Add new source and layer for the center point
-                mapInstanceRef.current.getSource(dotLayerId).setData(turf.point([lng, lat]));
+              // Ensure the dot source exists before updating
+              if (!mapInstanceRef.current.getSource(dotLayerId)) {
+                // Add new source for the center point
+                mapInstanceRef.current.addSource(dotLayerId, {
+                  type: 'geojson',
+                  data: turf.point([lng, lat])
+                });
             
+                // Add the center point layer
                 mapInstanceRef.current.addLayer({
                   id: dotLayerId,
                   type: 'circle',
@@ -128,9 +130,11 @@ const AddCellModal = ({ visible, handleClose, token }) => {
                     'circle-opacity': 1
                   }
                 });
+              } else {
+                // Update the data for the center point
+                mapInstanceRef.current.getSource(dotLayerId).setData(turf.point([lng, lat]));
               }
-            });
-                        
+            }); 
 
             mapInstanceRef.current.on('style.load', async () => {
               removeMapLayersAndSources(mapInstanceRef.current, cells.map(cell => `cell-${cell.id}`));
@@ -163,6 +167,37 @@ const AddCellModal = ({ visible, handleClose, token }) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+  
+  useEffect(() => {
+    if (formData.latitude && formData.longitude && mapInstanceRef.current) {
+      // Update the circle whenever the radius changes
+      const radiusInMeters = parseFloat(formData.radius);
+      const radiusInKilometers = radiusInMeters / 1000;
+      const circleGeoJSON = turf.buffer(turf.point([parseFloat(formData.longitude), parseFloat(formData.latitude)]), radiusInKilometers, { units: 'kilometers' });
+  
+      if (mapInstanceRef.current.getSource(sourceId)) {
+        // Update the existing circle with the new radius
+        mapInstanceRef.current.getSource(sourceId).setData(circleGeoJSON);
+      } else {
+        // Add new source for the circle if it doesn't exist
+        mapInstanceRef.current.addSource(sourceId, {
+          type: 'geojson',
+          data: circleGeoJSON
+        });
+  
+        // Add the circle layer
+        mapInstanceRef.current.addLayer({
+          id: circleLayerId,
+          type: 'fill',
+          source: sourceId,
+          paint: {
+            'fill-color': '#0000FF', 
+            'fill-opacity': 0.2 
+          }
+        });
+      }
+    }
+  }, [formData.radius, formData.latitude, formData.longitude]);
 
   const handleFormSubmit = async () => {
     if (!formData.gNB_id.trim()) {

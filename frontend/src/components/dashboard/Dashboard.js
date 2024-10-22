@@ -3,6 +3,8 @@ import {
   CCard, CCardHeader, CCardBody, CTable, CTableHead, CTableRow, CTableHeaderCell,
   CTableBody, CTableDataCell, CButton, CCardTitle, CRow, CCol
 } from '@coreui/react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import AddGNBModal from '../modals/AddGNBModal';
 import EditGNBModal from '../modals/EditGNBModal';
 import AddCellModal from '../modals/AddCellModal';
@@ -40,6 +42,14 @@ const Dashboard = ({ token }) => {
   useEffect(() => {
     fetchData(token, setGnbs, setCells, setUEs, setPaths);
   }, [token]);
+
+  const showToast = (message) => {
+    toast.error(message, {
+      position: 'bottom-right',
+      autoClose: 3000, 
+      style: { backgroundColor: 'rgba(255, 165, 0, 0.9)' } 
+    });
+  };
 
   const closeModals = () => {
     setShowAddGNBModal(false);
@@ -87,6 +97,7 @@ const Dashboard = ({ token }) => {
 
   return (
     <>
+     <ToastContainer />
       <CRow className="mb-4">
         <CCol md="3">
           <CCard>
@@ -158,7 +169,7 @@ const Dashboard = ({ token }) => {
         title="UEs"
         data={ues}
         columns={ueColumns}
-        onAdd={() => handleAdd('UE', setCurrentEntity, setEntityType, setShowAddGNBModal, setShowAddCellModal, setShowAddUEModal, setShowAddPathModal)}
+        onAdd={() => handleAdd('UE', setCurrentEntity, setEntityType, setShowAddGNBModal, setShowAddCellModal, setShowAddUEModal, setShowAddPathModal, gnbs, cells, showToast)}
         onEdit={entity => handleEdit('UE', entity, setCurrentEntity, setEntityType, setShowEditGNBModal, setShowEditCellModal, setShowEditUEModal, setShowEditPathModal)}
         onDelete={entity => handleDelete('UE', entity, setEntityToDelete, setShowDeleteModal)}
       />

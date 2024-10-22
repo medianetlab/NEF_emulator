@@ -164,13 +164,14 @@ export const removeMapLayersAndSources = (map, layerIds) => {
   });
 };
 
-// Handle clicking on a UE marker
-export const handleUEClick = (ue) => {
-  alert(`UE: ${ue.supi} clicked!`);
+export const handleUEClick = (ue, setSelectedUE, setShowUEModal) => {
+  setSelectedUE(ue); 
+  setShowUEModal(true); 
 };
 
+
 export const connectWebSocket = (setWs, mapInstanceRef) => {
-  const websocketURL = `wss://www.o-nef.gr:4443/api/v1/ue_movement/ws/ues`;
+  const websocketURL = process.env.REACT_APP_WEBSOCKET_URL;
   console.log('Attempting WebSocket connection to', websocketURL);
 
   const websocket = new WebSocket(websocketURL);
