@@ -170,7 +170,7 @@ export const handleUEClick = (ue) => {
 };
 
 export const connectWebSocket = (setWs, mapInstanceRef) => {
-  const websocketURL = `wss://localhost:4443/api/v1/ue_movement/ws/ues`;
+  const websocketURL = `wss://www.o-nef.gr:4443/api/v1/ue_movement/ws/ues`;
   console.log('Attempting WebSocket connection to', websocketURL);
 
   const websocket = new WebSocket(websocketURL);

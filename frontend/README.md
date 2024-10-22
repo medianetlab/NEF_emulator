@@ -33,3 +33,9 @@
     31. Add UE                                                  DONE
     32. Edit cell - style not done loading error                IN PROGRESS
     33. Edit UEs not all fields prefill                         IN PROGRESS
+    34. Websocket hostname (for example line 173 in mapviewutils) should be dynamic from .env
+    35. Click UE on map does not show details (see original)
+    36. In API console logs (map) "type" is missing 
+    37. After creating a gnb, in add a new cell gnb does not exist + picking a point in the map breaks.
+    38. "You cannot add a UE without having a cell" message missing (check original message)
+    39. Add UE "Uncaught runtime errors" + wrong coordinates on add UE
