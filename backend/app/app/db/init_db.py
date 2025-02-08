@@ -84,8 +84,8 @@ def init_db(db: Session) -> None:
                 json_data = jsonable_encoder(UE)
                 json_data['path_id'] = path.id
                 random_point = get_random_point(db, path.id)
-                json_data['latitude'] = random_point.get('latitude')
-                json_data['longitude'] = random_point.get('longitude')
+                json_data['latitude'] = 37.9960857285552,
+                json_data['longitude'] = 23.818403899510525
                 crud.ue.update(db=db, db_obj=UE, obj_in=json_data)
             else:
                 logging.warning(f"UE with SUPI {ue_path.get('supi')} not found. Skipping.")

@@ -3,8 +3,8 @@
       {
         "gNB_id": "AAAAA1",
         "name": "gNB1",
-        "description": "This is a base station",
-        "location": "unknown"
+        "description": "Amarisoft gNB",
+        "location": "Institute of Informatics and Telecommunications"
       }
     ],
     "cells": [

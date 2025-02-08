@@ -608,66 +608,56 @@ function ui_show_add_UE_modal(  ) {
 
 
 function ui_initialize_edit_UE_map() {
+    // Set map height
+    $('#edit_UE_mapid').css({ "height": 600 });
 
-    // set map height
-    $('#edit_UE_mapid').css({ "height": 600 } );
-
-    
     var mbAttr = '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        mbUrl  = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+        osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
+    var grayscale = L.tileLayer(osmUrl, { attribution: mbAttr, maxZoom: 23 }),
+        streets   = L.tileLayer(osmUrl, { attribution: mbAttr, maxZoom: 23 }),
+        osm       = L.tileLayer(osmUrl, { attribution: mbAttr, maxZoom: 23 });
 
-    var grayscale   = L.tileLayer(mbUrl, {id: 'mapbox/light-v9',    tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
-        streets     = L.tileLayer(mbUrl, {id: 'mapbox/streets-v11', tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
-        osm         = L.tileLayer(osUrl, {                          tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23});
-
-
-    // map initialization
+    // Initialize map
     edit_UE_map = L.map('edit_UE_mapid', {
         layers: [grayscale, edit_UE_position_lg, edit_UE_cell_lg, edit_UE_coverage_lg, edit_UE_all_paths_lg, edit_UE_selected_path_lg]
-    }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
-
+    }).setView([48.499998, 23.383331], 5); // Geographical midpoint of Europe
 
     var baseLayers = {
-            "Grayscale": grayscale,
-            "Streets": streets,
-            'OpenStreetMap': osm
-        };
+        "Grayscale": grayscale,
+        "Streets": streets,
+        "OpenStreetMap": osm
+    };
 
     var overlays = {
-        "UEs"      : edit_UE_position_lg,
-        "Cells"    : edit_UE_cell_lg,
-        "Coverage" : edit_UE_coverage_lg,
-        "Paths"     : edit_UE_all_paths_lg,
-        "selected path" : edit_UE_selected_path_lg
+        "UEs": edit_UE_position_lg,
+        "Cells": edit_UE_cell_lg,
+        "Coverage": edit_UE_coverage_lg,
+        "Paths": edit_UE_all_paths_lg,
+        "Selected Path": edit_UE_selected_path_lg
     };
 
     L.control.layers(baseLayers, overlays).addTo(edit_UE_map);
-
 }
 
 
 
-function ui_initialize_edit_UE_map() {
 
-    // set map height
+function ui_initialize_edit_UE_map() {
+    // Set map height
     $('#edit_UE_mapid').css({ "height": 600 });
 
-    // MapLibre attribution and tile URL
-    var mbAttr = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
-                'Imagery © <a href="https://maplibre.org/">MapLibre</a>',
-        mbUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    // OpenStreetMap attribution and tile URL
+    var osAttr = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        osUrl  = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
-    var osAttr = '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        osUrl  = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+    // Define map layers
+    var grayscale = L.tileLayer(osUrl, { attribution: osAttr, maxZoom: 23 }),
+        streets   = L.tileLayer(osUrl, { attribution: osAttr, maxZoom: 23 }),
+        osm       = L.tileLayer(osUrl, { attribution: osAttr, maxZoom: 23 });
 
-    // Define different map layers
-    var grayscale   = L.tileLayer(mbUrl, {tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
-        streets     = L.tileLayer(mbUrl, {tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
-        osm         = L.tileLayer(osUrl, {tileSize: 512, zoomOffset: -1, attribution: osAttr, maxZoom: 23});
-
-    // map initialization
-    edit_UE_map = L.map('edit_UE_mapid', {
+    // Initialize the map
+    let edit_UE_map = L.map('edit_UE_mapid', {
         layers: [grayscale, edit_UE_position_lg, edit_UE_cell_lg, edit_UE_coverage_lg, edit_UE_all_paths_lg, edit_UE_selected_path_lg]
     }).setView([48.499998, 23.383331], 5); // Geographical midpoint of Europe
 
@@ -683,10 +673,10 @@ function ui_initialize_edit_UE_map() {
         "Cells": edit_UE_cell_lg,
         "Coverage": edit_UE_coverage_lg,
         "Paths": edit_UE_all_paths_lg,
-        "selected path": edit_UE_selected_path_lg
+        "Selected Path": edit_UE_selected_path_lg
     };
 
-    // Add the layers control
+    // Add layer control to the map
     L.control.layers(baseLayers, overlays).addTo(edit_UE_map);
 }
 

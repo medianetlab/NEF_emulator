@@ -560,42 +560,37 @@ function ui_show_add_cell_modal(  ) {
 
 
 function ui_initialize_edit_cell_map() {
-
-    // set map height
-    $('#edit_cell_mapid').css({ "height": 600 } );
-
+    // Set map height
+    $('#edit_cell_mapid').css({ "height": 600 });
 
     var mbAttr = '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        mbUrl  = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+        osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
+    var grayscale = L.tileLayer(osmUrl, { attribution: mbAttr, maxZoom: 23 }),
+        streets   = L.tileLayer(osmUrl, { attribution: mbAttr, maxZoom: 23 }),
+        osm       = L.tileLayer(osmUrl, { attribution: mbAttr, maxZoom: 23 });
 
-
-    var grayscale   = L.tileLayer(mbUrl, {id: 'mapbox/light-v9',    tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
-        streets     = L.tileLayer(mbUrl, {id: 'mapbox/streets-v11', tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
-        osm         = L.tileLayer(osUrl, {                          tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23});
-
-
-    // map initialization
+    // Initialize map
     edit_cell_map = L.map('edit_cell_mapid', {
         layers: [grayscale, edit_cell_lg, edit_cell_coverage_lg, edit_cell_UE_position_lg, edit_cell_path_lg]
-    }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
-
+    }).setView([48.499998, 23.383331], 5); // Geographical midpoint of Europe
 
     var baseLayers = {
-            "Grayscale": grayscale,
-            "Streets": streets,
-            'OpenStreetMap': osm
-        };
+        "Grayscale": grayscale,
+        "Streets": streets,
+        "OpenStreetMap": osm
+    };
 
     var overlays = {
-        "cells"        : edit_cell_lg,
-        "cell coverage": edit_cell_coverage_lg,
-        "UEs"          : edit_cell_UE_position_lg,
-        "paths"        : edit_cell_path_lg
+        "Cells": edit_cell_lg,
+        "Cell Coverage": edit_cell_coverage_lg,
+        "UEs": edit_cell_UE_position_lg,
+        "Paths": edit_cell_path_lg
     };
 
     L.control.layers(baseLayers, overlays).addTo(edit_cell_map);
 }
+
 
 
 function ui_initialize_edit_cell_map() {

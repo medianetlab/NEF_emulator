@@ -598,38 +598,34 @@ function ui_initialize_edit_path_map() {
 
 
 function ui_initialize_add_path_map() {
-
-    // set map height
-    $('#add_path_mapid').css({ "height": 600 } );
+    // Set map height
+    $('#add_path_mapid').css({ "height": 600 });
 
     var mbAttr = '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        mbUrl  = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+        osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
+    var grayscale = L.tileLayer(osmUrl, { attribution: mbAttr, maxZoom: 23 }),
+        streets   = L.tileLayer(osmUrl, { attribution: mbAttr, maxZoom: 23 }),
+        osm       = L.tileLayer(osmUrl, { attribution: mbAttr, maxZoom: 23 });
 
-    var grayscale   = L.tileLayer(mbUrl, {id: 'mapbox/light-v9',    tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
-        streets     = L.tileLayer(mbUrl, {id: 'mapbox/streets-v11', tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
-        osm         = L.tileLayer(osUrl, {                          tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23});
-
-
-    // map initialization
+    // Initialize map
     add_path_map = L.map('add_path_mapid', {
-        layers: [grayscale, add_path_UE_position_lg, add_path_cell_lg, add_path_coverage_lg, add_path_all_paths_lg, add_path_points_lg, add_path_new_path_lg ]
-    }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
-
+        layers: [grayscale, add_path_UE_position_lg, add_path_cell_lg, add_path_coverage_lg, add_path_all_paths_lg, add_path_points_lg, add_path_new_path_lg]
+    }).setView([48.499998, 23.383331], 5); // Geographical midpoint of Europe
 
     var baseLayers = {
-            "Grayscale": grayscale,
-            "Streets": streets,
-            'OpenStreetMap': osm
-        };
+        "Grayscale": grayscale,
+        "Streets": streets,
+        "OpenStreetMap": osm
+    };
 
     var overlays = {
-        "UEs"     : add_path_UE_position_lg,
-        "Cells"   : add_path_cell_lg,
+        "UEs": add_path_UE_position_lg,
+        "Cells": add_path_cell_lg,
         "Coverage": add_path_coverage_lg,
-        "Paths"   : add_path_all_paths_lg,
+        "Paths": add_path_all_paths_lg,
         "New path": add_path_new_path_lg,
-        "points"  : add_path_points_lg
+        "Points": add_path_points_lg
     };
 
     L.control.layers(baseLayers, overlays).addTo(add_path_map);
@@ -638,18 +634,18 @@ function ui_initialize_add_path_map() {
         if (pointA == null) {
             pointA = e.latlng;
             
-            
             add_path_tmp_obj.start_point.latitude  = parseFloat(e.latlng.lat.toFixed(6));
             add_path_tmp_obj.start_point.longitude = parseFloat(e.latlng.lng.toFixed(6));
-            $('#add_path_start_lat').html( add_path_tmp_obj.start_point.latitude  );
-            $('#add_path_start_lon').html( add_path_tmp_obj.start_point.longitude );
+            $('#add_path_start_lat').html(add_path_tmp_obj.start_point.latitude);
+            $('#add_path_start_lon').html(add_path_tmp_obj.start_point.longitude);
 
-            // add a solid-color small circle (dot) at the start lat,lon
-            add_path_start_dot = L.circle([add_path_tmp_obj.start_point.latitude,add_path_tmp_obj.start_point.longitude], 1, {
-                color: 'none',
+            // Add a solid-color small circle (dot) at the start lat, lon
+            add_path_start_dot = L.circle([add_path_tmp_obj.start_point.latitude, add_path_tmp_obj.start_point.longitude], {
+                radius: 3,
+                color: '#3590e2',
                 fillColor: '#3590e2',
                 fillOpacity: 1.0
-            }).addTo(add_path_points_lg ).addTo( add_path_map );
+            }).addTo(add_path_points_lg).addTo(add_path_map);
 
             return;
         }
@@ -658,16 +654,19 @@ function ui_initialize_add_path_map() {
 
             add_path_tmp_obj.end_point.latitude  = parseFloat(e.latlng.lat.toFixed(6));
             add_path_tmp_obj.end_point.longitude = parseFloat(e.latlng.lng.toFixed(6));
-            $('#add_path_end_lat').html( add_path_tmp_obj.end_point.latitude  );
-            $('#add_path_end_lon').html( add_path_tmp_obj.end_point.longitude );
-            
-            // add a solid-color small circle (dot) at the end lat,lon
-            if (add_path_end_dot != null) { add_path_end_dot.remove(); }
-            add_path_end_dot = L.circle([add_path_tmp_obj.end_point.latitude,add_path_tmp_obj.end_point.longitude], 1, {
-                color: 'none',
+            $('#add_path_end_lat').html(add_path_tmp_obj.end_point.latitude);
+            $('#add_path_end_lon').html(add_path_tmp_obj.end_point.longitude);
+
+            // Add a solid-color small circle (dot) at the end lat, lon
+            if (add_path_end_dot != null) {
+                add_path_end_dot.remove();
+            }
+            add_path_end_dot = L.circle([add_path_tmp_obj.end_point.latitude, add_path_tmp_obj.end_point.longitude], {
+                radius: 3,
+                color: '#c7362c',
                 fillColor: '#c7362c',
                 fillOpacity: 1.0
-            }).addTo(add_path_points_lg).addTo( add_path_map );
+            }).addTo(add_path_points_lg).addTo(add_path_map);
 
             generate_coords_between_points(pointA.lat, pointA.lng, pointB.lat, pointB.lng);
             pointA = pointB;
@@ -676,8 +675,8 @@ function ui_initialize_add_path_map() {
     }
 
     add_path_map.on('click', onAddPathMapClick);
-
 }
+
 
 
 function ui_add_path_modal_reset_form() {
