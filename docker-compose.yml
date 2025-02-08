@@ -1,4 +1,3 @@
-version: "3.9"
 
 services:
 
@@ -117,8 +116,8 @@ services:
     command: sh -c '/self-signed-crt.sh && /dynamic_ports.sh'
 
 networks:
-    services_default:
-      external: ${EXTERNAL_NET}
+  services_default:
+    driver: bridge
 
 
 volumes:

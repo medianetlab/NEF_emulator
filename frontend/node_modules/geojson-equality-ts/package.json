@@ -1,0 +1,62 @@
+{
+  "name": "geojson-equality-ts",
+  "version": "1.0.2",
+  "description": "Check two valid geojson geometries for equality.",
+  "type": "module",
+  "main": "dist/cjs/index.cjs",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.cts",
+        "default": "./dist/cjs/index.cjs"
+      }
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "test": "tsx test.ts",
+    "build": "tsup"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/smallsaucepan/geojson-equality-ts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/smallsaucepan/geojson-equality-ts/issues"
+  },
+  "homepage": "https://github.com/smallsaucepan/geojson-equality-ts",
+  "keywords": [
+    "geojson",
+    "equality",
+    "equal",
+    "assertion"
+  ],
+  "author": "James Beard <james@smallsaucepan.com>",
+  "contributors": [
+    "Samir Shah <solaris.smoke@gmail.com>",
+    "Gagan Bansal <gaganbansal123@gmail.com>",
+    "Tim Oram <mitmaro@gmail.com>"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@types/geojson": "^7946.0.14"
+  },
+  "devDependencies": {
+    "@types/tape": "^5.6.4",
+    "tap-nirvana": "^1.1.0",
+    "tape": "^5.7.5",
+    "tsup": "^8.1.0",
+    "tsx": "^4.15.4",
+    "typescript": "^5.4.5"
+  }
+}

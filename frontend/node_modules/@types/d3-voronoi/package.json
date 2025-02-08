@@ -1,0 +1,40 @@
+{
+    "name": "@types/d3-voronoi",
+    "version": "1.1.12",
+    "description": "TypeScript definitions for d3-voronoi",
+    "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/d3-voronoi",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "Tom Wanzek",
+            "githubUsername": "tomwanzek",
+            "url": "https://github.com/tomwanzek"
+        },
+        {
+            "name": "Alex Ford",
+            "githubUsername": "gustavderdrache",
+            "url": "https://github.com/gustavderdrache"
+        },
+        {
+            "name": "Boris Yankov",
+            "githubUsername": "borisyankov",
+            "url": "https://github.com/borisyankov"
+        },
+        {
+            "name": "denisname",
+            "githubUsername": "denisname",
+            "url": "https://github.com/denisname"
+        }
+    ],
+    "main": "",
+    "types": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/d3-voronoi"
+    },
+    "scripts": {},
+    "dependencies": {},
+    "typesPublisherContentHash": "7b815bed9663c379bd13b0e61d02a6de6fd22f3f97390c988b68ad4f142f4ecd",
+    "typeScriptVersion": "4.5"
+}

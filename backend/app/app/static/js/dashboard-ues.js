@@ -612,13 +612,9 @@ function ui_initialize_edit_UE_map() {
     // set map height
     $('#edit_UE_mapid').css({ "height": 600 } );
 
-    var mbAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
-                'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-        mbUrl = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoiZXhhbXBsZXMiLCJhIjoiY2p0MG01MXRqMW45cjQzb2R6b2ptc3J4MSJ9.zA2W0IkI0c6KaAhJfk9bWg';
-
-    var osAttr = '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        osUrl  = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-
+    
+    var mbAttr = '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        mbUrl  = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
 
     var grayscale   = L.tileLayer(mbUrl, {id: 'mapbox/light-v9',    tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
@@ -652,49 +648,48 @@ function ui_initialize_edit_UE_map() {
 
 
 
-function ui_initialize_add_UE_map() {
+function ui_initialize_edit_UE_map() {
 
     // set map height
-    $('#add_UE_mapid').css({ "height": 600 } );
+    $('#edit_UE_mapid').css({ "height": 600 });
 
-    var mbAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
-                'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-        mbUrl = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoiZXhhbXBsZXMiLCJhIjoiY2p0MG01MXRqMW45cjQzb2R6b2ptc3J4MSJ9.zA2W0IkI0c6KaAhJfk9bWg';
+    // MapLibre attribution and tile URL
+    var mbAttr = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
+                'Imagery © <a href="https://maplibre.org/">MapLibre</a>',
+        mbUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
     var osAttr = '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         osUrl  = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
-
-
-    var grayscale   = L.tileLayer(mbUrl, {id: 'mapbox/light-v9',    tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
-        streets     = L.tileLayer(mbUrl, {id: 'mapbox/streets-v11', tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
-        osm         = L.tileLayer(osUrl, {                          tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23});
-
+    // Define different map layers
+    var grayscale   = L.tileLayer(mbUrl, {tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
+        streets     = L.tileLayer(mbUrl, {tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
+        osm         = L.tileLayer(osUrl, {tileSize: 512, zoomOffset: -1, attribution: osAttr, maxZoom: 23});
 
     // map initialization
-    add_UE_map = L.map('add_UE_mapid', {
-        layers: [grayscale, add_UE_position_lg, add_UE_cell_lg, add_UE_coverage_lg, add_UE_all_paths_lg, add_UE_selected_path_lg]
-    }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
+    edit_UE_map = L.map('edit_UE_mapid', {
+        layers: [grayscale, edit_UE_position_lg, edit_UE_cell_lg, edit_UE_coverage_lg, edit_UE_all_paths_lg, edit_UE_selected_path_lg]
+    }).setView([48.499998, 23.383331], 5); // Geographical midpoint of Europe
 
-
+    // Base map layers and overlays
     var baseLayers = {
-            "Grayscale": grayscale,
-            "Streets": streets,
-            'OpenStreetMap': osm
-        };
-
-    var overlays = {
-        "UEs"      : add_UE_position_lg,
-        "Cells"    : add_UE_cell_lg,
-        "Coverage" : add_UE_coverage_lg,
-        "Paths"    : add_UE_all_paths_lg,
-        "Selected path" : add_UE_selected_path_lg
+        "Grayscale": grayscale,
+        "Streets": streets,
+        "OpenStreetMap": osm
     };
 
-    L.control.layers(baseLayers, overlays).addTo(add_UE_map);
+    var overlays = {
+        "UEs": edit_UE_position_lg,
+        "Cells": edit_UE_cell_lg,
+        "Coverage": edit_UE_coverage_lg,
+        "Paths": edit_UE_all_paths_lg,
+        "selected path": edit_UE_selected_path_lg
+    };
 
-    
+    // Add the layers control
+    L.control.layers(baseLayers, overlays).addTo(edit_UE_map);
 }
+
 
 
 

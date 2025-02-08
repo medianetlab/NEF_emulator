@@ -15,6 +15,19 @@ import logging
 router = APIRouter()
 db_collection= 'MonitoringEvent'
 
+import requests
+
+def fetch_ue_location(imsi: str):
+    api_url = f"http://10.220.2.106:5000/{imsi}/device-location"
+    try:
+        response = requests.get(api_url, timeout=5)  # 5-second timeout
+        response.raise_for_status()
+        return response.json()  # Return JSON response
+    except requests.RequestException as e:
+        logging.error(f"Failed to fetch UE location from API: {e}")
+        return None  # Handle errors gracefully
+
+
 @router.get("/{scsAsId}/subscriptions", response_model=List[schemas.MonitoringEventSubscription], responses={204: {"model" : None}})
 def read_active_subscriptions(
     *,
@@ -84,6 +97,7 @@ def create_subscription(
     db_mongo = client.fastapi
 
     UE = ue.get_externalId(db=db, externalId=str(item_in.externalId), owner_id=current_user.id)
+    ue_location_data = fetch_ue_location("001010123456789")
     if not UE: 
         #CAPIF Core Function Logging Service
         try:
@@ -116,7 +130,13 @@ def create_subscription(
             if UE.Cell != None:
                 json_compatible_item_data["locationInfo"] = {'cellId' : UE.Cell.cell_id, 'gNBId' : UE.Cell.gNB.gNB_id}
             else:
-                json_compatible_item_data["locationInfo"] = {'cellId' : None, 'gNBId' : None}
+                json_compatible_item_data["locationInfo"] = {
+                "ageOfLocationInfo": ue_location_data["timestamp"],
+                'cellId': ue_location_data["ncgi"]["nrCellId"],
+                "enodeBID": "AAAAA1",
+                "plmnId": ue_location_data["ncgi"]["plmnId"],"routingAreaId": ue_location_data["tai"], 
+                "trackingAreaId":ue_location_data["tai"]["tac"],
+                "userLocation": ue_location_data["latlong"],"geographicArea": "GR"}
 
         http_response = JSONResponse(content=json_compatible_item_data, status_code=200)
         add_notifications(http_request, http_response, False)

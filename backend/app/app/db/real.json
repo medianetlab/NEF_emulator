@@ -1,0 +1,72 @@
+{
+    "gNBs": [
+      {
+        "gNB_id": "AAAAA1",
+        "name": "gNB1",
+        "description": "This is a base station",
+        "location": "unknown"
+      }
+    ],
+    "cells": [
+      {
+        "cell_id": "AAAAA1003",
+        "name": "cell3",
+        "description": "Institute of Informatics and Telecommunications",
+        "gNB_id": 1,
+        "latitude": 37.996136,
+        "longitude": 23.818535,
+        "radius": 100
+      }
+    ],
+    "UEs": [
+      {
+        "name": "UE1",
+        "description": "This is a UE",
+        "ip_address_v4": "10.0.0.1",
+        "ip_address_v6": "::1",
+        "mac_address": "22-00-00-00-00-01",
+        "dnn": "province1.mnc01.mcc202.gprs",
+        "mcc": 202,
+        "mnc": 1,
+        "external_identifier": "10001@domain.com",
+        "speed": "LOW",
+        "supi": "202010000000001"
+      }
+    ],
+    "paths": [
+      {
+        "description": "NCSRD Library",
+        "start_point": {
+          "latitude": 37.998119,
+          "longitude": 23.819444
+        },
+        "end_point": {
+          "latitude": 37.998098,
+          "longitude": 23.81944
+        },
+        "color": "#00a3cc",
+        "id": 1,
+        "points": [
+          {
+            "latitude": 37.998119,
+            "longitude": 23.819444
+          },
+          {
+            "latitude": 37.998125,
+            "longitude": 23.819436
+          },
+          {
+            "latitude": 37.998132,
+            "longitude": 23.819428
+          }
+        ]
+      }
+    ],
+    "ue_path_association": [
+      {
+        "supi": "001010123456789",
+        "path": 1
+      }
+    ]
+  }
+  

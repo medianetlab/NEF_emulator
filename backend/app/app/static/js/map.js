@@ -264,50 +264,44 @@ function reload_events_refresh_interval( new_option ) {
 
 
 // ===============================================
-//         initialize the Leaflet.js map 
+//         Initialize the Leaflet.js Map 
 // ===============================================
-// 
 function ui_initialize_map() {
+    // Set map height
+    $('#mapid').css({"height": window.innerHeight * 0.65});
 
-    // set map height
-    $('#mapid').css({"height": window.innerHeight * 0.65} );
+    var osAttr = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        osUrl  = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
-    var mbAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
-                'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-        mbUrl = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoiZXhhbXBsZXMiLCJhIjoiY2p0MG01MXRqMW45cjQzb2R6b2ptc3J4MSJ9.zA2W0IkI0c6KaAhJfk9bWg';
+    var cartoAttr = '&copy; <a href="https://carto.com/">CARTO</a>',
+        cartoLightUrl = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+        cartoDarkUrl  = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
 
-    var osAttr = '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        osUrl  = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+    var osm         = L.tileLayer(osUrl, {attribution: osAttr, maxZoom: 19}),
+        cartoLight  = L.tileLayer(cartoLightUrl, {attribution: cartoAttr, maxZoom: 19}),
+        cartoDark   = L.tileLayer(cartoDarkUrl, {attribution: cartoAttr, maxZoom: 19});
 
-
-
-    var grayscale   = L.tileLayer(mbUrl, {id: 'mapbox/light-v9',    tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
-        streets     = L.tileLayer(mbUrl, {id: 'mapbox/streets-v11', tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23}),
-        osm         = L.tileLayer(osUrl, {                          tileSize: 512, zoomOffset: -1, attribution: mbAttr, maxZoom: 23});
-
-
-    // map initialization
+    // Map initialization
     mymap = L.map('mapid', {
-        layers: [grayscale, cells_lg, cell_coverage_lg, ues_lg, paths_lg]
-    }).setView([48.499998, 23.383331], 5);    // Geographical midpoint of Europe
-    //.setView([37.996349, 23.819861], 17);  // previous "hard-coded" center for the first map scenario at NCSRD
-
+        layers: [osm, cells_lg, cell_coverage_lg, ues_lg, paths_lg]
+    }).setView([48.499998, 23.383331], 5); // Geographical midpoint of Europe
 
     var baseLayers = {
-            "Grayscale": grayscale,
-            "Streets": streets,
-            'OpenStreetMap': osm
-        };
+        "OpenStreetMap": osm,
+        "Carto Light": cartoLight,
+        "Carto Dark": cartoDark
+    };
 
     var overlays = {
-        "cells": cells_lg,
-        "cell coverage": cell_coverage_lg,
+        "Cells": cells_lg,
+        "Cell Coverage": cell_coverage_lg,
         "UEs": ues_lg,
-        "paths": paths_lg
+        "Paths": paths_lg
     };
 
     L.control.layers(baseLayers, overlays).addTo(mymap);
 }
+
 
 
 

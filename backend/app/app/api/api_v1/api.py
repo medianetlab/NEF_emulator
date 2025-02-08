@@ -12,8 +12,8 @@ api_router.include_router(endpoints.gNB.router, prefix="/gNBs", tags=["gNBs"])
 api_router.include_router(endpoints.Cell.router, prefix="/Cells", tags=["Cells"])
 api_router.include_router(endpoints.UE.router, prefix="/UEs", tags=["UEs"])
 api_router.include_router(endpoints.qosInformation.router, prefix="/qosInfo", tags=["QoS Information"])
-# api_router.include_router(monitoringevent.router, prefix="/3gpp-monitoring-event/v1", tags=["Monitoring Event API"])
-# api_router.include_router(qosMonitoring.router, prefix="/3gpp-as-session-with-qos/v1", tags=["Session With QoS API"])
+#api_router.include_router(monitoringevent.router, prefix="/3gpp-monitoring-event/v1", tags=["Monitoring Event API"])
+#api_router.include_router(qosMonitoring.router, prefix="/3gpp-as-session-with-qos/v1", tags=["Session With QoS API"])
 #api_router.include_router(monitoringevent.monitoring_callback_router, prefix="/3gpp-monitoring-event/v1", tags=["Monitoring Event API"])
 
 
